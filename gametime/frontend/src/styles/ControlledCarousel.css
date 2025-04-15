@@ -1,0 +1,94 @@
+.carousel-image {
+  height: 400px;
+  object-fit: cover;
+}
+
+.carousel-caption {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.carousel:hover .carousel-caption {
+  opacity: 1;
+}
+
+.carousel-caption h3,
+.carousel-caption p {
+  color: white;
+  margin: 0;
+}
+
+.carousel {
+  width: 100%;
+  height: 400px;
+  position: relative;
+}
+
+/* Indicadores en la esquina inferior izquierda */
+.carousel-indicators {
+  position: absolute !important;
+  bottom: 10px !important;
+  left: 10px !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: row;
+  gap: 6px;
+  padding: 6px;
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+  align-items: center;
+  justify-content: flex-start !important;
+  border-radius: 5px;
+}
+
+.carousel:hover .carousel-indicators {
+  opacity: 1;
+}
+
+.carousel-indicators [data-bs-target] {
+  width: 12px;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.carousel-indicators .active {
+  background-color: white;
+}
+
+/* Controles prev y next */
+.carousel-control-prev,
+.carousel-control-next {
+  top: 50%;
+  bottom: auto;
+  height: 50%;
+  width: 50px;
+  transform: translateY(-50%);
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease-in-out;
+}
+
+.carousel:hover .carousel-control-prev,
+.carousel:hover .carousel-control-next {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  border-radius: 50%;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+}

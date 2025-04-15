@@ -1,0 +1,102 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030; /* Asegura que esté por encima de otros elementos */
+  background-color: #2e2e2e !important; /* Mantener el color actual */
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.navbar-logo {
+  height: 40px;
+  margin-right: 20px;
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 10px 15px;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+.nav-item:not(:last-child)::after {
+  content: "|";
+  color: white;
+  margin-left: 15px;
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.language-selector {
+  position: relative;
+}
+
+.language-selector .btn.navbar-btn {
+  background-color: #2e2e2e; /* Mismo color que la navbar */
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 10px 15px;
+  cursor: default; /* Evita que el cursor cambie a "pointer" */
+}
+
+.language-selector .btn.navbar-btn:hover {
+  background-color: #2e2e2e; /* Mantener el mismo color al pasar el cursor */
+  color: white; /* Mantener el color del texto */
+  border: none; /* Sin borde */
+  cursor: default; /* Sin cambio de cursor */
+}
+
+.language-options {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #1b1b1b;
+  border: 1px solid #444;
+  border-radius: 5px;
+  padding: 5px;
+  z-index: 1050; /* Asegura que esté por encima de otros elementos */
+}
+
+.language-options .btn-link {
+  color: white;
+  text-decoration: none;
+  padding: 5px 10px;
+  text-align: left;
+}
+
+.language-options .btn-link:hover {
+  background-color: #333;
+  color: white;
+}
+
+body {
+  padding-top: 56px; /* Ajustar el contenido para que no quede debajo de la navbar */
+}
