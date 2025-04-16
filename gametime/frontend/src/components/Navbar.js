@@ -49,9 +49,9 @@ const Navbar = ({ language, setLanguage }) => {
               </Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#games">
-                {texts[language].navbar_games}
-              </a>
+              <Link className="nav-link" to="/upcoming-games">
+                {texts[language].navbar_upcoming_games} 
+              </Link>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#media">

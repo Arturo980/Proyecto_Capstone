@@ -1,0 +1,25 @@
+/* Asegurar que html, body y el contenedor principal ocupen el 100% de la altura */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Asegurar que el contenedor principal abarque toda la altura de la ventana */
+}
+
+.main-content {
+  flex: 1; /* Hacer que el contenido principal ocupe el espacio restante */
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  background-color: #f1f1f1;
+  text-align: center;
+  padding: 10px 0;
+  margin-top: auto; /* Empujar el footer al final */
+}
