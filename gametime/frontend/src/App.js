@@ -9,32 +9,33 @@ import Footer from './components/Footer';
 import TeamsPage from './pages/TeamsPage';
 import StatsPage from './pages/StatsPage';
 import UpcomingGames from './components/UpcomingGames';
-import UpcomingGamesPage from './pages/UpcomingGamesPage';
+import GamesPage from './pages/GamesPage'; // Cambiar el nombre del componente
+import MediaPage from './pages/MediaPage'; // Importar la nueva página
 import texts from './translations/texts';
 
 function App() {
   const [language, setLanguage] = useState('en');
 
-  // Datos de ejemplo para los próximos partidos
+  // Datos de ejemplo para los próximos partidos de voleibol
   const upcomingGames = [
     {
-      team1: 'Team A',
-      team2: 'Team B',
+      team1: 'Spikers United',
+      team2: 'Block Masters',
       date: '2023-11-01',
       time: '18:00',
-      team1Wins: 10,
+      team1Wins: 15,
       team1Losses: 5,
-      team2Wins: 8,
-      team2Losses: 7,
+      team2Wins: 12,
+      team2Losses: 8,
     },
     {
-      team1: 'Team C',
-      team2: 'Team D',
+      team1: 'Ace Warriors',
+      team2: 'Net Crushers',
       date: '2023-11-02',
       time: '20:00',
-      team1Wins: 12,
+      team1Wins: 18,
       team1Losses: 3,
-      team2Wins: 9,
+      team2Wins: 14,
       team2Losses: 6,
     },
   ];
@@ -70,8 +71,10 @@ function App() {
             <Route path="/teams" element={<TeamsPage language={language} />} />
             {/* Página de Estadísticas */}
             <Route path="/stats" element={<StatsPage language={language} />} />
-            {/* Página de Próximos Partidos */}
-            <Route path="/upcoming-games" element={<UpcomingGamesPage language={language} />} />
+            {/* Página de Partidos */}
+            <Route path="/games" element={<GamesPage language={language} />} />
+            {/* Página de Media */}
+            <Route path="/media" element={<MediaPage language={language} />} />
           </Routes>
         </div>
 

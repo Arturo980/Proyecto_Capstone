@@ -18,8 +18,18 @@ html, body {
 }
 
 footer {
-  background-color: #f1f1f1;
-  text-align: center;
-  padding: 10px 0;
-  margin-top: auto; /* Empujar el footer al final */
+  margin-top: 100px; /* Separar el footer del contenido principal */
+  background-color: #1b1b1b; /* Fondo oscuro */
+  color: white; /* Texto blanco */
+  padding: 50px 0; /* Espaciado interno */
+  text-align: center; /* Centrar el texto */
+}
+
+footer a {
+  color: #ffffff; /* Color de los enlaces */
+  text-decoration: none; /* Quitar subrayado */
+}
+
+footer a:hover {
+  text-decoration: underline; /* Subrayar al pasar el cursor */
 }

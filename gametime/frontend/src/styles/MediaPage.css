@@ -1,50 +1,36 @@
-.upcoming-games {
-  margin-top: 20px;
+.media-page {
+  text-align: center;
 }
 
-.upcoming-games h3 {
+.match-section img {
   margin-bottom: 15px;
+  border: 2px solid #ddd;
+  transition: transform 0.3s ease;
 }
 
-.games-container {
-  display: flex;
-  flex-wrap: wrap; /* Permitir que los elementos se ajusten si no caben en una fila */
-  gap: 15px; /* Espaciado entre los elementos */
+.match-section img:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
 }
 
-.game-card {
-  flex: 1 1 calc(25% - 15px); /* Ajustar el tamaño para que ocupen un 25% del ancho disponible */
-  max-width: 200px; /* Limitar el ancho máximo */
-  padding: 20px;
+.match-card {
   border: 2px solid #ddd;
   border-radius: 10px;
-  background-color: #f9f9f9;
-  text-align: center; /* Centrar el contenido */
+  padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
 }
 
-.game-card:hover {
+.match-card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
-.game-card strong {
+.back-button {
   display: block;
-  margin-bottom: 5px;
-}
-
-.game-card small {
-  color: #555;
-}
-
-.row h4 {
-  margin-top: 10px;
-}
-
-.row ul {
-  padding-left: 20px;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 .modal-overlay {
@@ -77,9 +63,11 @@
   border-radius: 10px;
   width: 80%;
   max-width: 600px;
+  max-height: 90%; /* Limitar la altura máxima */
+  overflow-y: auto; /* Hacer el modal desplazable */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   text-align: center;
-  animation: modal-scale 0.3s ease-out; /* Aplicar la animación */
+  animation: modal-scale 0.3s ease-out;
 }
 
 .close-button {
@@ -98,11 +86,11 @@
   background-color: #c82333;
 }
 
-.row h4, .row p, .row ul {
+.modal-content h2, .modal-content h3, .modal-content h4, .modal-content ul {
   text-align: center;
 }
 
-.row ul {
+.modal-content ul {
   list-style: none;
   padding: 0;
 }

@@ -14,10 +14,15 @@
   margin-right: 20px;
 }
 
+.navbar-collapse {
+  text-align: left; /* Ensure text aligns to the left */
+}
+
 .navbar-nav {
   display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column; /* Stack items vertically on smaller screens */
+  align-items: flex-start; /* Align items to the left */
+  gap: 10px; /* Adjust spacing between items */
   margin: 0;
   padding: 0;
   list-style: none;
@@ -34,6 +39,8 @@
   font-weight: bold;
   text-transform: uppercase;
   padding: 10px 15px;
+  width: 100%; /* Ensure links take full width */
+  text-align: left; /* Align text to the left */
 }
 
 .nav-link:hover {
@@ -41,17 +48,14 @@
 }
 
 .nav-item:not(:last-child)::after {
-  content: "|";
-  color: white;
-  margin-left: 15px;
-  position: absolute;
-  right: -10px;
-  top: 50%;
-  transform: translateY(-50%);
+  content: ""; /* Remove the "|" separator */
+  color: transparent; /* Ensure no visible separator */
+  margin-left: 0; /* Remove spacing */
+  position: static; /* Reset positioning */
 }
 
 .language-selector {
-  position: relative;
+  position: relative; /* Contenedor relativo para posicionar el menú desplegable */
 }
 
 .language-selector .btn.navbar-btn {
@@ -73,16 +77,39 @@
 }
 
 .language-options {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #1b1b1b;
-  border: 1px solid #444;
+  position: absolute; /* Position relative to the button */
+  top: 100%; /* Align directly below the button */
+  left: 0; /* Align to the left of the button */
+  background-color: #333; /* Background color */
+  border: 1px solid #444; /* Border for differentiation */
   border-radius: 5px;
-  padding: 5px;
-  z-index: 1050; /* Asegura que esté por encima de otros elementos */
+  padding: 5px 10px;
+  z-index: 1000; /* Ensure it appears above other elements */
+  min-width: 150px; /* Minimum width for proper display */
+}
+
+@media (max-width: 768px) {
+  .language-options {
+    top: calc(100% + 5px); /* Ensure it still appears below the button */
+    left: 0; /* Align to the left of the button */
+    right: auto; /* Prevent alignment to the right */
+  }
+}
+
+.language-options button {
+  color: #fff;
+  text-align: left;
+  width: 100%;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex; /* Usar flexbox para alinear la bandera y el texto */
+  align-items: center;
+}
+
+.language-options button:hover {
+  background-color: #444; /* Cambiar color al pasar el cursor */
 }
 
 .language-options .btn-link {
@@ -95,6 +122,17 @@
 .language-options .btn-link:hover {
   background-color: #333;
   color: white;
+}
+
+.language-options img {
+  margin-right: 10px; /* Espaciado entre la bandera y el texto */
+}
+
+.language-flag {
+  width: 20px; /* Ajustar el ancho de la bandera */
+  height: auto; /* Mantener la proporción */
+  border-radius: 3px; /* Bordes redondeados para un mejor diseño */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Sombra para destacar */
 }
 
 body {
