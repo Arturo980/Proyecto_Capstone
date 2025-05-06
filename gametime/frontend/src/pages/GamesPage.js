@@ -1,29 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/UpcomingGames.css'; // Usar los mismos estilos para consistencia
 import texts from '../translations/texts'; // Importar traducciones
+import gameData from '../data/gameData'; // Importar datos de partidos
 
 const GamesPage = ({ language }) => {
   const [selectedGame, setSelectedGame] = useState(null);
-
-  // Datos de ejemplo para los partidos
-  const games = [
-    {
-      team1: 'Spikers United',
-      team2: 'Block Masters',
-      date: '2023-11-01',
-      time: '18:00',
-      team1Stats: { wins: 15, losses: 5, players: ['Player A', 'Player B', 'Player C'] },
-      team2Stats: { wins: 12, losses: 8, players: ['Player X', 'Player Y', 'Player Z'] },
-    },
-    {
-      team1: 'Ace Warriors',
-      team2: 'Net Crushers',
-      date: '2023-11-02',
-      time: '20:00',
-      team1Stats: { wins: 18, losses: 3, players: ['Player D', 'Player E', 'Player F'] },
-      team2Stats: { wins: 14, losses: 6, players: ['Player U', 'Player V', 'Player W'] },
-    },
-  ];
 
   // Función para formatear fechas al formato dd-mm-aaaa
   const formatDate = (dateString) => {
@@ -33,6 +14,9 @@ const GamesPage = ({ language }) => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
+  // Ordenar los partidos por fecha
+  const sortedGames = [...gameData].sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // Deshabilitar el desplazamiento de la página principal cuando el modal está abierto
   useEffect(() => {
@@ -50,14 +34,23 @@ const GamesPage = ({ language }) => {
     <div className="container mt-5">
       <h2>{texts[language]?.navbar_games || 'Games'}</h2>
       <div className="games-container">
-        {games.map((game, index) => (
+        {sortedGames.map((game, index) => (
           <div
             key={index}
             className="game-card"
             onClick={() => setSelectedGame(game)}
           >
-            <strong>{game.team1} vs {game.team2}</strong>
-            <span>{formatDate(game.date)} - {game.time}</span>
+            <div className="game-teams">
+              <span className="team-left">{game.team1}</span>
+              <span className="vs-text">vs</span>
+              <span className="team-right">{game.team2}</span>
+            </div>
+            <div className="game-info">
+              <div>{formatDate(game.date)}</div>
+              <div>{game.time}</div>
+              {game.status === 'past' && <small>Score: {game.score}</small>}
+              {game.status === 'ongoing' && <small>{language === 'en' ? 'Live' : 'En Vivo'}</small>}
+            </div>
           </div>
         ))}
       </div>
@@ -79,27 +72,28 @@ const GamesPage = ({ language }) => {
               &times; {/* Mostrar solo una "X" */}
             </button>
             <h3>{selectedGame.team1} vs {selectedGame.team2}</h3>
-            <p>{formatDate(selectedGame.date)} - {selectedGame.time}</p>
-            <div className="row">
-              <div className="col-md-6">
-                <h4>{selectedGame.team1}</h4>
-                <p>{selectedGame.team1Stats.wins}-{selectedGame.team1Stats.losses}</p>
-                <h5>{language === 'en' ? 'Players:' : 'Jugadores:'}</h5>
-                <ul>
-                  {selectedGame.team1Stats.players.map((player, idx) => (
-                    <li key={idx}>{player}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="col-md-6">
-                <h4>{selectedGame.team2}</h4>
-                <p>{selectedGame.team2Stats.wins}-{selectedGame.team2Stats.losses}</p>
-                <h5>{language === 'en' ? 'Players:' : 'Jugadores:'}</h5>
-                <ul>
-                  {selectedGame.team2Stats.players.map((player, idx) => (
-                    <li key={idx}>{player}</li>
-                  ))}
-                </ul>
+            <p>{formatDate(selectedGame.date)}</p>
+            <p>{selectedGame.time}</p>
+            {selectedGame.status === 'past' && <p>Score: {selectedGame.score}</p>}
+            <div>
+              <h4>{language === 'en' ? 'Lineup' : 'Citación'}</h4>
+              <div className="lineup-container">
+                <div className="team-lineup">
+                  <h5>{selectedGame.team1}</h5>
+                  <ul>
+                    {selectedGame.lineup.team1.map((player, index) => (
+                      <li key={index}>{player}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="team-lineup">
+                  <h5>{selectedGame.team2}</h5>
+                  <ul>
+                    {selectedGame.lineup.team2.map((player, index) => (
+                      <li key={index}>{player}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

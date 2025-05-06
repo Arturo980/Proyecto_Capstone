@@ -56,6 +56,7 @@
 
 .language-selector {
   position: relative; /* Contenedor relativo para posicionar el menú desplegable */
+  margin-left: auto; /* Push the settings button to the right */
 }
 
 .language-selector .btn.navbar-btn {
@@ -76,23 +77,49 @@
   cursor: default; /* Sin cambio de cursor */
 }
 
+.language-selector .btn.triangle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; /* Adjust size for better visibility */
+  height: 40px;
+  cursor: pointer;
+}
+
+.language-selector .btn.triangle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Add a subtle hover effect */
+  border-radius: 50%; /* Make it circular */
+}
+
 .language-options {
   position: absolute; /* Position relative to the button */
   top: 100%; /* Align directly below the button */
-  left: 0; /* Align to the left of the button */
-  background-color: #333; /* Background color */
-  border: 1px solid #444; /* Border for differentiation */
+  right: 0; /* Align to the left of the button */
+  left: auto; /* Prevent alignment to the right */
+  background-color: #343a40; /* Background color */
   border-radius: 5px;
-  padding: 5px 10px;
+  padding: 10px;
   z-index: 1000; /* Ensure it appears above other elements */
-  min-width: 150px; /* Minimum width for proper display */
 }
 
 @media (max-width: 768px) {
-  .language-options {
-    top: calc(100% + 5px); /* Ensure it still appears below the button */
-    left: 0; /* Align to the left of the button */
-    right: auto; /* Prevent alignment to the right */
+  .language-selector {
+    margin-left: 0; /* Reset margin for smaller screens */
+    justify-content: flex-end; /* Align to the right */
+    margin-right: 10px; /* Add spacing from the edge */
+  }
+
+  .language-toggle-icon {
+    width: 25px; /* Adjust size for smaller screens */
+    height: 25px;
+  }
+
+  .settings-options {
+    width: 100%; /* Ensure dropdown takes full width on smaller screens */
+    padding: 10px; /* Adjust padding for smaller screens */
   }
 }
 
@@ -137,4 +164,70 @@
 
 body {
   padding-top: 56px; /* Ajustar el contenido para que no quede debajo de la navbar */
+}
+
+.nav-link.no-underline {
+  text-decoration: none !important;
+}
+
+.language-toggle-icon {
+  width: 30px; /* Increase the size of the icon */
+  height: 30px;
+  display: block; /* Ensure it's treated as a block element */
+  margin: auto; /* Center vertically within the button */
+}
+
+.triangle-btn {
+  display: flex; /* Use flexbox to center the icon */
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0; /* Remove extra padding */
+  cursor: pointer;
+  transition: transform 0.3s ease; /* Smooth animation */
+}
+
+.triangle-btn.triangle-down {
+  transform: rotate(180deg); /* Rotate the button */
+}
+
+.settings-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #343a40;
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Add spacing between sections */
+}
+
+.settings-section {
+  margin-bottom: 10px; /* Add spacing between sections */
+}
+
+.settings-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px; /* Remove underline spacing */
+}
+
+.settings-options button {
+  color: #fff;
+  text-align: left;
+  width: 100%;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none; /* Ensure no underline */
+}
+
+.settings-options button:hover {
+  background-color: #444;
+  text-decoration: none; /* Ensure no underline on hover */
 }

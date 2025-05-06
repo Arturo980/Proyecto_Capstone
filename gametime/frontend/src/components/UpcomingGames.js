@@ -1,7 +1,8 @@
 import React from 'react';
 import '../styles/UpcomingGames.css'; // Asegurarse de que los estilos estén actualizados
+import texts from '../translations/texts'; // Importar traducciones
 
-const UpcomingGames = ({ games }) => {
+const UpcomingGames = ({ games, language }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -10,18 +11,19 @@ const UpcomingGames = ({ games }) => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
-  
+
   return (
     <div className="upcoming-games">
-      <h3>Upcoming Games</h3>
       <div className="games-container">
         {games.map((game, index) => (
           <div key={index} className="game-card">
-            <div>
-              <strong>{game.team1} vs {game.team2}</strong>
+            <div className="game-teams">
+              <span className="team-left">{game.team1}</span>
+              <span className="vs-text">{game.vsText}</span>
+              <span className="team-right">{game.team2}</span>
             </div>
             <div>
-              <span>{formatDate(game.date)} - {game.time}</span> {/* Formatear la fecha */}
+              <span>{formatDate(game.date)} - {game.time}</span>
             </div>
             <div>
               <small>

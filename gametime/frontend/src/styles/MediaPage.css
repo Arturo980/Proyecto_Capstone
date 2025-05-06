@@ -14,17 +14,16 @@
 }
 
 .match-card {
-  border: 2px solid #ddd;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #f9f9f9;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--card-background-color); /* Usar el color de fondo del tema */
+  color: var(--text-color); /* Asegurar que el texto también cambie */
+  border-radius: 10px; /* Bordes redondeados */
+  padding: 15px; /* Espaciado interno */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra para destacar */
 }
 
 .match-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada al pasar el cursor */
 }
 
 .back-button {

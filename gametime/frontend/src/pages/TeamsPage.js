@@ -64,19 +64,18 @@ const TeamsPage = ({ language }) => {
             </button>
             <h2>{selectedTeam.name}</h2>
             <h3>{language === 'en' ? 'Roster' : 'Plantilla'}</h3>
+            <div className="roster-grid">
+              {selectedTeam.roster.map((player, index) => (
+                <div key={index} className="player-card">
+                  {player}
+                </div>
+              ))}
+            </div>
             <div>
               <h4>{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</h4>
               <ul>
                 {selectedTeam.staff.map((member, index) => (
                   <li key={index}>{member}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4>{language === 'en' ? 'Players' : 'Jugadores'}</h4>
-              <ul>
-                {selectedTeam.players.map((player, index) => (
-                  <li key={index}>{player}</li>
                 ))}
               </ul>
             </div>
