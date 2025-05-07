@@ -7,6 +7,17 @@
   display: flex;
   align-items: center;
   padding: 0 20px;
+  margin-bottom: 0; /* Eliminar margen inferior */
+  transition: transform 0.3s ease-in-out; /* Animación para mostrar/ocultar */
+  transform: translateY(0); /* Barra visible por defecto */
+}
+
+.navbar.hidden {
+  transform: translateY(-100%); /* Ocultar la barra moviéndola hacia arriba */
+}
+
+.horizontal-carousel-wrapper:hover ~ .navbar {
+  transform: translateY(0); /* Mostrar la barra cuando el mouse está sobre el carrusel */
 }
 
 .navbar-logo {
@@ -153,6 +164,8 @@
 
 .language-options img {
   margin-right: 10px; /* Espaciado entre la bandera y el texto */
+  width: 20px; /* Reducir el ancho del círculo */
+  height: 20px; /* Reducir la altura del círculo */
 }
 
 .language-flag {
@@ -198,33 +211,38 @@ body {
   right: 0;
   background-color: #343a40;
   border-radius: 5px;
-  padding: 10px;
-  z-index: 1000;
+  padding: 15px; /* Increase horizontal padding for more space */
+  width: 250px; /* Expand the width slightly */
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Add spacing between sections */
+  gap: 15px; /* Increase spacing between sections */
+  max-height: 300px; /* Limitar la altura máxima */
+  overflow-y: auto; /* Hacer el contenido desplazable */
+  z-index: 1000;
 }
 
 .settings-section {
-  margin-bottom: 10px; /* Add spacing between sections */
+  margin-bottom: 15px; /* Increase spacing between sections */
 }
 
 .settings-title {
-  font-size: 14px;
+  font-size: 16px; /* Increase font size for better readability */
   font-weight: bold;
   color: #fff;
-  margin-bottom: 5px; /* Remove underline spacing */
+  margin-bottom: 10px; /* Increase spacing below the title */
+  margin-left: 5px; /* Add slight left margin for better alignment */
 }
 
 .settings-options button {
   color: #fff;
   text-align: left;
   width: 100%;
-  padding: 5px 10px;
+  padding: 10px; /* Increase horizontal padding for buttons */
   background: none;
   border: none;
   cursor: pointer;
   text-decoration: none; /* Ensure no underline */
+  font-size: 15px; /* Increase font size for buttons */
 }
 
 .settings-options button:hover {

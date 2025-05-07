@@ -1,0 +1,127 @@
+.horizontal-carousel-wrapper {
+  position: relative; /* Habilitar posicionamiento relativo */
+  width: 100vw; /* Asegurar que el contenedor abarque todo el ancho de la ventana */
+  margin-left: calc(-50vw + 50%); /* Centrar el fondo horizontalmente */
+  background-color: #adadad; /* Fondo detrás del carrusel */
+  padding: 20px 10px; /* Reducir el padding superior e inferior */
+  margin-top: 0px; /* Ajustar el margen superior */
+  display: flex; /* Habilitar flexbox para centrar contenido */
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+}
+
+.horizontal-carousel {
+  display: flex;
+  align-items: center;
+  position: relative; /* Para posicionar las flechas */
+  width: 60%; /* Ajustar al ancho del contenido del carrusel */
+  margin: -20px 60px 0 auto; /* Agregar margen a la derecha para separarlo del borde */
+}
+
+.carousel-track-container {
+  overflow-x: hidden; /* Ocultar la barra de desplazamiento */
+  flex: 1; /* Hacer que el contenedor ocupe todo el espacio disponible */
+  position: relative; /* Habilitar posicionamiento relativo */
+  align-items: center; /* Centrar el contenido verticalmente */
+  display: flex; /* Asegurar que el contenedor use flexbox */
+}
+
+.carousel-track {
+  display: inline-flex;
+  gap: 15px;
+  padding: 10px;
+  transition: transform 0.3s ease; /* Transición suave para el desplazamiento */
+  /* transform: translateX(-20%); */ /* Eliminar desplazamiento inicial */
+}
+
+.scroll-left-button,
+.scroll-right-button {
+  position: absolute;
+  top: 50%; /* Centrar verticalmente */
+  transform: translateY(-50%); /* Ajustar para centrar */
+  background-color: transparent; /* Fondo transparente */
+  border: none;
+  width: 40px; /* Tamaño del botón */
+  height: 40px; /* Tamaño del botón */
+  display: none; /* Ocultar botones por defecto */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2; /* Asegurar que estén por encima del contenido */
+  opacity: 0.3; /* Reducir opacidad cuando no se pasa el cursor */
+  transition: opacity 0.3s ease; /* Transición suave para cambios de opacidad */
+}
+
+.scroll-left-button {
+  left: 10px; /* Posicionar a la izquierda dentro del carrusel */
+}
+
+.scroll-right-button {
+  right: 10px; /* Posicionar a la derecha dentro del carrusel */
+}
+
+.scroll-left-button:hover,
+.scroll-right-button:hover {
+  opacity: 1; /* Restaurar opacidad completa al pasar el cursor */
+}
+
+.horizontal-carousel-wrapper:hover .scroll-left-button,
+.horizontal-carousel-wrapper:hover .scroll-right-button {
+  display: flex; /* Mostrar botones al pasar el ratón */
+}
+
+.arrow-icon {
+  width: 100%; /* Ajustar el ancho de la imagen al botón */
+  height: 100%; /* Ajustar la altura de la imagen al botón */
+  object-fit: contain; /* Asegurar que la imagen mantenga su proporción */
+  transition: transform 0.3s ease; /* Transición suave para el hover */
+}
+
+.scroll-left-button:hover .arrow-icon,
+.scroll-right-button:hover .arrow-icon {
+  transform: scale(1.1); /* Aumentar tamaño al pasar el cursor */
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1px; /* Reducir el padding general */
+  border: 1px solid #ccc;
+  background-color: #777777;
+  width: 200px; /* Ampliar significativamente el ancho de las tarjetas */
+}
+
+.game-teams-scores {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: -10px; /* Reducir el margen inferior para acercar el horario */
+  padding: 5px; /* Mantener el padding interno */
+}
+
+.team-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.team-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.team-score {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: right;
+}
+
+.game-info {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #ddd; /* Cambiar a un color más claro para mejor contraste */
+  padding: 5px; /* Mantener el padding interno */
+}

@@ -9,3 +9,35 @@
   border-radius: 5px;
   background-color: #f9f9f9;
 }
+
+.game-item strong {
+  display: flex;
+  justify-content: space-between; /* Asegurar que los equipos estén a los extremos */
+  align-items: center;
+  font-size: 14px; /* Ajustar el tamaño de fuente */
+  font-weight: bold; /* Asegurar que los nombres sean legibles */
+}
+
+.game-item span {
+  background-color: transparent; /* Hacer el fondo transparente */
+  color: inherit; /* Mantener el color del texto según el tema */
+  padding: 0; /* Eliminar cualquier relleno adicional */
+  margin: 0; /* Eliminar márgenes */
+}
+
+.team-left {
+  text-align: left; /* Alinear el equipo de la izquierda */
+  flex: 1;
+}
+
+.team-right {
+  text-align: right; /* Alinear el equipo de la derecha */
+  flex: 1;
+}
+
+.vs-text {
+  margin: 0 10px; /* Espaciado entre los equipos y el texto "vs" */
+  font-style: italic;
+  color: #555;
+  flex: 0;
+}

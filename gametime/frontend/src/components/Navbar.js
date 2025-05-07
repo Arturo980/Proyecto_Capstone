@@ -7,6 +7,8 @@ import chileFlag from '../assets/images/ChileBandera.png'; // Importar bandera d
 import ukFlag from '../assets/images/ReinoUnidoBandera.png'; // Importar bandera del Reino Unido
 import texts from '../translations/texts';
 import toggleIcon from '../assets/images/icons8-settings-384.png'; // Import the new image
+import whiteCircleIcon from '../assets/images/circulo_blanco.png'; // Importar círculo blanco
+import blackCircleIcon from '../assets/images/circulo_negro.png'; // Importar círculo negro
 
 const Navbar = ({ language, setLanguage }) => {
   const [showSettings, setShowSettings] = useState(false); // State for showing settings dropdown
@@ -26,10 +28,6 @@ const Navbar = ({ language, setLanguage }) => {
     document.body.className = theme; // Cambiar solo el tema
     setShowSettings(false); // Cerrar el menú de configuración
     setIsTriangleDown(false); // Asegurar que el triángulo se restablezca
-  };
-
-  const handleSettingsToggle = () => {
-    setShowSettings(!showSettings); // Toggle the settings dropdown
   };
 
   const handleMouseEnter = () => {
@@ -68,10 +66,32 @@ const Navbar = ({ language, setLanguage }) => {
     };
   }, []);
 
-  const handleToggleClick = () => {
-    setShowSettings((prevState) => !prevState); // Toggle the settings dropdown
-    setIsTriangleDown((prevState) => !prevState); // Toggle the triangle state
+  const handleToggleClick = (event) => {
+    event.preventDefault(); // Prevenir el comportamiento predeterminado
+    event.stopPropagation(); // Evitar que el evento se propague
+    setShowSettings((prevState) => !prevState); // Alternar el menú de configuración
+    setIsTriangleDown((prevState) => !prevState); // Alternar el estado del triángulo
   };
+
+  useEffect(() => {
+    const handleTouchOutside = (event) => {
+      if (
+        languageSelectorRef.current &&
+        !languageSelectorRef.current.contains(event.target) &&
+        event.target !== toggleIconRef.current
+      ) {
+        setShowSettings(false); // Cerrar el menú de configuración
+        setIsTriangleDown(false); // Restablecer el estado del triángulo
+      }
+    };
+
+    document.addEventListener('mousedown', handleTouchOutside); // Manejar clics fuera del menú
+    document.addEventListener('touchstart', handleTouchOutside); // Manejar toques fuera del menú
+    return () => {
+      document.removeEventListener('mousedown', handleTouchOutside);
+      document.removeEventListener('touchstart', handleTouchOutside);
+    };
+  }, []);
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark" ref={navbarRef}>
@@ -157,16 +177,18 @@ const Navbar = ({ language, setLanguage }) => {
                   <div className="settings-section">
                     <span className="settings-title">{texts[language]?.theme || 'Theme'}</span>
                     <button
-                      className="btn btn-link no-underline"
+                      className="btn btn-link d-flex align-items-center no-underline"
                       onClick={() => handleScreenColorChange('theme-light')}
                     >
-                      {texts[language]?.theme_light || 'Light Mode'}
+                      <img src={whiteCircleIcon} alt="Light Mode" className="language-flag me-2" />
+                      <span>{texts[language]?.theme_light || 'Light Mode'}</span>
                     </button>
                     <button
-                      className="btn btn-link no-underline"
+                      className="btn btn-link d-flex align-items-center no-underline"
                       onClick={() => handleScreenColorChange('theme-dark')}
                     >
-                      {texts[language]?.theme_dark || 'Dark Mode'}
+                      <img src={blackCircleIcon} alt="Dark Mode" className="language-flag me-2" />
+                      <span>{texts[language]?.theme_dark || 'Dark Mode'}</span>
                     </button>
                   </div>
                 </div>

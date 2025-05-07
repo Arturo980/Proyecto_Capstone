@@ -8,15 +8,15 @@ const GamesPage = ({ language }) => {
 
   // Función para formatear fechas al formato dd-mm-aaaa
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return dateString; // Return the date as it is already in dd-mm-yyyy format
   };
 
-  // Ordenar los partidos por fecha
-  const sortedGames = [...gameData].sort((a, b) => new Date(a.date) - new Date(b.date));
+  // Ordenar los partidos por fecha y hora
+  const sortedGames = [...gameData].sort((a, b) => {
+    const dateTimeA = new Date(`${a.date.split('-').reverse().join('-')}T${a.time}`);
+    const dateTimeB = new Date(`${b.date.split('-').reverse().join('-')}T${b.time}`);
+    return dateTimeA - dateTimeB;
+  });
 
   // Deshabilitar el desplazamiento de la página principal cuando el modal está abierto
   useEffect(() => {
@@ -48,7 +48,11 @@ const GamesPage = ({ language }) => {
             <div className="game-info">
               <div>{formatDate(game.date)}</div>
               <div>{game.time}</div>
-              {game.status === 'past' && <small>Score: {game.score}</small>}
+              <div>
+                <span className="score-box">{game.status === 'past' || game.status === 'ongoing' ? game.score.split('-')[0] : '-'}</span>
+                <span>-</span>
+                <span className="score-box">{game.status === 'past' || game.status === 'ongoing' ? game.score.split('-')[1] : '-'}</span>
+              </div>
               {game.status === 'ongoing' && <small>{language === 'en' ? 'Live' : 'En Vivo'}</small>}
             </div>
           </div>
@@ -74,7 +78,19 @@ const GamesPage = ({ language }) => {
             <h3>{selectedGame.team1} vs {selectedGame.team2}</h3>
             <p>{formatDate(selectedGame.date)}</p>
             <p>{selectedGame.time}</p>
-            {selectedGame.status === 'past' && <p>Score: {selectedGame.score}</p>}
+            {selectedGame.status === 'past' || selectedGame.status === 'ongoing' ? (
+              <div>
+                <span className="score-box">{selectedGame.score.split('-')[0]}</span>
+                <span>-</span>
+                <span className="score-box">{selectedGame.score.split('-')[1]}</span>
+              </div>
+            ) : (
+              <div>
+                <span className="score-box">-</span>
+                <span>-</span>
+                <span className="score-box">-</span>
+              </div>
+            )}
             <div>
               <h4>{language === 'en' ? 'Lineup' : 'Citación'}</h4>
               <div className="lineup-container">

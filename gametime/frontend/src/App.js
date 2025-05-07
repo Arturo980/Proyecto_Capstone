@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom'; // Import Link
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Import Link eliminado
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/Global.css'; // Importar el CSS global
 import Navbar from './components/Navbar';
@@ -8,20 +8,35 @@ import StandingsTable from './components/StandingsTable';
 import Footer from './components/Footer';
 import TeamsPage from './pages/TeamsPage';
 import StatsPage from './pages/StatsPage';
-import UpcomingGames from './components/UpcomingGames';
 import GamesPage from './pages/GamesPage'; // Cambiar el nombre del componente
 import MediaPage from './pages/MediaPage'; // Importar la nueva página
 import texts from './translations/texts';
 import gameData from './data/gameData'; // Importar datos de partidos
+import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 
 function App() {
   const [language, setLanguage] = useState('en');
+  const [isNavbarHidden, setIsNavbarHidden] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const carousel = document.querySelector('.horizontal-carousel-wrapper');
+      if (carousel && carousel.contains(e.target)) {
+        setIsNavbarHidden(false); // Mostrar la barra si el mouse está sobre el carrusel
+      } else {
+        setIsNavbarHidden(true); // Ocultar la barra si el mouse no está sobre el carrusel
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   return (
     <Router>
-      <div id="root">
+      <div id="root" style={{ overflowX: 'hidden' }}> {/* Evitar barra horizontal */}
         {/* Navbar */}
-        <Navbar language={language} setLanguage={setLanguage} />
+        <Navbar className={isNavbarHidden ? 'hidden' : ''} language={language} setLanguage={setLanguage} />
 
         {/* Contenido principal */}
         <div className="main-content">
@@ -30,13 +45,12 @@ function App() {
             <Route
               path="/"
               element={
-                <div className="container mt-5">
+                <div className="container">
                   <div className="mb-4">
-                    <h3>{texts[language]?.upcoming_games || 'Upcoming Games'}</h3>
-                    <UpcomingGames
+                    <HorizontalGamesCarousel
                       games={gameData.map((game) => ({
                         ...game,
-                        vsText: 'vs', // Ensure "vs" remains consistent
+                        vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
                       }))}
                       language={language}
                     />
