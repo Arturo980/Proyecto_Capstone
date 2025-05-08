@@ -1,0 +1,345 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px; /* Espaciado alrededor de la página */
+}
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px; /* Espacio entre el calendario y los cuadros de partidos */
+}
+
+.calendar-container h3 {
+  margin-bottom: 20px; /* Espacio entre el título y el calendario */
+  font-size: 18px;
+  color: #333;
+}
+
+.games-container {
+  display: flex;
+  flex-wrap: wrap; /* Permitir que los cuadros se ajusten a la siguiente fila */
+  gap: 30px; /* Espacio entre los cuadros */
+  justify-content: center; /* Centrar los cuadros horizontalmente */
+  width: 100%; /* Asegurar que ocupe todo el ancho */
+}
+
+.game-container {
+  display: flex;
+  flex-wrap: wrap; /* Permitir que los cuadros se ajusten a la siguiente fila */
+  gap: 30px; /* Aumentar el espacio entre los cuadros */
+  justify-content: center; /* Centrar los cuadros horizontalmente */
+  margin-top: 40px; /* Aumentar el margen superior para más espacio */
+  padding: 20px; /* Agregar relleno alrededor del contenedor */
+}
+
+.game-box {
+  display: flex;
+  flex-direction: column; /* Apilar contenido verticalmente */
+  align-items: center; /* Centrar contenido horizontalmente */
+  justify-content: center; /* Centrar contenido verticalmente */
+  width: 320px; /* Aumentar el ancho del cuadro */
+  padding: 20px; /* Aumentar el relleno interno */
+  border: 1px solid #ddd;
+  border-radius: 10px; /* Bordes más redondeados */
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra más prominente */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Agregar animación */
+}
+
+.game-box:hover {
+  transform: scale(1.05); /* Ampliar ligeramente al pasar el cursor */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Mejorar la sombra al pasar el cursor */
+}
+
+.team-names-container {
+  display: flex;
+  justify-content: space-between; /* Colocar equipos en lados opuestos */
+  width: 100%; /* Asegurar ancho completo para la alineación */
+  margin-bottom: 25px; /* Aumentar espacio debajo de los nombres de los equipos */
+}
+
+.team-name {
+  font-size: 18px; /* Aumentar el tamaño de fuente */
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.vs-text {
+  font-size: 16px; /* Aumentar el tamaño de fuente */
+  font-weight: bold;
+  color: #555;
+  margin: 0 15px; /* Aumentar espacio entre los equipos y "vs" */
+}
+
+.score-box-container {
+  display: flex;
+  justify-content: space-between; /* Colocar cuadros de puntuación debajo de cada equipo */
+  width: 100%; /* Asegurar ancho completo para la alineación */
+  margin-top: 15px; /* Aumentar espacio encima de las puntuaciones */
+}
+
+.score-box {
+  display: inline-block;
+  width: 60px; /* Ajustar el ancho */
+  height: 80px; /* Ajustar la altura */
+  line-height: 80px; /* Centrar texto verticalmente */
+  text-align: center;
+  font-size: 20px; /* Aumentar el tamaño de fuente */
+  font-weight: bold;
+  color: #fff;
+  background-color: #9c9c9c; /* Cambiar a un color azul más vibrante */
+  border-radius: 10px; /* Bordes más redondeados */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Sombra más prominente */
+  margin: 0 40px; /* Aumentar espacio entre los cuadros de puntuación */
+}
+
+.date-time {
+  font-size: 14px; /* Tamaño de fuente más pequeño */
+  font-weight: normal;
+  color: #666; /* Color gris para diferenciarlo */
+  margin-top: 10px; /* Espacio entre la fecha/hora y el resto del contenido */
+  text-align: center; /* Centrar el texto */
+}
+
+.calendar-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px; /* Espacio entre el icono y el contenido */
+}
+
+.calendar-icon {
+  font-size: 24px; /* Tamaño del icono */
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.calendar-icon img {
+  width: 32px;
+  height: 32px;
+}
+
+.calendar-icon:hover {
+  transform: scale(1.2); /* Ampliar ligeramente al pasar el cursor */
+}
+
+.calendar-container {
+  margin-bottom: 30px; /* Espacio entre el calendario y los cuadros de partidos */
+  display: flex;
+  justify-content: center; /* Centrar el calendario */
+}
+
+.react-calendar {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  background-color: #fff;
+}
+
+.react-calendar .highlight-date {
+  color: #000; /* Color negro para fechas con partidos */
+  font-weight: bold; /* Resaltar el número */
+}
+
+.react-calendar .disabled-date {
+  color: #ccc; /* Color gris para fechas sin partidos */
+  pointer-events: none; /* Deshabilitar interacción con días sin partidos */
+}
+
+.games-list {
+  display: flex;
+  flex-wrap: wrap; /* Permitir que los cuadros se ajusten a la siguiente fila */
+  gap: 30px; /* Espacio entre los cuadros */
+  justify-content: center; /* Centrar los cuadros horizontalmente */
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar-header h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.selected-date {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.scoreboardDateNav {
+  display: flex;
+  align-items: center; /* Alinear verticalmente */
+  justify-content: center; /* Centrar horizontalmente */
+  gap: 20px; /* Espacio entre la barra de navegación y el calendario */
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Permitir que los elementos se ajusten en pantallas pequeñas */
+}
+
+.scroll-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #007bff;
+  transition: transform 0.2s ease;
+}
+
+.scroll-button:hover {
+  transform: scale(1.2);
+}
+
+.date-nav-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto; /* Hacer la barra de navegación horizontalmente desplazable */
+  padding: 10px 0;
+  max-width: 20%; /* Limitar el ancho visible al 20% de la página */
+  justify-content: flex-start; /* Alinear las fechas al inicio */
+  scrollbar-width: thin; /* Estilo del scroll para navegadores compatibles */
+}
+
+.date-nav-scroll::-webkit-scrollbar {
+  height: 6px; /* Altura del scroll horizontal */
+}
+
+.date-nav-scroll::-webkit-scrollbar-thumb {
+  background-color: #007bff; /* Color del scroll */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+.date-nav-scroll::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Fondo del track */
+}
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto; /* Ajustar el ancho automáticamente */
+}
+
+.calendar-icon {
+  width: 40px; /* Ajustar el tamaño de la imagen del calendario */
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.2s ease; /* Agregar animación al pasar el cursor */
+}
+
+.calendar-icon:hover {
+  transform: scale(1.1); /* Ampliar ligeramente al pasar el cursor */
+}
+
+.react-calendar {
+  width: 100%; /* Asegurar que el calendario ocupe todo el ancho del contenedor */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  background-color: #fff;
+}
+
+.date-nav-day {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px; /* Aumentar el ancho para mejor visibilidad */
+  height: 50px; /* Aumentar la altura para mejor visibilidad */
+  font-size: 16px; /* Incrementar el tamaño de fuente */
+  font-weight: bold; /* Hacer los números más destacados */
+  color: #333; /* Color oscuro para mejor contraste */
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0; /* Evitar que los días se reduzcan en tamaño */
+  border-radius: 50%; /* Hacer los días redondos */
+  border: 1px solid transparent; /* Agregar un borde inicial transparente */
+}
+
+.date-nav-day:hover {
+  background-color: #f0f0f0; /* Cambiar el fondo al pasar el cursor */
+  border-color: #007bff; /* Resaltar el borde al pasar el cursor */
+}
+
+.date-nav-day.disabled-date {
+  color: #ccc; /* Color gris para fechas sin partidos */
+  cursor: default;
+}
+
+.date-nav-day.highlight-date {
+  color: #000; /* Color negro para fechas con partidos */
+}
+
+.date-nav-day.selected-day {
+  background-color: #007bff; /* Fondo azul para la fecha seleccionada */
+  color: #fff; /* Texto blanco */
+  border-color: #0056b3; /* Borde más oscuro para la fecha seleccionada */
+}
+
+/* Estilos para el modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegurar que el modal esté encima de otros elementos */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  width: 90%;
+  max-width: 400px; /* Limitar el ancho máximo del modal */
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #007bff;
+  transition: transform 0.2s ease;
+}
+
+.close-modal:hover {
+  transform: scale(1.2); /* Ampliar ligeramente al pasar el cursor */
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 768px) {
+  .scoreboardDateNav {
+    flex-direction: column; /* Apilar la barra de navegación y el calendario verticalmente */
+    align-items: center;
+  }
+
+  .date-nav-scroll {
+    max-width: 100%; /* Permitir que la barra ocupe todo el ancho en pantallas pequeñas */
+  }
+
+  .calendar-container {
+    width: 100%; /* Ajustar el calendario para que ocupe todo el ancho */
+  }
+}

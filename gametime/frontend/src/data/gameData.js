@@ -2,7 +2,7 @@ const gameData = [
   {
     team1: 'Spikers United',
     team2: 'Block Masters',
-    date: '01-11-2023',
+    date: '01-11-2025',
     time: '18:00',
     team1Wins: 15,
     team1Losses: 5,
@@ -23,7 +23,7 @@ const gameData = [
   {
     team1: 'Ace Warriors',
     team2: 'Net Crushers',
-    date: '02-11-2023',
+    date: '02-11-2025',
     time: '20:00',
     team1Wins: 18,
     team1Losses: 3,
@@ -44,7 +44,7 @@ const gameData = [
   {
     team1: 'Spike Kings',
     team2: 'Net Defenders',
-    date: '02-11-2023',
+    date: '02-11-2025',
     time: '19:00',
     team1Wins: 10,
     team1Losses: 10,
@@ -65,7 +65,7 @@ const gameData = [
   {
     team1: 'Spikers United',
     team2: 'Block Masters',
-    date: '29-10-2023',
+    date: '29-10-2025',
     time: '20:00',
     status: 'past',
     score: '3-1',
@@ -83,7 +83,7 @@ const gameData = [
   {
     team1: 'Ace Warriors',
     team2: 'Net Crushers',
-    date: '01-11-2023',
+    date: '01-11-2025',
     time: '18:00',
     status: 'ongoing',
     score: '2-2',
@@ -101,7 +101,7 @@ const gameData = [
   {
     team1: 'Spike Kings',
     team2: 'Net Defenders',
-    date: '04-11-2023',
+    date: '04-11-2025',
     time: '17:00',
     status: 'upcoming',
     lineup: {
@@ -112,7 +112,7 @@ const gameData = [
   {
     team1: 'Ace Warriors',
     team2: 'Spike Kings',
-    date: '05-11-2023',
+    date: '05-11-2025',
     time: '19:00',
     status: 'upcoming',
     lineup: {
@@ -123,7 +123,7 @@ const gameData = [
   {
     team1: 'Net Crushers',
     team2: 'Block Masters',
-    date: '06-11-2023',
+    date: '06-11-2025',
     time: '18:00',
     status: 'upcoming',
     lineup: {
@@ -134,7 +134,7 @@ const gameData = [
   {
     team1: 'Spikers United',
     team2: 'Ace Warriors',
-    date: '07-11-2023',
+    date: '07-11-2025',
     time: '20:00',
     status: 'upcoming',
     lineup: {
@@ -145,7 +145,7 @@ const gameData = [
   {
     team1: 'Spike Kings',
     team2: 'Net Crushers',
-    date: '08-11-2023',
+    date: '08-11-2025',
     time: '17:30',
     status: 'upcoming',
     lineup: {
@@ -156,7 +156,7 @@ const gameData = [
   {
     team1: 'Block Masters',
     team2: 'Net Defenders',
-    date: '09-11-2023',
+    date: '09-11-2025',
     time: '18:30',
     status: 'upcoming',
     lineup: {
@@ -167,7 +167,7 @@ const gameData = [
   {
     team1: 'Spikers United',
     team2: 'Net Crushers',
-    date: '10-11-2023',
+    date: '10-11-2025',
     time: '19:30',
     status: 'upcoming',
     lineup: {
@@ -178,7 +178,7 @@ const gameData = [
   {
     team1: 'Ace Warriors',
     team2: 'Block Masters',
-    date: '11-11-2023',
+    date: '11-11-2025',
     time: '20:30',
     status: 'upcoming',
     lineup: {
@@ -189,7 +189,7 @@ const gameData = [
   {
     team1: 'Spike Kings',
     team2: 'Spikers United',
-    date: '12-11-2023',
+    date: '12-11-2025',
     time: '18:00',
     status: 'upcoming',
     lineup: {
@@ -200,7 +200,7 @@ const gameData = [
   {
     team1: 'Net Defenders',
     team2: 'Ace Warriors',
-    date: '13-11-2023',
+    date: '13-11-2025',
     time: '19:00',
     status: 'upcoming',
     lineup: {
