@@ -11,13 +11,13 @@ const Login = () => {
     const handleLogin = () => {
         // Simulación de credenciales
         const credentials = {
-            admin: { password: 'admin123', role: 'main' },
+            admin: { password: 'admin123', role: 'admin' },
             editor: { password: 'editor123', role: 'editor' },
-            uploader: { password: 'uploader123', role: 'uploader' },
+            manager: { password: 'manager123', role: 'match-manager' }, // Nuevo rol
         };
 
         if (credentials[username] && credentials[username].password === password) {
-            navigate('/dashboard', { state: { role: credentials[username].role, username } }); // Redirigir a la página principal
+            navigate(`/${credentials[username].role}`, { state: { role: credentials[username].role, username } });
         } else {
             setError('Invalid credentials');
         }

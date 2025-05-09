@@ -38,6 +38,15 @@ function App() {
         {/* Navbar */}
         <Navbar className={isNavbarHidden ? 'hidden' : ''} language={language} setLanguage={setLanguage} />
 
+        {/* Horizontal Carousel */}
+        <HorizontalGamesCarousel
+          games={gameData.map((game) => ({
+            ...game,
+            vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
+          }))}
+          language={language}
+        />
+
         {/* Contenido principal */}
         <div className="main-content">
           <Routes>
@@ -46,15 +55,6 @@ function App() {
               path="/"
               element={
                 <div className="container">
-                  <div className="mb-4">
-                    <HorizontalGamesCarousel
-                      games={gameData.map((game) => ({
-                        ...game,
-                        vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
-                      }))}
-                      language={language}
-                    />
-                  </div>
                   <div className="row mt-5">
                     <div className="col-md-8">
                       <ControlledCarousel language={language} />

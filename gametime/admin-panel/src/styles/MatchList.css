@@ -1,0 +1,354 @@
+.match-list-container {
+    padding: 20px;
+    background: #aaaaaa;
+    color: #fff;
+    min-height: 100vh;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+}
+
+.match-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.match-card {
+    background: #fff;
+    color: #333;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.match-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.match-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.match-card p {
+    margin: 5px 0;
+    font-size: 1rem;
+}
+
+.back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.back-button:hover {
+    background-color: #c0392b;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow: auto; /* Allow scrolling inside the modal if content overflows */
+}
+
+.modal-content {
+    background: #b8aeae;
+    padding: 30px; /* Aumentar el padding para más espacio interno */
+    border-radius: 15px; /* Bordes más redondeados */
+    width: 90%;
+    max-width: 700px; /* Aumentar el ancho máximo del modal */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+    position: relative;
+    text-align: center; /* Centrar el contenido del modal */
+    max-height: 90vh; /* Limit modal height */
+    overflow-y: auto; /* Enable scrolling inside the modal */
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.modal-field {
+    margin-bottom: 20px; /* Más separación entre los campos */
+}
+
+.modal-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px; /* Más separación debajo del label */
+}
+
+.modal-field input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.modal-field ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-field ul li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Más separación entre los jugadores */
+}
+
+.modal-field ul li button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal-field ul li button:hover {
+    background-color: #c0392b;
+}
+
+.save-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.save-button:hover {
+    background-color: #1a5bb8;
+}
+
+.modal-field button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal-field button:hover {
+    background-color: #1a5bb8;
+}
+
+.modal-teams {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px; /* Aumentar el espacio entre las columnas */
+    margin-top: 20px; /* Separación superior */
+}
+
+.team-column {
+    flex: 1;
+    background: #f4f4f4;
+    padding: 20px; /* Más espacio interno */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+.team-column h3 {
+    text-align: center;
+    margin-bottom: 15px; /* Más separación debajo del título */
+    color: #000;
+}
+
+.team-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.team-column ul li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Más separación entre los jugadores */
+    color: #000;
+}
+
+.team-column ul li label {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre el checkbox y el nombre del jugador */
+    cursor: pointer;
+}
+
+.team-column ul li input[type="checkbox"] {
+    transform: scale(1.2); /* Aumentar el tamaño del checkbox */
+    cursor: pointer;
+}
+
+.team-column ul li span {
+    font-size: 1rem;
+    color: #000;
+}
+
+.team-column ul li button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.team-column ul li button:hover {
+    background-color: #c0392b;
+}
+
+.score {
+    margin-top: 20px; /* Más separación superior */
+    text-align: center;
+}
+
+.score-container {
+    display: flex;
+    justify-content: center; /* Center the scores */
+    gap: 50px; /* Reduce the spacing between the two teams */
+    align-items: center;
+    margin: 20px 0;
+}
+
+.team-score {
+    text-align: center;
+}
+
+.current-score {
+    font-size: 3rem; /* Large font for current set points */
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.set-score {
+    font-size: 1rem; /* Smaller font for sets won */
+    color: #666;
+    display: block;
+    margin-top: 5px;
+}
+
+.score-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Space between +1 and -1 buttons */
+}
+
+.score-buttons button {
+    padding: 8px 15px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.score-buttons button:hover {
+    background-color: #1a5bb8;
+}
+
+.navbar {
+    z-index: 1001; /* Asegurar que la barra de navegación no interfiera con el modal */
+}
+
+.modal-option-button {
+    display: block;
+    width: 100%;
+    margin: 15px 0; /* Más separación entre los botones */
+    padding: 12px 20px; /* Botones más grandes */
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.modal-option-button:hover {
+    background-color: #1a5bb8;
+}
+
+.team-actions {
+    display: flex;
+    justify-content: center; /* Centrar los botones de selección de equipo */
+    gap: 15px; /* Espacio entre los botones */
+    margin-top: 20px;
+}
+
+.team-actions button {
+    padding: 10px 20px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.team-actions button:hover {
+    background-color: #1a5bb8;
+}
+
+.confirm-delete-button {
+    background-color: #2575fc;
+    padding: 8px 12px; /* Botones más grandes */
+    font-size: 0.9rem;
+}
+
+.confirm-delete-button:hover {
+    background-color: #1a5bb8;
+}

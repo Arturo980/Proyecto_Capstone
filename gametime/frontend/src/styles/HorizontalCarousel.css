@@ -4,7 +4,7 @@
   margin-left: calc(-50vw + 50%); /* Centrar el fondo horizontalmente */
   background-color: #adadad; /* Fondo detrás del carrusel */
   padding: 20px 10px; /* Reducir el padding superior e inferior */
-  margin-top: 0px; /* Ajustar el margen superior */
+  margin-top: 0; /* Asegurar que no haya separación con la navbar */
   display: flex; /* Habilitar flexbox para centrar contenido */
   justify-content: center; /* Centrar horizontalmente */
   align-items: center; /* Centrar verticalmente */

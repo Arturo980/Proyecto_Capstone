@@ -86,3 +86,15 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+.navbar {
+  margin-bottom: 0; /* Eliminar margen inferior para conectar con el carrusel */
+}
+
+.horizontal-carousel-wrapper {
+  margin-top: 0; /* Asegurar que no haya separación con la navbar */
+}
+
+.mb-4 {
+  margin-top: 0 !important; /* Asegurar que no haya separación con la navbar */
+}
