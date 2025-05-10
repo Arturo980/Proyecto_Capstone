@@ -15,6 +15,10 @@ const MatchList = () => {
     const [newPlayerName, setNewPlayerName] = useState(''); // Nombre del nuevo jugador
     const [selectedTeam, setSelectedTeam] = useState(null); // Controla el equipo seleccionado en el modal de agregar jugador
     const [selectedPlayers, setSelectedPlayers] = useState({ team1: [], team2: [] }); // Controla los jugadores seleccionados para eliminar
+    const [totalSets, setTotalSets] = useState(3); // Total sets in the match (3 or 5)
+    const [lastSetPointLimit, setLastSetPointLimit] = useState(15); // Point limit for the last set (15 or 25)
+    const [matchEnded, setMatchEnded] = useState(false); // Controla si el partido ha terminado
+    const [winningTeam, setWinningTeam] = useState(null); // Almacena el equipo ganador
     const navigate = useNavigate();
 
     const handleBack = () => {
@@ -78,22 +82,91 @@ const MatchList = () => {
 
     const handleScoreChange = (team, increment) => {
         if (team === 'team1') {
-            const newScore = team1Score + increment;
-            setTeam1Score(newScore);
-            if (newScore >= 25 && newScore - team2Score >= 2) { // Win condition for the set
-                setTeam1Sets(team1Sets + 1);
-                setTeam1Score(0);
-                setTeam2Score(0);
-            }
+            setTeam1Score(Math.max(0, team1Score + increment)); // Prevent negative scores
         } else {
-            const newScore = team2Score + increment;
-            setTeam2Score(newScore);
-            if (newScore >= 25 && newScore - team1Score >= 2) { // Win condition for the set
-                setTeam2Sets(team2Sets + 1);
-                setTeam1Score(0);
-                setTeam2Score(0);
-            }
+            setTeam2Score(Math.max(0, team2Score + increment)); // Prevent negative scores
         }
+    };
+
+    const handleConfirmSet = () => {
+        const isLastSet = team1Sets + team2Sets + 1 === totalSets; // Check if it's the last set
+        const pointLimit = isLastSet ? lastSetPointLimit : 25; // Use the last set point limit if applicable
+
+        if (
+            (team1Score >= pointLimit || team2Score >= pointLimit) && // Ensure at least the point limit
+            Math.abs(team1Score - team2Score) >= 2 && // Ensure a 2-point difference
+            team1Sets + team2Sets < totalSets // Ensure total sets do not exceed the configured limit
+        ) {
+            if (team1Score > team2Score) {
+                setTeam1Sets(team1Sets + 1);
+                if (team1Sets + 1 === Math.ceil(totalSets / 2)) {
+                    setMatchEnded(true);
+                    setWinningTeam('team1');
+                    saveMatchResult('team1'); // Save the match result when the match ends
+                }
+            } else {
+                setTeam2Sets(team2Sets + 1);
+                if (team2Sets + 1 === Math.ceil(totalSets / 2)) {
+                    setMatchEnded(true);
+                    setWinningTeam('team2');
+                    saveMatchResult('team2'); // Save the match result when the match ends
+                }
+            }
+            setTeam1Score(0);
+            setTeam2Score(0);
+        } else {
+            alert(`Set cannot be confirmed. Ensure a team has at least ${pointLimit} points, a 2-point lead, and the total sets do not exceed ${totalSets}.`);
+        }
+    };
+
+    const saveMatchResult = (winner) => {
+        const matchIndex = gameData.findIndex((match) => match === selectedMatch);
+
+        if (matchIndex !== -1) {
+            const updatedMatch = {
+                ...gameData[matchIndex],
+                status: 'past', // Cambiar el estado a "pasado"
+                score: `${team1Sets}-${team2Sets}`, // Reflejar la cantidad de sets ganados por cada equipo
+                results: {
+                    winner: winner === 'team1' ? gameData[matchIndex].team1 : gameData[matchIndex].team2,
+                    sets: {
+                        team1: team1Sets,
+                        team2: team2Sets,
+                    },
+                },
+            };
+
+            // Actualizar el objeto gameData con los resultados finales
+            gameData[matchIndex] = updatedMatch;
+
+            console.log('Resultados finales del partido:', JSON.stringify(updatedMatch, null, 2)); // Registrar los resultados finales
+            console.log(`El ganador del partido es: ${updatedMatch.results.winner}`); // Mostrar el ganador del partido
+
+            // Cerrar el modal y reiniciar el estado
+            setSelectedMatch(null);
+            setModalStep('options');
+            setMatchEnded(true); // Asegurar que el estado del partido esté marcado como terminado
+        } else {
+            console.error('Partido no encontrado en gameData.');
+        }
+    };
+
+    const handleSaveMatchSettings = () => {
+        const sets = parseInt(document.getElementById('total-sets-input').value, 10);
+        const points = parseInt(document.getElementById('last-set-points-input').value, 10);
+
+        if (sets !== 3 && sets !== 5) {
+            alert("Invalid input. Please enter 3 or 5 for total sets.");
+            return;
+        }
+        if (points !== 15 && points !== 25) {
+            alert("Invalid input. Please enter 15 or 25 for last set points.");
+            return;
+        }
+
+        setTotalSets(sets);
+        setLastSetPointLimit(points);
+        setModalStep('options');
     };
 
     const handleTogglePlayerSelection = (team, index) => {
@@ -146,7 +219,12 @@ const MatchList = () => {
                         <p><strong>Date:</strong> {match.date}</p>
                         <p><strong>Time:</strong> {match.time}</p>
                         <p><strong>Status:</strong> {match.status}</p>
-                        {match.status === 'past' && <p><strong>Score:</strong> {match.score}</p>}
+                        {match.status === 'past' && (
+                            <>
+                                <p><strong>Score:</strong> {match.score}</p>
+                                <p><strong>Winner:</strong> {match.results?.winner || 'N/A'}</p>
+                            </>
+                        )}
                     </div>
                 ))}
             </div>
@@ -165,6 +243,9 @@ const MatchList = () => {
                                 </button>
                                 <button onClick={() => setModalStep('score')} className="modal-option-button">
                                     Marcador en vivo
+                                </button>
+                                <button onClick={() => setModalStep('settings')} className="modal-option-button">
+                                    Configuración del partido
                                 </button>
                             </div>
                         )}
@@ -232,29 +313,68 @@ const MatchList = () => {
                             <div>
                                 <h3>Marcador en vivo</h3>
                                 <div className="score-container">
-                                    <div className="team-score">
-                                        <p>
-                                            <strong>{selectedMatch.team1}</strong>
-                                            <span className="set-score">Sets: {team1Sets}</span>
-                                        </p>
-                                        <p className="current-score">{team1Score}</p>
-                                        <div className="score-buttons">
-                                            <button onClick={() => handleScoreChange('team1', -1)}>-1</button>
-                                            <button onClick={() => handleScoreChange('team1', 1)}>+1</button>
-                                        </div>
-                                    </div>
-                                    <div className="team-score">
-                                        <p>
-                                            <strong>{selectedMatch.team2}</strong>
-                                            <span className="set-score">Sets: {team2Sets}</span>
-                                        </p>
-                                        <p className="current-score">{team2Score}</p>
-                                        <div className="score-buttons">
-                                            <button onClick={() => handleScoreChange('team2', -1)}>-1</button>
-                                            <button onClick={() => handleScoreChange('team2', 1)}>+1</button>
-                                        </div>
-                                    </div>
+                                    {matchEnded ? (
+                                        <>
+                                            <div className="team-score">
+                                                <p>
+                                                    <strong>{selectedMatch.team1}</strong>
+                                                    <span className="set-score">Sets: {team1Sets}</span>
+                                                </p>
+                                            </div>
+                                            <div className="team-score">
+                                                <p>
+                                                    <strong>{selectedMatch.team2}</strong>
+                                                    <span className="set-score">Sets: {team2Sets}</span>
+                                                </p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className={`team-score ${winningTeam === 'team1' ? 'winner' : ''}`}>
+                                                <p>
+                                                    <strong>{selectedMatch.team1}</strong>
+                                                    <span className="set-score">Sets: {team1Sets}</span>
+                                                </p>
+                                                <p className="current-score">{team1Score}</p>
+                                                <div className="score-buttons">
+                                                    <button onClick={() => handleScoreChange('team1', -1)}>-1</button>
+                                                    <button onClick={() => handleScoreChange('team1', 1)}>+1</button>
+                                                </div>
+                                            </div>
+                                            <div className={`team-score ${winningTeam === 'team2' ? 'winner' : ''}`}>
+                                                <p>
+                                                    <strong>{selectedMatch.team2}</strong>
+                                                    <span className="set-score">Sets: {team2Sets}</span>
+                                                </p>
+                                                <p className="current-score">{team2Score}</p>
+                                                <div className="score-buttons">
+                                                    <button onClick={() => handleScoreChange('team2', -1)}>-1</button>
+                                                    <button onClick={() => handleScoreChange('team2', 1)}>+1</button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
+                                {!matchEnded && (
+                                    <button onClick={handleConfirmSet} className="confirm-set-button">
+                                        Confirmar Set
+                                    </button>
+                                )}
+                                <button onClick={() => setModalStep('options')} className="back-button">Volver</button>
+                            </div>
+                        )}
+                        {modalStep === 'settings' && (
+                            <div>
+                                <h2>Configuración del partido</h2>
+                                <div className="modal-field">
+                                    <label htmlFor="total-sets-input">Total Sets (3 or 5):</label>
+                                    <input id="total-sets-input" type="number" min="3" max="5" step="2" defaultValue={totalSets} />
+                                </div>
+                                <div className="modal-field">
+                                    <label htmlFor="last-set-points-input">Last Set Points (15 or 25):</label>
+                                    <input id="last-set-points-input" type="number" min="15" max="25" step="10" defaultValue={lastSetPointLimit} />
+                                </div>
+                                <button onClick={handleSaveMatchSettings} className="save-button">Guardar configuración</button>
                                 <button onClick={() => setModalStep('options')} className="back-button">Volver</button>
                             </div>
                         )}

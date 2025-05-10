@@ -109,14 +109,16 @@ h1 {
 }
 
 .modal-field label {
-    display: block;
+    font-size: 1rem;
     font-weight: bold;
-    margin-bottom: 10px; /* Más separación debajo del label */
+    margin-bottom: 5px;
+    display: block;
 }
 
 .modal-field input {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
+    margin: 10px 0;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
@@ -259,10 +261,21 @@ h1 {
     gap: 50px; /* Reduce the spacing between the two teams */
     align-items: center;
     margin: 20px 0;
+    flex-wrap: wrap; /* Allow wrapping for smaller screens */
 }
 
 .team-score {
     text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f4f4f4; /* Neutral background for final score */
+    color: #000;
+    font-weight: bold;
+}
+
+.team-score.winner {
+    background-color: #4caf50; /* Highlight winner */
+    color: #fff;
 }
 
 .current-score {
@@ -350,5 +363,39 @@ h1 {
 }
 
 .confirm-delete-button:hover {
+    background-color: #1a5bb8;
+}
+
+.confirm-set-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.confirm-set-button:hover {
+    background-color: #1a5bb8;
+}
+
+.settings-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.settings-button:hover {
     background-color: #1a5bb8;
 }
