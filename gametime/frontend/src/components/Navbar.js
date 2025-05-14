@@ -10,7 +10,7 @@ import toggleIcon from '../assets/images/icons8-settings-384.png'; // Import the
 import whiteCircleIcon from '../assets/images/circulo_blanco.png'; // Importar círculo blanco
 import blackCircleIcon from '../assets/images/circulo_negro.png'; // Importar círculo negro
 
-const Navbar = ({ language, setLanguage }) => {
+const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   const [showSettings, setShowSettings] = useState(false); // State for showing settings dropdown
   const [isNavbarOpen, setIsNavbarOpen] = useState(false); // State for navbar collapse
   const [isTriangleDown, setIsTriangleDown] = useState(false); // State for animation
@@ -92,6 +92,11 @@ const Navbar = ({ language, setLanguage }) => {
       document.removeEventListener('touchstart', handleTouchOutside);
     };
   }, []);
+
+  const handleLogout = () => {
+    setIsLoggedIn(false); // Set the logged-in state to false
+    window.location.href = '/'; // Redirect to the home page
+  };
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark" ref={navbarRef}>
@@ -190,6 +195,23 @@ const Navbar = ({ language, setLanguage }) => {
                       <img src={blackCircleIcon} alt="Dark Mode" className="language-flag me-2" />
                       <span>{texts[language]?.theme_dark || 'Dark Mode'}</span>
                     </button>
+                  </div>
+                  <div className="settings-section">
+                    {isLoggedIn ? (
+                      <button
+                        className="btn btn-danger w-100 mt-2" // Logout button with red color
+                        onClick={handleLogout}
+                      >
+                        {texts[language]?.navbar_logout || 'Logout'}
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary w-100 mt-2" // Login button with blue color
+                        onClick={() => window.location.href = '/login'}
+                      >
+                        {texts[language]?.navbar_login || 'Login'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

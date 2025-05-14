@@ -1,24 +1,30 @@
 /* Asegurar que html, body y el contenedor principal ocupen el 100% de la altura */
 html, body {
   height: 100%;
-  margin: 0;
-  padding: 0;
+  margin: 0; /* Asegurar que no haya márgenes */
+  padding: 0; /* Asegurar que no haya padding */
   overflow-x: hidden; /* Evitar barra horizontal */
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+  margin: 0; /* Asegurar que no haya margen alrededor del body */
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* Asegurar que el contenedor principal abarque toda la altura de la ventana */
+  min-height: 100vh; /* Asegurar que el contenedor principal abarque toda la ventana */
+  margin-top: -56px; /* Eliminar márgenes adicionales */
 }
 
 .main-content {
   flex: 1; /* Hacer que el contenido principal ocupe el espacio restante */
   display: flex;
   flex-direction: column;
-  margin: 0 auto; /* Centrar contenido horizontalmente */
+  margin: 50px auto; /* Añadir margen superior e inferior */
   width: 100%; /* Asegurar que no exceda el ancho */
   max-width: 1200px; /* Limitar el ancho máximo */
+  padding: 20px; /* Aumentar el padding lateral */
 }
 
 footer {
@@ -54,12 +60,6 @@ footer a:hover {
   --card-background-color: #2a2a2a; /* Fondo más claro para los cuadros */
 }
 
-/* Aplicar las variables de tema */
-body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
-}
 
 .roster-grid {
   display: grid;
@@ -87,12 +87,8 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.navbar {
-  margin-bottom: 0; /* Eliminar margen inferior para conectar con el carrusel */
-}
-
 .horizontal-carousel-wrapper {
-  margin-top: 0; /* Asegurar que no haya separación con la navbar */
+  margin-top: 20px; /* Añadir separación con la navbar */
 }
 
 .mb-4 {

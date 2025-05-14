@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/App.css'; // Reutilizar el estilo existente
+import '../styles/Login.css'; // Reutilizar el estilo existente
 
-const Login = () => {
+const Login = ({ setIsLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -17,7 +17,8 @@ const Login = () => {
         };
 
         if (credentials[username] && credentials[username].password === password) {
-            navigate(`/${credentials[username].role}`, { state: { role: credentials[username].role, username } });
+            setIsLoggedIn(true); // Set login state to true
+            navigate('/'); // Redirect to the home page
         } else {
             setError('Invalid credentials');
         }

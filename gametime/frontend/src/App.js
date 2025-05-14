@@ -10,6 +10,7 @@ import TeamsPage from './pages/TeamsPage';
 import StatsPage from './pages/StatsPage';
 import GamesPage from './pages/GamesPage'; // Cambiar el nombre del componente
 import MediaPage from './pages/MediaPage'; // Importar la nueva página
+import Login from './pages/Login'; // Importar la página de Login
 import texts from './translations/texts';
 import gameData from './data/gameData'; // Importar datos de partidos
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
@@ -17,6 +18,7 @@ import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // I
 function App() {
   const [language, setLanguage] = useState('en');
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -34,53 +36,72 @@ function App() {
 
   return (
     <Router>
-      <div id="root" style={{ overflowX: 'hidden' }}> {/* Evitar barra horizontal */}
-        {/* Navbar */}
-        <Navbar className={isNavbarHidden ? 'hidden' : ''} language={language} setLanguage={setLanguage} />
-
-        {/* Horizontal Carousel */}
-        <HorizontalGamesCarousel
-          games={gameData.map((game) => ({
-            ...game,
-            vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
-          }))}
-          language={language}
+      <Routes>
+        {/* Página de Login */}
+        <Route
+          path="/login"
+          element={<Login setIsLoggedIn={setIsLoggedIn} />}
         />
+        {/* Rutas principales */}
+        <Route
+          path="*"
+          element={
+            <div id="root" style={{ overflowX: 'hidden' }}> {/* Evitar barra horizontal */}
+              {/* Navbar */}
+              <Navbar
+                className={isNavbarHidden ? 'hidden' : ''}
+                language={language}
+                setLanguage={setLanguage}
+                isLoggedIn={isLoggedIn}
+                setIsLoggedIn={setIsLoggedIn}
+              />
 
-        {/* Contenido principal */}
-        <div className="main-content">
-          <Routes>
-            {/* Página Home */}
-            <Route
-              path="/"
-              element={
-                <div className="container">
-                  <div className="row mt-5">
-                    <div className="col-md-8">
-                      <ControlledCarousel language={language} />
-                    </div>
-                    <div className="col-md-4">
-                      <h3>{texts[language].standings_title}</h3>
-                      <StandingsTable language={language} /> {/* Pasar el idioma */}
-                    </div>
-                  </div>
-                </div>
-              }
-            />
-            {/* Página de Equipos */}
-            <Route path="/teams" element={<TeamsPage language={language} />} />
-            {/* Página de Estadísticas */}
-            <Route path="/stats" element={<StatsPage language={language} />} />
-            {/* Página de Partidos */}
-            <Route path="/games" element={<GamesPage language={language} />} />
-            {/* Página de Media */}
-            <Route path="/media" element={<MediaPage language={language} />} />
-          </Routes>
-        </div>
+              {/* Horizontal Carousel */}
+              <HorizontalGamesCarousel
+                games={gameData.map((game) => ({
+                  ...game,
+                  vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
+                }))}
+                language={language}
+              />
 
-        {/* Footer */}
-        <Footer language={language} />
-      </div>
+              {/* Contenido principal */}
+              <div className="main-content">
+                <Routes>
+                  {/* Página Home */}
+                  <Route
+                    path="/"
+                    element={
+                      <div className="container">
+                        <div className="row mt-5">
+                          <div className="col-md-8">
+                            <ControlledCarousel language={language} />
+                          </div>
+                          <div className="col-md-4">
+                            <h3>{texts[language].standings_title}</h3>
+                            <StandingsTable language={language} /> {/* Pasar el idioma */}
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  />
+                  {/* Página de Equipos */}
+                  <Route path="/teams" element={<TeamsPage language={language} />} />
+                  {/* Página de Estadísticas */}
+                  <Route path="/stats" element={<StatsPage language={language} />} />
+                  {/* Página de Partidos */}
+                  <Route path="/games" element={<GamesPage language={language} />} />
+                  {/* Página de Media */}
+                  <Route path="/media" element={<MediaPage language={language} />} />
+                </Routes>
+              </div>
+
+              {/* Footer */}
+              <Footer language={language} />
+            </div>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
