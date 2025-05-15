@@ -249,3 +249,26 @@ body {
   background-color: #444;
   text-decoration: none; /* Ensure no underline on hover */
 }
+
+.account-type-box {
+  background: #23272b;
+  border: 2px solid #2575fc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(37,117,252,0.08);
+}
+
+.admin-label {
+  color: #ffb300;
+  font-weight: bold;
+  font-size: 14px;
+  background: #1a1a1a;
+  border-radius: 5px;
+  padding: 2px 7px;
+  margin-right: 8px;
+  display: inline-block;
+}

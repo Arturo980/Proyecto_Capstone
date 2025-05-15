@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import '../styles/MediaPage.css'; // Usar estilos globales
 
 const MediaPage = ({ language }) => {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
+  // NUEVO: Estado para agregar imágenes
+  const [showAddImage, setShowAddImage] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageAlt, setImageAlt] = useState('');
+  const fileInputRef = useRef(null);
+
   // Datos de ejemplo de imágenes organizadas por partidos
-  const mediaData = [
+  const [mediaData, setMediaData] = useState([
     {
       date: '2023-11-01',
       match: 'Spikers United vs Block Masters',
@@ -26,12 +33,41 @@ const MediaPage = ({ language }) => {
         { src: '/images/match2/img2.jpg', alt: 'Net Crushers bloqueando' },
       ],
     },
-  ];
+  ]);
 
   // Función para convertir fechas al formato dd-mm-aaaa
   const formatDate = (dateString) => {
     const [year, month, day] = dateString.split('-');
     return `${day}-${month}-${year}`;
+  };
+
+  // NUEVO: Manejo de agregar imagen
+  const handleAddImage = () => {
+    if (!selectedMatch) return;
+    let src = imageUrl;
+    if (imageFile) {
+      // Mostrar preview local (no persistente)
+      src = URL.createObjectURL(imageFile);
+    }
+    if (!src) return;
+    const updatedMedia = mediaData.map((match) =>
+      match === selectedMatch
+        ? {
+            ...match,
+            images: [...match.images, { src, alt: imageAlt }],
+          }
+        : match
+    );
+    setMediaData(updatedMedia);
+    setSelectedMatch({
+      ...selectedMatch,
+      images: [...selectedMatch.images, { src, alt: imageAlt }],
+    });
+    setShowAddImage(false);
+    setImageUrl('');
+    setImageFile(null);
+    setImageAlt('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -77,6 +113,63 @@ const MediaPage = ({ language }) => {
               </div>
             ))}
           </div>
+          {/* NUEVO: Botón para mostrar el formulario de agregar imagen */}
+          <button
+            className="btn btn-primary mb-3"
+            onClick={() => setShowAddImage(!showAddImage)}
+          >
+            {language === 'en' ? 'Add Image' : 'Agregar Imagen'}
+          </button>
+          {showAddImage && (
+            <div className="mb-4">
+              <label className="form-label">
+                {language === 'en' ? 'Image Description (alt)' : 'Descripción de la imagen (alt)'}
+              </label>
+              <input
+                type="text"
+                className="form-control mb-2"
+                value={imageAlt}
+                onChange={e => setImageAlt(e.target.value)}
+                placeholder={language === 'en' ? 'Description' : 'Descripción'}
+              />
+              <div className="mb-2">
+                <label className="form-label">
+                  {language === 'en' ? 'Image URL' : 'URL de la imagen'}
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={imageUrl}
+                  onChange={e => {
+                    setImageUrl(e.target.value);
+                    setImageFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  placeholder={language === 'en' ? 'Paste image URL' : 'Pega la URL de la imagen'}
+                />
+              </div>
+              <div className="mb-2">
+                <label className="form-label">
+                  {language === 'en' ? 'Or upload image' : 'O sube una imagen'}
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      setImageFile(e.target.files[0]);
+                      setImageUrl('');
+                    }
+                  }}
+                />
+              </div>
+              <button className="btn btn-success mt-2" onClick={handleAddImage}>
+                {language === 'en' ? 'Add' : 'Agregar'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -11,14 +11,33 @@ import StatsPage from './pages/StatsPage';
 import GamesPage from './pages/GamesPage'; // Cambiar el nombre del componente
 import MediaPage from './pages/MediaPage'; // Importar la nueva página
 import Login from './pages/Login'; // Importar la página de Login
+import Register from './pages/Register'; // Importar la página de Registro
+import AdminSolicitudes from './pages/AdminSolicitudes'; // Importar la página de Solicitudes de Admin
 import texts from './translations/texts';
-import gameData from './data/gameData'; // Importar datos de partidos
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 
 function App() {
   const [language, setLanguage] = useState('en');
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  // Inicializa isLoggedIn según si hay usuario en localStorage
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      return !!localStorage.getItem('user');
+    } catch {
+      return false;
+    }
+  });
+  // NUEVO: Obtener el rol del usuario (soporta content-editor)
+  const [userRole] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      // El backend retorna tipoCuenta, no role
+      if (user?.esAdmin) return 'admin';
+      return user?.tipoCuenta || 'public';
+    } catch {
+      return 'public';
+    }
+  });
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -42,11 +61,16 @@ function App() {
           path="/login"
           element={<Login setIsLoggedIn={setIsLoggedIn} />}
         />
+        {/* Página de Registro */}
+        <Route
+          path="/register"
+          element={<Register />}
+        />
         {/* Rutas principales */}
         <Route
           path="*"
           element={
-            <div id="root" style={{ overflowX: 'hidden' }}> {/* Evitar barra horizontal */}
+            <div id="root" style={{ overflowX: 'hidden' }}>
               {/* Navbar */}
               <Navbar
                 className={isNavbarHidden ? 'hidden' : ''}
@@ -57,13 +81,12 @@ function App() {
               />
 
               {/* Horizontal Carousel */}
+              {/*
               <HorizontalGamesCarousel
-                games={gameData.map((game) => ({
-                  ...game,
-                  vsText: texts[language]?.vs || 'vs', // Usar traducción para "vs"
-                }))}
+                games={[]} // <-- Asegura que siempre se pase un array, aunque esté vacío
                 language={language}
               />
+              */}
 
               {/* Contenido principal */}
               <div className="main-content">
@@ -86,13 +109,15 @@ function App() {
                     }
                   />
                   {/* Página de Equipos */}
-                  <Route path="/teams" element={<TeamsPage language={language} />} />
+                  <Route path="/teams" element={<TeamsPage language={language} userRole={userRole} />} />
                   {/* Página de Estadísticas */}
                   <Route path="/stats" element={<StatsPage language={language} />} />
                   {/* Página de Partidos */}
                   <Route path="/games" element={<GamesPage language={language} />} />
                   {/* Página de Media */}
                   <Route path="/media" element={<MediaPage language={language} />} />
+                  {/* Página de Solicitudes de Admin */}
+                  <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
                 </Routes>
               </div>
 

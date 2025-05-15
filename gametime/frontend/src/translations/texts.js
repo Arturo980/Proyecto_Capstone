@@ -24,6 +24,13 @@ const texts = {
     footer_rights: 'All rights reserved.',
     footer_follow_us: 'Follow us on:',
     vs: 'vs',
+    teams_title: "Teams",
+    league_name_label: "League Name:",
+    league_name_placeholder: "Enter league name",
+    number_of_teams_label: "Number of Teams:",
+    league_label: "League:",
+    not_set: "Not set",
+    teams_in_championship_label: "Teams in Championship:",
   },
   es: {
     navbar_home: 'Inicio',
@@ -50,6 +57,13 @@ const texts = {
     footer_rights: 'Todos los derechos reservados.',
     footer_follow_us: 'Síguenos en:',
     vs: 'contra',
+    teams_title: "Equipos",
+    league_name_label: "Nombre de la Liga:",
+    league_name_placeholder: "Ingrese el nombre de la liga",
+    number_of_teams_label: "Cantidad de Equipos:",
+    league_label: "Liga:",
+    not_set: "No definida",
+    teams_in_championship_label: "Equipos en el Campeonato:",
   },
 };
 

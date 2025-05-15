@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Calendar from 'react-calendar'; // Importar el componente de calendario
 import 'react-calendar/dist/Calendar.css'; // Importar estilos del calendario
 import '../styles/GamePage.css';
-import gameData from '../data/gameData';
 import es from 'date-fns/locale/es'; // Importar el idioma español de date-fns
 import calendar from '../assets/images/calendario.png'; // Importar la imagen del calendario
 
@@ -11,10 +10,10 @@ const GamesPage = () => {
   const [showModal, setShowModal] = useState(false); // Estado para mostrar/ocultar el modal
 
   // Obtener las fechas de los partidos
-  const matchDates = gameData.map((game) => {
-    const [day, month, year] = game.date.split('-');
-    return new Date(`${year}-${month}-${day}`).toDateString();
-  });
+  // const matchDates = gameData.map((game) => {
+  //   const [day, month, year] = game.date.split('-');
+  //   return new Date(`${year}-${month}-${day}`).toDateString();
+  // });
 
   // Obtener los días del mes actual
   const currentMonth = selectedDate.getMonth();
@@ -33,10 +32,10 @@ const GamesPage = () => {
   };
 
   // Filtrar los partidos según la fecha seleccionada
-  const filteredGames = gameData.filter((game) => {
-    const gameDate = new Date(game.date.split('-').reverse().join('-'));
-    return gameDate.toDateString() === selectedDate.toDateString();
-  });
+  // const filteredGames = gameData.filter((game) => {
+  //   const gameDate = new Date(game.date.split('-').reverse().join('-'));
+  //   return gameDate.toDateString() === selectedDate.toDateString();
+  // });
 
   return (
     <div className="page-container">
@@ -47,13 +46,13 @@ const GamesPage = () => {
         <div className="date-nav-scroll">
           {[...Array(daysInMonth)].map((_, index) => {
             const day = index + 1;
-            const dateString = new Date(currentYear, currentMonth, day).toDateString();
-            const isMatchDay = matchDates.includes(dateString);
+            // const dateString = new Date(currentYear, currentMonth, day).toDateString();
+            // const isMatchDay = matchDates.includes(dateString);
 
             return (
               <div
                 key={day}
-                className={`date-nav-day ${isMatchDay ? 'highlight-date' : 'disabled-date'} ${
+                className={`date-nav-day ${''} ${
                   selectedDate.getDate() === day ? 'selected-day' : ''
                 }`}
                 onClick={() => handleDayClick(day)}
@@ -81,9 +80,9 @@ const GamesPage = () => {
               locale={es} // Configurar idioma en español
               tileClassName={({ date }) => {
                 const dateString = date.toDateString();
-                if (matchDates.includes(dateString)) {
-                  return 'highlight-date'; // Clase para días con partidos
-                }
+                // if (matchDates.includes(dateString)) {
+                //   return 'highlight-date'; // Clase para días con partidos
+                // }
                 return 'disabled-date'; // Clase para días sin partidos
               }}
             />
@@ -94,7 +93,7 @@ const GamesPage = () => {
         </div>
       )}
       <div className="games-container">
-        {filteredGames.length > 0 ? (
+        {/* {filteredGames.length > 0 ? (
           filteredGames.map((game, index) => (
             <div key={index} className="game-box">
               <div className="team-names-container">
@@ -115,9 +114,9 @@ const GamesPage = () => {
               </div>
             </div>
           ))
-        ) : (
-          <p>No hay partidos programados para esta fecha.</p>
-        )}
+        ) : ( */}
+        <p>No hay partidos programados para esta fecha.</p>
+        {/* )} */}
       </div>
     </div>
   );

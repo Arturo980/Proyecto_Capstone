@@ -17,6 +17,38 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   const languageSelectorRef = useRef(null); // Referencia al contenedor del selector de idiomas
   const navbarRef = useRef(null); // Reference for the navbar
   const toggleIconRef = useRef(null); // Reference for the settings button
+  // Obtener usuario logueado desde localStorage (si existe)
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Estado para la cantidad de solicitudes pendientes
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Si es admin, consulta la cantidad de solicitudes pendientes
+  useEffect(() => {
+    let intervalId;
+    const fetchPending = () => {
+      if (user && user.esAdmin) {
+        fetch('http://localhost:3001/solicitudes-pendientes')
+          .then(res => res.json())
+          .then(data => setPendingCount(Array.isArray(data) ? data.length : 0))
+          .catch(() => setPendingCount(0));
+      }
+    };
+    fetchPending();
+    // Actualiza cada 3 segundos si es admin
+    if (user && user.esAdmin) {
+      intervalId = setInterval(fetchPending, 3000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [user]);
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang); // Cambiar solo el idioma
@@ -94,8 +126,9 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   }, []);
 
   const handleLogout = () => {
-    setIsLoggedIn(false); // Set the logged-in state to false
-    window.location.href = '/'; // Redirect to the home page
+    setIsLoggedIn(false);
+    localStorage.removeItem('user');
+    window.location.href = '/';
   };
 
   return (
@@ -144,6 +177,29 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
                 {texts[language].navbar_media}
               </Link>
             </li>
+            {/* Solo mostrar al admin */}
+            {user && user.esAdmin && (
+              <li className="nav-item">
+                <Link className="nav-link no-underline" to="/admin/solicitudes">
+                  Solicitudes de Registro
+                  {pendingCount > 0 && (
+                    <span
+                      style={{
+                        background: '#ffb300',
+                        color: '#23272b',
+                        borderRadius: '10px',
+                        padding: '2px 8px',
+                        marginLeft: '8px',
+                        fontWeight: 'bold',
+                        fontSize: '13px'
+                      }}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            )}
           </ul>
           <div className="d-flex align-items-center ms-auto">
             <div
@@ -195,6 +251,30 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
                       <img src={blackCircleIcon} alt="Dark Mode" className="language-flag me-2" />
                       <span>{texts[language]?.theme_dark || 'Dark Mode'}</span>
                     </button>
+                  </div>
+                  <div className="settings-section">
+                    {/* Mostrar información de cuenta si está logueado */}
+                    {user && (
+                      <div className="account-type-box mb-2 text-start">
+                        <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '13px' }}>
+                          Cuenta actual:
+                        </span>
+                        <br />
+                        <span>
+                          {user.esAdmin ? (
+                            <span className="admin-label">
+                              ADMINISTRADOR
+                            </span>
+                          ) : (
+                            user.tipoCuenta === 'match-manager'
+                              ? 'Gestor de Partido'
+                              : user.tipoCuenta === 'content-editor'
+                              ? 'Editor de Contenido'
+                              : 'Público'
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="settings-section">
                     {isLoggedIn ? (
