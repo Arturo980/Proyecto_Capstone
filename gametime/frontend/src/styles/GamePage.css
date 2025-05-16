@@ -143,8 +143,10 @@
 }
 
 .react-calendar .highlight-date {
-  color: #000; /* Color negro para fechas con partidos */
-  font-weight: bold; /* Resaltar el número */
+  background: #ffe066 !important;
+  color: #000 !important;
+  border-radius: 50%;
+  font-weight: bold;
 }
 
 .react-calendar .disabled-date {
@@ -279,7 +281,9 @@
 }
 
 .date-nav-day.highlight-date {
-  color: #000; /* Color negro para fechas con partidos */
+  background-color: #ffe066;
+  color: #000;
+  border-color: #ffd700;
 }
 
 .date-nav-day.selected-day {
@@ -303,7 +307,8 @@
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-color, #000);
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);

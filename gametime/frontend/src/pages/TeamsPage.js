@@ -11,6 +11,7 @@ const defaultTeam = {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/teams';
 const LEAGUES_URL = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
+const TEAM_LOGO_UPLOAD_URL = process.env.REACT_APP_API_TEAM_LOGO_URL || 'http://localhost:3001/api/team-logos';
 
 const TeamsPage = ({ language, userRole }) => {
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -80,21 +81,37 @@ const TeamsPage = ({ language, userRole }) => {
   // ...elimina useEffect sobre leagueName...
 
   // NUEVO: Manejo de logo file
-  const handleLogoFileChange = (e) => {
+  const handleLogoFileChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setLogoFile(file);
       setTeamForm((prev) => ({ ...prev, logo: '' }));
+
+      // Subir al backend y guardar la URL
+      const formData = new FormData();
+      formData.append('logo', file);
+      try {
+        const res = await fetch(TEAM_LOGO_UPLOAD_URL, {
+          method: 'POST',
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Guarda la URL absoluta si es relativa
+          const url = data.url.startsWith('http')
+            ? data.url
+            : `http://localhost:3001${data.url}`;
+          setTeamForm((prev) => ({ ...prev, logo: url }));
+        }
+      } catch (err) {
+        // Maneja el error si lo deseas
+      }
     }
   };
 
-  // NUEVO: Subida de imagen (solo preview local, no persistente)
+  // NUEVO: getLogoPreview ahora solo muestra la URL guardada
   const getLogoPreview = () => {
-    if (logoType === 'file' && logoFile) {
-      return URL.createObjectURL(logoFile);
-    }
-    if (logoType === 'url' && teamForm.logo) {
-      return teamForm.logo;
-    }
+    if (teamForm.logo) return teamForm.logo;
     return '';
   };
 
@@ -188,18 +205,29 @@ const TeamsPage = ({ language, userRole }) => {
     setLoading(false);
   };
 
-  // Eliminar equipo
-  const handleDeleteTeam = async (idx) => {
-    const teamId = teams[idx]._id;
-    setLoading(true);
-    const res = await fetch(`${API_URL}/${teamId}`, { method: 'DELETE' });
-    if (res.ok) {
-      await fetchTeamsAndLeague();
-    }
-    setEditingTeam(null);
-    setTeamForm(defaultTeam);
-    setLoading(false);
+  // Modal de confirmación para eliminar equipo
+  const [deleteTeamIdx, setDeleteTeamIdx] = useState(null);
+
+  // Eliminar equipo (con modal)
+  const handleDeleteTeam = (idx) => {
+    setDeleteTeamIdx(idx);
   };
+
+  const confirmDeleteTeam = async () => {
+    if (deleteTeamIdx !== null) {
+      const teamId = teams[deleteTeamIdx]._id;
+      setLoading(true);
+      const res = await fetch(`${API_URL}/${teamId}`, { method: 'DELETE' });
+      // Elimina el equipo del estado local sin afectar otras secciones ni recargar la liga
+      setTeams(prev => prev.filter((_, i) => i !== deleteTeamIdx));
+      setEditingTeam(null);
+      setTeamForm(defaultTeam);
+      setLoading(false);
+      setDeleteTeamIdx(null);
+    }
+  };
+
+  const cancelDeleteTeam = () => setDeleteTeamIdx(null);
 
   const handleShowTeam = (team) => {
     setSelectedTeam(team);
@@ -355,16 +383,23 @@ const TeamsPage = ({ language, userRole }) => {
           <div
             key={team._id}
             className="col-md-4 mb-3"
-            style={{ cursor: 'pointer' }}
-            onClick={
-              (userRole !== 'content-editor' && userRole !== 'admin')
-                ? () => handleShowTeam(team)
-                : undefined
-            }
+            // Quita el onClick de la columna
           >
-            <div className="card h-100">
+            <div
+              className="card h-100"
+              style={{ cursor: (userRole !== 'content-editor' && userRole !== 'admin') ? 'pointer' : 'default' }}
+              onClick={
+                (userRole !== 'content-editor' && userRole !== 'admin')
+                  ? () => handleShowTeam(team)
+                  : undefined
+              }
+            >
               {team.logo && (
-                <img src={team.logo} className="card-img-top" alt={team.name} />
+                <img
+                  src={team.logo}
+                  className="card-img-top team-logo-img"
+                  alt={team.name}
+                />
               )}
               <div className="card-body">
                 <h5 className="card-title">{team.name}</h5>
@@ -372,20 +407,20 @@ const TeamsPage = ({ language, userRole }) => {
                   <>
                     <button
                       className="btn btn-outline-info btn-sm me-2"
-                      onClick={() => handleShowTeam(team)}
+                      onClick={e => { e.stopPropagation(); handleShowTeam(team); }}
                     >
                       {language === 'en' ? 'View' : 'Ver'}
                     </button>
                     <button
                       className="btn btn-outline-secondary btn-sm me-2"
-                      onClick={() => openEditTeam(team, idx)}
+                      onClick={e => { e.stopPropagation(); openEditTeam(team, idx); }}
                       disabled={loading}
                     >
                       {language === 'en' ? 'Edit' : 'Editar'}
                     </button>
                     <button
                       className="btn btn-outline-danger btn-sm"
-                      onClick={() => handleDeleteTeam(idx)}
+                      onClick={e => { e.stopPropagation(); handleDeleteTeam(idx); }}
                       disabled={loading}
                     >
                       {language === 'en' ? 'Delete' : 'Eliminar'}
@@ -417,7 +452,13 @@ const TeamsPage = ({ language, userRole }) => {
             </button>
             <h2>{selectedTeam.name}</h2>
             {selectedTeam.logo && (
-              <img src={selectedTeam.logo} alt={selectedTeam.name} style={{ maxWidth: 120, marginBottom: 16 }} />
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <img
+                  src={selectedTeam.logo}
+                  alt={selectedTeam.name}
+                  style={{ maxWidth: 120, marginBottom: 16, display: 'block' }}
+                />
+              </div>
             )}
             <h3>{language === 'en' ? 'Roster' : 'Plantilla'}</h3>
             <div className="roster-grid">
@@ -582,6 +623,26 @@ const TeamsPage = ({ language, userRole }) => {
 
             <button className="btn btn-primary mt-3" onClick={handleSaveTeam} disabled={loading}>
               {language === 'en' ? 'Save' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar equipo */}
+      {deleteTeamIdx !== null && (
+        <div className="modal-overlay" onClick={cancelDeleteTeam}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
+            <p>
+              {language === 'en'
+                ? 'Are you sure you want to delete this team?'
+                : '¿Seguro que deseas eliminar este equipo?'}
+            </p>
+            <button className="btn btn-danger me-2" onClick={confirmDeleteTeam}>
+              {language === 'en' ? 'Delete' : 'Eliminar'}
+            </button>
+            <button className="btn btn-secondary" onClick={cancelDeleteTeam}>
+              {language === 'en' ? 'Cancel' : 'Cancelar'}
             </button>
           </div>
         </div>

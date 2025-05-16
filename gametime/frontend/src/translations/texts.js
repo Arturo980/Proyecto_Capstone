@@ -56,7 +56,7 @@ const texts = {
     theme_dark: 'Modo Oscuro',
     footer_rights: 'Todos los derechos reservados.',
     footer_follow_us: 'Síguenos en:',
-    vs: 'contra',
+    vs: 'vs',
     teams_title: "Equipos",
     league_name_label: "Nombre de la Liga:",
     league_name_placeholder: "Ingrese el nombre de la liga",

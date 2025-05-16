@@ -4,8 +4,8 @@ html, body {
   margin: 0; /* Asegurar que no haya márgenes */
   padding: 0; /* Asegurar que no haya padding */
   overflow-x: hidden; /* Evitar barra horizontal */
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background-color: var(--background-color, #fff);
+  color: var(--text-color, #000);
   transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
   margin: 0; /* Asegurar que no haya margen alrededor del body */
 }
@@ -93,4 +93,9 @@ footer a:hover {
 
 .mb-4 {
   margin-top: 0 !important; /* Asegurar que no haya separación con la navbar */
+}
+
+.modal-content {
+  background-color: var(--card-background-color, #fff) !important;
+  color: var(--text-color, #000) !important;
 }

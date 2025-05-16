@@ -128,9 +128,22 @@
     height: 25px;
   }
 
+  /* Ajustar el menú de configuración para móviles */
   .settings-options {
-    width: 100%; /* Ensure dropdown takes full width on smaller screens */
-    padding: 10px; /* Adjust padding for smaller screens */
+    left: 0 !important;
+    right: 0 !important;
+    width: 95vw !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    margin: 0 auto !important;
+    border-radius: 0 0 10px 10px !important;
+    top: 110%; /* Un poco más abajo para evitar superposición */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  .settings-options button {
+    padding: 10px;
+    font-size: 16px;
   }
 }
 

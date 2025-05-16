@@ -13,6 +13,7 @@ import MediaPage from './pages/MediaPage'; // Importar la nueva página
 import Login from './pages/Login'; // Importar la página de Login
 import Register from './pages/Register'; // Importar la página de Registro
 import AdminSolicitudes from './pages/AdminSolicitudes'; // Importar la página de Solicitudes de Admin
+import AdminAuditPage from './pages/AdminAuditPage';
 import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 
@@ -38,6 +39,13 @@ function App() {
       return 'public';
     }
   });
+
+  useEffect(() => {
+    // Asegura que el tema claro esté aplicado por defecto
+    if (!document.body.className) {
+      document.body.className = 'theme-light';
+    }
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -118,6 +126,8 @@ function App() {
                   <Route path="/media" element={<MediaPage language={language} />} />
                   {/* Página de Solicitudes de Admin */}
                   <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
+                  {/* Página de Auditoría/Admin */}
+                  <Route path="/admin/auditoria" element={<AdminAuditPage language={language} />} />
                 </Routes>
               </div>
 

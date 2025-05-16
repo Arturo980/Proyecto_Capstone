@@ -2,6 +2,23 @@
   text-align: center;
 }
 
+.media-page img.img-fluid {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  object-fit: cover;
+  background: #eee;
+  cursor: pointer; /* Esto muestra la mano, no la lupa */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Elimina cualquier cursor: zoom-in o similar en hover */
+.media-page img.img-fluid:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  cursor: pointer; /* Asegura que siga siendo pointer */
+}
+
 .match-section img {
   margin-bottom: 15px;
   border: 2px solid #ddd;
@@ -43,6 +60,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: default; /* Cambia de zoom-out a default para evitar la lupa */
 }
 
 @keyframes modal-scale {
@@ -57,7 +75,8 @@
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-color, #000);
   padding: 30px;
   border-radius: 10px;
   width: 80%;
@@ -67,6 +86,13 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   text-align: center;
   animation: modal-scale 0.3s ease-out;
+}
+
+.modal-content img {
+  max-width: 90vw;
+  max-height: 80vh;
+  background-color: var(--card-background-color); /* Ajusta el fondo según el tema */
+  padding: 8px; /* Espacio para que el fondo se vea alrededor de la imagen */
 }
 
 .close-button {
@@ -92,4 +118,22 @@
 .modal-content ul {
   list-style: none;
   padding: 0;
+}
+
+.card-img-top,
+.team-logo-img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain; /* Cambia de cover a contain para que el logo no se recorte */
+  object-position: center;
+  margin: 0 auto 12px auto;
+  display: block;
+  padding: 8px; /* Espacio interno para que el logo no quede pegado al borde */
+}
+
+.card,
+.card-body {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color 0.3s, color 0.3s;
 }

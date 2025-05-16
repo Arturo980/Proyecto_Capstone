@@ -179,26 +179,33 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
             </li>
             {/* Solo mostrar al admin */}
             {user && user.esAdmin && (
-              <li className="nav-item">
-                <Link className="nav-link no-underline" to="/admin/solicitudes">
-                  Solicitudes de Registro
-                  {pendingCount > 0 && (
-                    <span
-                      style={{
-                        background: '#ffb300',
-                        color: '#23272b',
-                        borderRadius: '10px',
-                        padding: '2px 8px',
-                        marginLeft: '8px',
-                        fontWeight: 'bold',
-                        fontSize: '13px'
-                      }}
-                    >
-                      {pendingCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link no-underline" to="/admin/solicitudes">
+                    Solicitudes de Registro
+                    {pendingCount > 0 && (
+                      <span
+                        style={{
+                          background: '#ffb300',
+                          color: '#23272b',
+                          borderRadius: '10px',
+                          padding: '2px 8px',
+                          marginLeft: '8px',
+                          fontWeight: 'bold',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {pendingCount}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link no-underline" to="/admin/auditoria">
+                    Auditoría
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
           <div className="d-flex align-items-center ms-auto">
