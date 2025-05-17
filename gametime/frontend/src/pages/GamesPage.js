@@ -5,10 +5,12 @@ import '../styles/GamePage.css';
 import es from 'date-fns/locale/es';
 import calendar from '../assets/images/calendario.png';
 import texts from '../translations/texts';
+import { io as socketIOClient } from "socket.io-client";
 
 const API_TEAMS = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/teams';
 const API_LEAGUES = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
 const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
 
 const GamesPage = ({ language = 'es' }) => {
   // Obtener el rol del usuario desde localStorage
@@ -21,6 +23,17 @@ const GamesPage = ({ language = 'es' }) => {
       return 'public';
     }
   });
+
+  // Añade esta línea para definir canEditMatchData
+  const canEditMatchData = userRole === 'admin' || userRole === 'match-manager';
+  const canEditCitadosAndSets = userRole === 'admin';
+
+  // NUEVO: Estado para modales separados
+  const [editConfigGame, setEditConfigGame] = useState(null); // Para editar configuración (equipos, fecha, hora)
+  const [editScoreGame, setEditScoreGame] = useState(null);   // Para editar marcador
+
+  // NUEVO: Estado para citados seleccionados
+  const [selectedCitados, setSelectedCitados] = useState([]);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showModal, setShowModal] = useState(false);
@@ -37,6 +50,11 @@ const GamesPage = ({ language = 'es' }) => {
     team2: '',
     date: '',
     time: '',
+    citados: '', // NUEVO: citados (string, puede ser lista separada por comas)
+    score1: '',  // NUEVO: marcador de puntos equipo 1
+    score2: '',  // NUEVO: marcador de puntos equipo 2
+    sets1: '',   // NUEVO: sets ganados equipo 1
+    sets2: '',   // NUEVO: sets ganados equipo 2
   });
   const [editingGame, setEditingGame] = useState(null);
 
@@ -46,25 +64,79 @@ const GamesPage = ({ language = 'es' }) => {
   // Modal de confirmación para eliminar partido
   const [deleteGameId, setDeleteGameId] = useState(null);
 
+  // NUEVO: Estado para el partido que se está editando el marcador en vivo
+  const [liveScoreGame, setLiveScoreGame] = useState(null);
+
+  // NUEVO: Estado para sets jugados en el partido en vivo
+  const [liveSets, setLiveSets] = useState([]); // [{score1, score2}]
+  const [currentSetScore, setCurrentSetScore] = useState({ score1: 0, score2: 0 });
+
+  // NUEVO: Estado para configuración de sets de la liga activa
+  const [leagueConfig, setLeagueConfig] = useState({ setsToWin: 3, lastSetPoints: 15 });
+
+  // Actualiza leagueConfig cuando cambia la liga activa o las ligas
+  useEffect(() => {
+    if (activeLeague && leagues.length > 0) {
+      const liga = leagues.find(l => l._id === activeLeague);
+      if (liga) {
+        setLeagueConfig({
+          setsToWin: liga.setsToWin ?? 3,
+          lastSetPoints: liga.lastSetPoints ?? 15
+        });
+      }
+    }
+  }, [activeLeague, leagues]);
+
   const fetchLeagues = useCallback(async () => {
-    const res = await fetch(API_LEAGUES);
-    let data = await res.json();
-    if (!Array.isArray(data)) data = [];
-    data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-    setLeagues(data);
-    if (data.length > 0) setActiveLeague(data[0]._id);
+    try {
+      const res = await fetch(API_LEAGUES);
+      if (!res.ok) {
+        console.error('Error al obtener ligas:', res.status, res.statusText);
+        setLeagues([]);
+        return;
+      }
+      let data = await res.json();
+      if (!Array.isArray(data)) data = [];
+      data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      setLeagues(data);
+      if (data.length > 0) setActiveLeague(data[0]._id);
+    } catch (err) {
+      console.error('No se pudo conectar con el backend para obtener ligas:', err.message);
+      setLeagues([]);
+    }
   }, []);
 
   const fetchTeams = useCallback(async () => {
-    const res = await fetch(`${API_TEAMS}?league=${activeLeague}`);
-    const data = await res.json();
-    setTeams(data.teams || []);
+    try {
+      const res = await fetch(`${API_TEAMS}?league=${activeLeague}`);
+      if (!res.ok) {
+        console.error('Error al obtener equipos:', res.status, res.statusText);
+        setTeams([]);
+        return;
+      }
+      const data = await res.json();
+      setTeams(data.teams || []);
+    } catch (err) {
+      console.error('No se pudo conectar con el backend para obtener equipos:', err.message);
+      setTeams([]);
+    }
   }, [activeLeague]);
 
+  // Cambia fetchGames para manejar errores de red y mostrar un mensaje claro en consola
   const fetchGames = useCallback(async () => {
-    const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
-    const data = await res.json();
-    setGames(data.games || []);
+    try {
+      const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
+      if (!res.ok) {
+        console.error('Error al obtener partidos:', res.status, res.statusText);
+        setGames([]);
+        return;
+      }
+      const data = await res.json();
+      setGames(data.games || []);
+    } catch (err) {
+      console.error('No se pudo conectar con el backend para obtener partidos:', err.message);
+      setGames([]);
+    }
   }, [activeLeague]);
 
   // Cargar ligas al montar
@@ -132,23 +204,150 @@ const GamesPage = ({ language = 'es' }) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Encuentra el roster de los equipos seleccionados
+  const team1Obj = teams.find(t => t.name === form.team1);
+  const team2Obj = teams.find(t => t.name === form.team2);
+  const roster1 = team1Obj?.roster || [];
+  const roster2 = team2Obj?.roster || [];
+
+  // Cuando cambia el equipo seleccionado, limpia los citados
+  useEffect(() => {
+    setSelectedCitados([]);
+  }, [form.team1, form.team2, editingGame]);
+
+  // Cuando se edita un partido existente, carga los citados
+  useEffect(() => {
+    if (editingGame && editingGame !== 'new' && editingGame.citados) {
+      setSelectedCitados(
+        editingGame.citados
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      );
+    }
+  }, [editingGame]);
+
+  // Maneja el cambio de selección de citados
+  const handleCitadoToggle = (player) => {
+    setSelectedCitados(prev =>
+      prev.includes(player)
+        ? prev.filter(p => p !== player)
+        : [...prev, player]
+    );
+  };
+
+  // Maneja abrir modal de configuración
+  const handleEditConfigGame = (game) => {
+    setEditConfigGame(game);
+    setForm({
+      team1: game.team1,
+      team2: game.team2,
+      date: game.date,
+      time: game.time,
+      // No marcador ni sets ni citados aquí
+    });
+  };
+
+  // Maneja abrir modal de marcador
+  const handleEditScoreGame = (game) => {
+    setEditScoreGame(game);
+    setForm({
+      score1: game.score1 !== null ? game.score1 : '',
+      score2: game.score2 !== null ? game.score2 : '',
+      // Solo admin puede editar sets y citados
+      sets1: canEditCitadosAndSets ? (game.sets1 !== null ? game.sets1 : '') : '',
+      sets2: canEditCitadosAndSets ? (game.sets2 !== null ? game.sets2 : '') : '',
+      // citados se maneja en selectedCitados/useEffect si admin
+    });
+    // citados para admin
+    if (canEditCitadosAndSets && game.citados) {
+      setSelectedCitados(
+        game.citados
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      );
+    }
+  };
+
+  // Guardar cambios de configuración (equipos, fecha, hora)
+  const handleSaveConfigGame = async (e) => {
+    e.preventDefault();
+    if (!form.team1 || !form.team2 || !form.date || !form.time) return;
+    let body = {
+      team1: form.team1,
+      team2: form.team2,
+      date: form.date,
+      time: form.time,
+      league: activeLeague
+    };
+    const res = await fetch(`${API_GAMES}/${editConfigGame._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      await fetchGames();
+    }
+    setEditConfigGame(null);
+    setForm({ team1: '', team2: '', date: '', time: '' });
+  };
+
+  // Guardar cambios de marcador (marcador, sets, citados)
+  const handleSaveScoreGame = async (e) => {
+    e.preventDefault();
+    let body = {};
+    if (canEditMatchData) {
+      body.score1 = form.score1;
+      body.score2 = form.score2;
+    }
+    if (canEditCitadosAndSets) {
+      body.sets1 = form.sets1;
+      body.sets2 = form.sets2;
+      body.citados = selectedCitados.join(', ');
+    }
+    const res = await fetch(`${API_GAMES}/${editScoreGame._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      await fetchGames();
+    }
+    setEditScoreGame(null);
+    setForm({ score1: '', score2: '', sets1: '', sets2: '' });
+    setSelectedCitados([]);
+  };
+
   const handleAddOrEditGame = async (e) => {
     e.preventDefault();
     if (!form.team1 || !form.team2 || !form.date || !form.time) return;
+    let body = { team1: form.team1, team2: form.team2, date: form.date, time: form.time, league: activeLeague };
+    // Solo admin puede enviar citados y sets
+    if (canEditCitadosAndSets) {
+      body.citados = selectedCitados.join(', ');
+      body.sets1 = form.sets1;
+      body.sets2 = form.sets2;
+    }
+    // Admin y match-manager pueden editar marcador
+    if (canEditMatchData) {
+      body.score1 = form.score1;
+      body.score2 = form.score2;
+    }
     let res;
     if (editingGame && editingGame !== 'new') {
       // Editar partido
       res = await fetch(`${API_GAMES}/${editingGame._id || editingGame}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, league: activeLeague }),
+        body: JSON.stringify(body),
       });
     } else {
       // Crear partido
       res = await fetch(API_GAMES, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, league: activeLeague }),
+        body: JSON.stringify(body),
       });
     }
     if (res && res.ok) {
@@ -156,6 +355,7 @@ const GamesPage = ({ language = 'es' }) => {
     }
     setForm({ team1: '', team2: '', date: '', time: '' });
     setEditingGame(null);
+    setSelectedCitados([]);
   };
 
   const handleEditGame = (game) => {
@@ -165,7 +365,14 @@ const GamesPage = ({ language = 'es' }) => {
       team2: game.team2,
       date: game.date,
       time: game.time,
+      // Solo admin puede editar citados y sets
+      score1: canEditMatchData ? (game.score1 !== null ? game.score1 : '') : '',
+      score2: canEditMatchData ? (game.score2 !== null ? game.score2 : '') : '',
+      sets1: canEditCitadosAndSets ? (game.sets1 !== null ? game.sets1 : '') : '',
+      sets2: canEditCitadosAndSets ? (game.sets2 !== null ? game.sets2 : '') : '',
+      // citados ya no se usa aquí
     });
+    // citados se carga en useEffect
   };
 
   const handleDeleteGame = (gameId) => {
@@ -211,9 +418,163 @@ const GamesPage = ({ language = 'es' }) => {
     };
   }, [selectedGame, editingGame]);
 
+  // NUEVO: Socket.IO
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const s = socketIOClient(SOCKET_URL, { transports: ['websocket'] });
+    setSocket(s);
+    return () => {
+      s.disconnect();
+    };
+  }, []);
+
+  // NUEVO: Función para actualizar el marcador en el backend y emitir por socket.io
+  const updateScore = useCallback((gameId, score1, score2) => {
+    // Actualiza el estado local inmediatamente para feedback instantáneo
+    setGames(prevGames =>
+      prevGames.map(g =>
+        g._id === gameId ? { ...g, score1, score2 } : g
+      )
+    );
+    setLiveScoreGame(prev =>
+      prev && prev._id === gameId ? { ...prev, score1, score2 } : prev
+    );
+    // Llama al backend (el backend emitirá a todos por socket.io)
+    fetch(`${API_GAMES}/${gameId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ score1, score2 }),
+    });
+    // Emite por socket.io para feedback instantáneo a otros clientes
+    if (socket) {
+      socket.emit('score_update', { gameId, score1, score2 });
+    }
+  }, [socket, setGames, setLiveScoreGame]);
+
+  // NUEVO: Escucha eventos de score_update de otros clientes
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ gameId, score1, score2 }) => {
+      setGames(prevGames =>
+        prevGames.map(g =>
+          g._id === gameId ? { ...g, score1, score2 } : g
+        )
+      );
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId ? { ...prev, score1, score2 } : prev
+      );
+    };
+    socket.on('score_update', handler);
+    return () => {
+      socket.off('score_update', handler);
+    };
+  }, [socket]);
+
+  // NUEVO: Handlers para botones +1/-1 (asegúrate de que esté antes del render)
+  const handleScoreChange = (team, delta) => {
+    if (!liveScoreGame) return;
+    const newScore1 = team === 1 ? Math.max(0, (liveScoreGame.score1 || 0) + delta) : liveScoreGame.score1;
+    const newScore2 = team === 2 ? Math.max(0, (liveScoreGame.score2 || 0) + delta) : liveScoreGame.score2;
+    updateScore(liveScoreGame._id, newScore1, newScore2);
+  };
+
+  // --- Lógica de voley para finalizar set y partido ---
+  function canFinishSet(score1, score2, setIndex, leagueConfig) {
+    // setsToWin: 3 = mejor de 5 (gana 3 sets), 2 = mejor de 3 (gana 2 sets)
+    const totalSets = leagueConfig.setsToWin * 2 - 1;
+    const isLastSet = setIndex === (totalSets - 1);
+    const pointsToWin = isLastSet ? leagueConfig.lastSetPoints : 25;
+    // Un equipo debe llegar a pointsToWin y tener diferencia de 2
+    if (
+      (score1 >= pointsToWin || score2 >= pointsToWin) &&
+      Math.abs(score1 - score2) >= 2 &&
+      score1 !== score2
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  // Finalizar set manualmente
+  const handleFinishSet = async () => {
+    const setIndex = liveSets.length;
+    const { score1, score2 } = currentSetScore;
+    if (!canFinishSet(score1, score2, setIndex, leagueConfig)) {
+      alert(language === 'en'
+        ? 'Set cannot be finished. Check points and difference.'
+        : 'No se puede finalizar el set. Revisa los puntos y la diferencia.');
+      return;
+    }
+    // Agrega el set al historial
+    const newSets = [...liveSets, { score1, score2 }];
+    setLiveSets(newSets);
+    setCurrentSetScore({ score1: 0, score2: 0 });
+
+    // Calcula sets ganados
+    let sets1 = 0, sets2 = 0;
+    newSets.forEach(s => {
+      if (s.score1 > s.score2) sets1++;
+      else if (s.score2 > s.score1) sets2++;
+    });
+
+    // ¿Ya hay ganador del partido?
+    let partidoFinalizado = false;
+    if (sets1 === leagueConfig.setsToWin || sets2 === leagueConfig.setsToWin) {
+      partidoFinalizado = true;
+    }
+
+    // Guarda en backend: setsHistory, sets1, sets2, score1, score2 (último set), partidoFinalizado
+    await fetch(`${API_GAMES}/${liveScoreGame._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        setsHistory: newSets,
+        sets1,
+        sets2,
+        score1,
+        score2,
+        partidoFinalizado
+      }),
+    });
+    // Actualiza estado local
+    setLiveScoreGame(prev => ({
+      ...prev,
+      setsHistory: newSets,
+      sets1,
+      sets2,
+      score1,
+      score2,
+      partidoFinalizado
+    }));
+    setGames(prevGames =>
+      prevGames.map(g =>
+        g._id === liveScoreGame._id
+          ? { ...g, setsHistory: newSets, sets1, sets2, score1, score2, partidoFinalizado }
+          : g
+      )
+    );
+  };
+
+  // Sumar/restar puntos del set actual
+  const handleSetScoreChange = (team, delta) => {
+    setCurrentSetScore(prev => {
+      let s1 = prev.score1, s2 = prev.score2;
+      if (team === 1) s1 = Math.max(0, s1 + delta);
+      if (team === 2) s2 = Math.max(0, s2 + delta);
+      return { score1: s1, score2: s2 };
+    });
+  };
+
   // --- Render ---
-  // Para admin/editor: solo mostrar el modal de partidos, no el calendario ni la vista pública
-  if (userRole === 'admin' || userRole === 'content-editor') {
+  // Mueve el useState fuera del render condicional para cumplir las reglas de hooks
+  const [publicGameModal, setPublicGameModal] = useState(null);
+
+  // Añade los estados para el modal de citados ANTES del render condicional
+  const [pendingCitadosGame, setPendingCitadosGame] = useState(null);
+  const [pendingCitados, setPendingCitados] = useState([]);
+
+  if (userRole === 'admin' || userRole === 'content-editor' || userRole === 'match-manager') {
     return (
       <div className="container mt-5">
         <h2>{language === 'en' ? 'Games' : 'Partidos'}</h2>
@@ -232,91 +593,29 @@ const GamesPage = ({ language = 'es' }) => {
           </select>
         </div>
         <div className="mb-4">
-          <button className="btn btn-primary" onClick={() => setEditingGame('new')}>
+          <button className="btn btn-primary" onClick={() => {
+            setEditingGame('new');
+            setForm({
+              team1: '',
+              team2: '',
+              date: '',
+              time: '',
+              citados: '',
+              score1: '',
+              score2: '',
+              sets1: '',
+              sets2: ''
+            });
+          }}>
             {language === 'en' ? 'Add Game' : 'Agregar Partido'}
           </button>
         </div>
-        <div className="row justify-content-center">
-          {games.map((game, idx) => (
-            <div
-              key={game._id || idx}
-              className="col-md-4 mb-3"
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleShowGame(game)}
-            >
-              <div className="card h-100">
-                <div className="card-body">
-                  <h5 className="card-title">
-                    {game.team1} {texts[language]?.vs || 'vs'} {game.team2}
-                  </h5>
-                  <div className="mb-2">
-                    <span>{game.date} - {game.time}</span>
-                  </div>
-                  <div>
-                    <span className="score-box">{game.score1 !== null ? game.score1 : '-'}</span>
-                    <span style={{ margin: '0 10px' }} />
-                    <span className="score-box">{game.score2 !== null ? game.score2 : '-'}</span>
-                  </div>
-                  <div className="mt-2">
-                    <button
-                      className="btn btn-outline-secondary btn-sm me-2"
-                      onClick={e => { e.stopPropagation(); handleEditGame(game); }}
-                    >
-                      {language === 'en' ? 'Edit' : 'Editar'}
-                    </button>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={e => { e.stopPropagation(); handleDeleteGame(game._id); }}
-                    >
-                      {language === 'en' ? 'Delete' : 'Eliminar'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Modal para ver partido */}
-        {selectedGame && (
-          <div className="modal-overlay" onClick={handleCloseGameModal}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <button
-                className="btn btn-secondary close-button"
-                onClick={handleCloseGameModal}
-              >
-                &times;
-              </button>
-              <h2>{selectedGame.team1} {texts[language]?.vs || 'vs'} {selectedGame.team2}</h2>
-              <div className="mb-2">
-                <strong>{language === 'en' ? 'Date' : 'Fecha'}:</strong> {selectedGame.date}
-              </div>
-              <div className="mb-2">
-                <strong>{language === 'en' ? 'Time' : 'Hora'}:</strong> {selectedGame.time}
-              </div>
-              <div className="mb-2">
-                <strong>{language === 'en' ? 'Score' : 'Marcador'}:</strong>
-                <span className="score-box ms-2">{selectedGame.score1 !== null ? selectedGame.score1 : '-'}</span>
-                <span style={{ margin: '0 10px' }} />
-                <span className="score-box">{selectedGame.score2 !== null ? selectedGame.score2 : '-'}</span>
-              </div>
-            </div>
-          </div>
-        )}
         {/* Modal para agregar/editar partido */}
-        {(editingGame !== null) && (
+        {editingGame === 'new' && (
           <div className="modal-overlay" onClick={handleCancelEdit}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <button
-                className="btn btn-secondary close-button"
-                onClick={handleCancelEdit}
-              >
-                &times;
-              </button>
-              <h2>
-                {editingGame !== 'new'
-                  ? (language === 'en' ? 'Edit Game' : 'Editar Partido')
-                  : (language === 'en' ? 'Add Game' : 'Agregar Partido')}
-              </h2>
+              <button className="btn btn-secondary close-button" onClick={handleCancelEdit}>&times;</button>
+              <h2>{language === 'en' ? 'Add Game' : 'Agregar Partido'}</h2>
               <form className="row g-2 align-items-end" onSubmit={handleAddOrEditGame}>
                 <div className="col-12 mb-2">
                   <label className="form-label">{language === 'en' ? 'Team 1' : 'Equipo 1'}</label>
@@ -366,11 +665,262 @@ const GamesPage = ({ language = 'es' }) => {
                 </div>
                 <div className="col-12 mt-3">
                   <button className="btn btn-success" type="submit">
-                    {editingGame !== 'new'
-                      ? (language === 'en' ? 'Save Changes' : 'Guardar Cambios')
-                      : (language === 'en' ? 'Add' : 'Agregar')}
+                    {language === 'en' ? 'Save' : 'Guardar'}
                   </button>
                   <button className="btn btn-secondary ms-2" type="button" onClick={handleCancelEdit}>
+                    {language === 'en' ? 'Cancel' : 'Cancelar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        <div className="row justify-content-center">
+          {games.map((game, idx) => (
+            <div
+              key={game._id || idx}
+              className="col-md-4 mb-3"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (game.partidoFinalizado) {
+                  setPublicGameModal(game);
+                } else if (canEditMatchData) {
+                  // Mostrar primero el modal de citados si aún no están definidos
+                  if (!game.citados || game.citados.trim() === '') {
+                    setPendingCitadosGame(game);
+                    // Inicializa los citados vacíos
+                    setPendingCitados([]);
+                  } else {
+                    setLiveScoreGame(game);
+                  }
+                } else {
+                  handleShowGame(game);
+                }
+              }}
+            >
+              <div className="card h-100">
+                <div className="card-body">
+                  {/* CAMBIO: Mostrar equipos alineados a izquierda y derecha */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    marginBottom: 8
+                  }}>
+                    <span style={{ fontWeight: 'bold', fontSize: 18, textAlign: 'left', flex: 1 }}>{game.team1}</span>
+                    <span style={{ fontWeight: 'bold', fontSize: 16, color: '#555', margin: '0 10px' }}>
+                      {texts[language]?.vs || 'vs'}
+                    </span>
+                    <span style={{ fontWeight: 'bold', fontSize: 18, textAlign: 'right', flex: 1 }}>{game.team2}</span>
+                  </div>
+                  <div className="mb-2">
+                    <span>{game.date} - {game.time}</span>
+                  </div>
+                  {/* CAMBIO: Marcador responsive */}
+                  <div
+                    className="score-box-container"
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 10,
+                      flexWrap: 'nowrap'
+                    }}
+                  >
+                    <span className="score-box" style={{ minWidth: 40 }}>{game.score1 !== null ? game.score1 : '-'}</span>
+                    <span className="score-box" style={{ minWidth: 40 }}>{game.score2 !== null ? game.score2 : '-'}</span>
+                  </div>
+                  {/* NUEVO: Mostrar sets si existen */}
+                  {(game.sets1 !== undefined || game.sets2 !== undefined) && (
+                    <div className="mt-2">
+                      <span>Sets: {game.sets1 ?? '-'} - {game.sets2 ?? '-'}</span>
+                    </div>
+                  )}
+                  {/* Si el partido está finalizado, muestra un aviso */}
+                  {game.partidoFinalizado && (
+                    <div style={{ color: '#007bff', fontWeight: 'bold', marginTop: 8 }}>
+                      {language === 'en' ? 'Finished' : 'Finalizado'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    {/* Solo admin y content-editor pueden editar configuración */}
+                    {(userRole === 'admin' || userRole === 'content-editor') && (
+                      <button
+                        className="btn btn-outline-secondary btn-sm me-2"
+                        onClick={e => { e.stopPropagation(); handleEditConfigGame(game); }}
+                      >
+                        {language === 'en' ? 'Edit' : 'Editar'}
+                      </button>
+                    )}
+                    {/* Solo admin y content-editor pueden eliminar */}
+                    {(userRole === 'admin' || userRole === 'content-editor') && (
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={e => { e.stopPropagation(); handleDeleteGame(game._id); }}
+                      >
+                        {language === 'en' ? 'Delete' : 'Eliminar'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Modal para editar configuración */}
+        {editConfigGame && (
+          <div className="modal-overlay" onClick={() => setEditConfigGame(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <button className="btn btn-secondary close-button" onClick={() => setEditConfigGame(null)}>&times;</button>
+              <h2>{language === 'en' ? 'Edit Game' : 'Editar Partido'}</h2>
+              <form className="row g-2 align-items-end" onSubmit={handleSaveConfigGame}>
+                <div className="col-12 mb-2">
+                  <label className="form-label">{language === 'en' ? 'Team 1' : 'Equipo 1'}</label>
+                  <select
+                    className="form-select"
+                    name="team1"
+                    value={form.team1}
+                    onChange={handleFormChange}
+                    style={{ minWidth: 220, maxWidth: 350 }}
+                  >
+                    <option value="">
+                      {language === 'en'
+                        ? 'Select a team from the list'
+                        : 'Selecciona un equipo de la lista'}
+                    </option>
+                    {teams.map(t => (
+                      <option key={t._id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 mb-2">
+                  <label className="form-label">{language === 'en' ? 'Team 2' : 'Equipo 2'}</label>
+                  <select
+                    className="form-select"
+                    name="team2"
+                    value={form.team2}
+                    onChange={handleFormChange}
+                    style={{ minWidth: 220, maxWidth: 350 }}
+                  >
+                    <option value="">
+                      {language === 'en'
+                        ? 'Select a team from the list'
+                        : 'Selecciona un equipo de la lista'}
+                    </option>
+                    {teams.map(t => (
+                      <option key={t._id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-6 mb-2">
+                  <label className="form-label">{language === 'en' ? 'Date' : 'Fecha'}</label>
+                  <input type="date" className="form-control" name="date" value={form.date} onChange={handleFormChange} />
+                </div>
+                <div className="col-6 mb-2">
+                  <label className="form-label">{language === 'en' ? 'Time' : 'Hora'}</label>
+                  <input type="time" className="form-control" name="time" value={form.time} onChange={handleFormChange} />
+                </div>
+                <div className="col-12 mt-3">
+                  <button className="btn btn-success" type="submit">
+                    {language === 'en' ? 'Save Changes' : 'Guardar Cambios'}
+                  </button>
+                  <button className="btn btn-secondary ms-2" type="button" onClick={() => setEditConfigGame(null)}>
+                    {language === 'en' ? 'Cancel' : 'Cancelar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Modal para editar marcador */}
+        {editScoreGame && (
+          <div className="modal-overlay" onClick={() => setEditScoreGame(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <button className="btn btn-secondary close-button" onClick={() => setEditScoreGame(null)}>&times;</button>
+              <h2>{language === 'en' ? 'Edit Score' : 'Editar Marcador'}</h2>
+              <form className="row g-2 align-items-end" onSubmit={handleSaveScoreGame}>
+                {canEditMatchData && (
+                  <>
+                    <div className="col-6 mb-2">
+                      <label className="form-label">{language === 'en' ? 'Score Team 1' : 'Puntos Equipo 1'}</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="score1"
+                        value={form.score1}
+                        onChange={handleFormChange}
+                        min="0"
+                      />
+                    </div>
+                    <div className="col-6 mb-2">
+                      <label className="form-label">{language === 'en' ? 'Score Team 2' : 'Puntos Equipo 2'}</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="score2"
+                        value={form.score2}
+                        onChange={handleFormChange}
+                        min="0"
+                      />
+                    </div>
+                  </>
+                )}
+                {canEditCitadosAndSets && (
+                  <>
+                    <div className="col-6 mb-2">
+                      <label className="form-label">{language === 'en' ? 'Sets Team 1' : 'Sets Equipo 1'}</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="sets1"
+                        value={form.sets1}
+                        onChange={handleFormChange}
+                        min="0"
+                        max="5"
+                      />
+                    </div>
+                    <div className="col-6 mb-2">
+                      <label className="form-label">{language === 'en' ? 'Sets Team 2' : 'Sets Equipo 2'}</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="sets2"
+                        value={form.sets2}
+                        onChange={handleFormChange}
+                        min="0"
+                        max="5"
+                      />
+                    </div>
+                    <div className="col-12 mb-2">
+                      <label className="form-label">{language === 'en' ? 'Called Players' : 'Citados'}</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {[...roster1, ...roster2].map(player => (
+                          <label key={player} style={{ marginRight: 12 }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCitados.includes(player)}
+                              onChange={() => handleCitadoToggle(player)}
+                            />{' '}
+                            {player}
+                          </label>
+                        ))}
+                        {roster1.length === 0 && roster2.length === 0 && (
+                          <span style={{ color: '#888' }}>
+                            {language === 'en'
+                              ? 'Select teams to see roster'
+                              : 'Selecciona equipos para ver la plantilla'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+                <div className="col-12 mt-3">
+                  <button className="btn btn-success" type="submit">
+                    {language === 'en' ? 'Save Changes' : 'Guardar Cambios'}
+                  </button>
+                  <button className="btn btn-secondary ms-2" type="button" onClick={() => setEditScoreGame(null)}>
                     {language === 'en' ? 'Cancel' : 'Cancelar'}
                   </button>
                 </div>
@@ -394,6 +944,274 @@ const GamesPage = ({ language = 'es' }) => {
               <button className="btn btn-secondary" onClick={cancelDeleteGame}>
                 {language === 'en' ? 'Cancel' : 'Cancelar'}
               </button>
+            </div>
+          </div>
+        )}
+        {/* Modal para seleccionar citados antes de mostrar el marcador */}
+        {pendingCitadosGame && (
+          <div className="modal-overlay" onClick={() => setPendingCitadosGame(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+              <button
+                className="btn btn-secondary close-button"
+                onClick={() => setPendingCitadosGame(null)}
+              >
+                &times;
+              </button>
+              <h4 style={{ textAlign: 'center', marginBottom: 10 }}>
+                {language === 'en' ? 'Select Called Players' : 'Selecciona los citados'}
+              </h4>
+              <div style={{ marginBottom: 10, textAlign: 'center' }}>
+                <b>{pendingCitadosGame.team1}</b> {texts[language]?.vs || 'vs'} <b>{pendingCitadosGame.team2}</b>
+              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 32,
+                marginBottom: 16
+              }}>
+                {/* Lado izquierdo: roster del equipo 1 */}
+                <div style={{ minWidth: 120 }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'left' }}>{pendingCitadosGame.team1}</div>
+                  {(
+                    Array.isArray(teams.find(t => t.name === pendingCitadosGame.team1)?.roster)
+                      ? teams.find(t => t.name === pendingCitadosGame.team1).roster
+                      : []
+                  ).map(player => (
+                    <label key={player} style={{ display: 'block', marginBottom: 4, textAlign: 'left' }}>
+                      <input
+                        type="checkbox"
+                        checked={pendingCitados.includes(player)}
+                        onChange={() => {
+                          setPendingCitados(prev =>
+                            prev.includes(player)
+                              ? prev.filter(p => p !== player)
+                              : [...prev, player]
+                          );
+                        }}
+                      />{' '}
+                      {player}
+                    </label>
+                  ))}
+                </div>
+                {/* Lado derecho: roster del equipo 2 */}
+                <div style={{ minWidth: 120 }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'right' }}>{pendingCitadosGame.team2}</div>
+                  {(
+                    Array.isArray(teams.find(t => t.name === pendingCitadosGame.team2)?.roster)
+                      ? teams.find(t => t.name === pendingCitadosGame.team2).roster
+                      : []
+                  ).map(player => (
+                    <label key={player} style={{ display: 'block', marginBottom: 4, textAlign: 'right' }}>
+                      <input
+                        type="checkbox"
+                        checked={pendingCitados.includes(player)}
+                        onChange={() => {
+                          setPendingCitados(prev =>
+                            prev.includes(player)
+                              ? prev.filter(p => p !== player)
+                              : [...prev, player]
+                          );
+                        }}
+                      />{' '}
+                      {player}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  className="btn btn-success"
+                  onClick={async () => {
+                    // Guarda los citados en el backend y luego muestra el marcador
+                    await fetch(`${API_GAMES}/${pendingCitadosGame._id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ citados: pendingCitados.join(', ') }),
+                    });
+                    // Actualiza el estado local de games
+                    setGames(prevGames =>
+                      prevGames.map(g =>
+                        g._id === pendingCitadosGame._id
+                          ? { ...g, citados: pendingCitados.join(', ') }
+                          : g
+                      )
+                    );
+                    setLiveScoreGame({ ...pendingCitadosGame, citados: pendingCitados.join(', ') });
+                    setPendingCitadosGame(null);
+                  }}
+                  disabled={pendingCitados.length === 0}
+                >
+                  {language === 'en' ? 'Confirm Called Players' : 'Confirmar Citados'}
+                </button>
+                <div style={{ fontSize: 13, color: '#888', marginTop: 8 }}>
+                  {language === 'en'
+                    ? 'Select all players who will participate in this match.'
+                    : 'Selecciona todos los jugadores que disputarán el encuentro.'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Modal para editar marcador en vivo SOLO si el partido NO está finalizado */}
+        {liveScoreGame && !liveScoreGame.partidoFinalizado && (
+          <div className="modal-overlay" onClick={() => setLiveScoreGame(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <button
+                className="btn btn-secondary close-button"
+                onClick={() => setLiveScoreGame(null)}
+              >
+                &times;
+              </button>
+              <div className="team-names-container modal-header">
+                <span className="team-name">{liveScoreGame.team1}</span>
+                <span className="vs-text">{texts[language]?.vs || 'vs'}</span>
+                <span className="team-name" style={{ textAlign: 'right' }}>{liveScoreGame.team2}</span>
+              </div>
+              {/* Mostrar historial de sets */}
+              <div style={{ marginBottom: 16 }}>
+                <strong>{language === 'en' ? 'Sets played:' : 'Sets jugados:'}</strong>
+                <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+                  {liveSets.map((set, idx) => (
+                    <span key={idx} className="score-box" style={{ fontSize: 18 }}>
+                      {set.score1} - {set.score2}
+                    </span>
+                  ))}
+                  {liveSets.length === 0 && (
+                    <span style={{ color: '#888' }}>
+                      {language === 'en' ? 'No sets finished yet.' : 'Aún no hay sets finalizados.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Set actual */}
+              <div className="mb-2">
+                <strong>{language === 'en' ? 'Current Set' : 'Set Actual'}:</strong>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 16 }}>
+                  {/* Equipo 1 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <button
+                      className="btn btn-success btn-sm"
+                      style={{ fontSize: 24, width: 40, marginBottom: 6 }}
+                      onClick={e => { e.stopPropagation(); handleSetScoreChange(1, +1); }}
+                      disabled={liveScoreGame.partidoFinalizado}
+                    >+</button>
+                    <span className="score-box" style={{ fontSize: 28 }}>{currentSetScore.score1}</span>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      style={{ fontSize: 24, width: 40, marginTop: 6 }}
+                      onClick={e => { e.stopPropagation(); handleSetScoreChange(1, -1); }}
+                      disabled={currentSetScore.score1 <= 0 || liveScoreGame.partidoFinalizado}
+                    >-</button>
+                  </div>
+                  {/* Separador */}
+                  <span style={{ fontSize: 32, fontWeight: 'bold' }}>:</span>
+                  {/* Equipo 2 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <button
+                      className="btn btn-success btn-sm"
+                      style={{ fontSize: 24, width: 40, marginBottom: 6 }}
+                      onClick={e => { e.stopPropagation(); handleSetScoreChange(2, +1); }}
+                      disabled={liveScoreGame.partidoFinalizado}
+                    >+</button>
+                    <span className="score-box" style={{ fontSize: 28 }}>{currentSetScore.score2}</span>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      style={{ fontSize: 24, width: 40, marginTop: 6 }}
+                      onClick={e => { e.stopPropagation(); handleSetScoreChange(2, -1); }}
+                      disabled={currentSetScore.score2 <= 0 || liveScoreGame.partidoFinalizado}
+                    >-</button>
+                  </div>
+                </div>
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleFinishSet}
+                    disabled={liveScoreGame.partidoFinalizado}
+                  >
+                    {language === 'en' ? 'Finish Set' : 'Finalizar Set'}
+                  </button>
+                  <div style={{ fontSize: 13, color: '#888', marginTop: 6 }}>
+                    {liveScoreGame.partidoFinalizado
+                      ? (language === 'en'
+                        ? 'Match finished.'
+                        : 'Partido finalizado.')
+                      : (language === 'en'
+                        ? `A set ends at 25 points (or ${leagueConfig.lastSetPoints} in last set) with 2-point difference. Finish manually.`
+                        : `Un set termina a 25 puntos (o ${leagueConfig.lastSetPoints} en el último) y diferencia de 2. Finaliza manualmente.`)
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Modal de sets finalizados para admin/editor */}
+        {publicGameModal && (
+          <div className="modal-overlay" onClick={() => setPublicGameModal(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+              <button
+                className="btn btn-secondary close-button"
+                onClick={() => setPublicGameModal(null)}
+              >
+                &times;
+              </button>
+              <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                <h3 style={{ marginBottom: 0 }}>
+                  {publicGameModal.team1} {texts[language]?.vs || 'vs'} {publicGameModal.team2}
+                </h3>
+                <div style={{ fontSize: 18, margin: '8px 0' }}>
+                  <b>{(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}</b>
+                </div>
+                <div style={{ fontSize: 15, color: '#888' }}>
+                  {publicGameModal.date} {publicGameModal.time}
+                </div>
+              </div>
+              {/* Tabla de sets */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
+                <thead>
+                  <tr style={{ background: '#f0f0f0' }}>
+                    <th style={{ padding: 6, border: '1px solid #ddd' }}></th>
+                    {Array.isArray(publicGameModal.setsHistory)
+                      ? publicGameModal.setsHistory.map((_, idx) => (
+                          <th key={idx} style={{ padding: 6, border: '1px solid #ddd' }}>S{idx + 1}</th>
+                        ))
+                      : null}
+                    <th style={{ padding: 6, border: '1px solid #ddd' }}>{language === 'en' ? 'Sets' : 'Sets'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team1}</td>
+                    {Array.isArray(publicGameModal.setsHistory)
+                      ? publicGameModal.setsHistory.map((set, idx) => (
+                          <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
+                            {set.score1}
+                          </td>
+                        ))
+                      : null}
+                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                      {publicGameModal.sets1 ?? '-'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team2}</td>
+                    {Array.isArray(publicGameModal.setsHistory)
+                      ? publicGameModal.setsHistory.map((set, idx) => (
+                          <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
+                            {set.score2}
+                          </td>
+                        ))
+                      : null}
+                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                      {publicGameModal.sets2 ?? '-'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style={{ marginTop: 12, textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
+                {language === 'en' ? 'Finished' : 'Finalizado'}
+              </div>
             </div>
           </div>
         )}
@@ -479,18 +1297,35 @@ const GamesPage = ({ language = 'es' }) => {
         {filteredGames.length > 0 ? (
           filteredGames.map((game, index) => (
             <div key={game._id || index} className="game-box">
-              <div className="team-names-container">
-                {/* Los nombres de los equipos no se traducen */}
-                <div className="team-name">{game.team1}</div>
-                <div className="vs-text">{texts[language]?.vs || (language === 'en' ? 'vs' : 'vs')}</div>
-                <div className="team-name">{game.team2}</div>
+              {/* CAMBIO: Equipos alineados izquierda/derecha */}
+              <div className="team-names-container" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                marginBottom: 8
+              }}>
+                <div className="team-name" style={{ textAlign: 'left', flex: 1 }}>{game.team1}</div>
+                <div className="vs-text" style={{ margin: '0 10px' }}>{texts[language]?.vs || (language === 'en' ? 'vs' : 'vs')}</div>
+                <div className="team-name" style={{ textAlign: 'right', flex: 1 }}>{game.team2}</div>
               </div>
+              {/* SOLO HORARIO, NO FECHA */}
               <div className="date-time">
-                {game.date} - {game.time}
+                {game.time}
               </div>
-              <div className="score-box-container">
-                <div className="score-box">{game.score1 !== null ? game.score1 : '-'}</div>
-                <div className="score-box">{game.score2 !== null ? game.score2 : '-'}</div>
+              {/* CAMBIO: Marcador responsive */}
+              <div
+                className="score-box-container"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 10,
+                  flexWrap: 'nowrap'
+                }}
+              >
+                <div className="score-box" style={{ minWidth: 40 }}>{game.score1 !== null ? game.score1 : '-'}</div>
+                <div className="score-box" style={{ minWidth: 40 }}>{game.score2 !== null ? game.score2 : '-'}</div>
               </div>
             </div>
           ))
@@ -498,6 +1333,75 @@ const GamesPage = ({ language = 'es' }) => {
           <p>{language === 'en' ? 'No games scheduled for this date.' : 'No hay partidos programados para esta fecha.'}</p>
         )}
       </div>
+      {/* Modal detalle de sets del partido */}
+      {publicGameModal && (
+        <div className="modal-overlay" onClick={() => setPublicGameModal(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+            <button
+              className="btn btn-secondary close-button"
+              onClick={() => setPublicGameModal(null)}
+            >
+              &times;
+            </button>
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
+              <h3 style={{ marginBottom: 0 }}>
+                {publicGameModal.team1} {texts[language]?.vs || 'vs'} {publicGameModal.team2}
+              </h3>
+              <div style={{ fontSize: 18, margin: '8px 0' }}>
+                <b>{(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}</b>
+              </div>
+              <div style={{ fontSize: 15, color: '#888' }}>
+                {publicGameModal.date} {publicGameModal.time}
+              </div>
+            </div>
+            {/* Tabla de sets */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
+              <thead>
+                <tr style={{ background: '#f0f0f0' }}>
+                  <th style={{ padding: 6, border: '1px solid #ddd' }}></th>
+                  {Array.isArray(publicGameModal.setsHistory)
+                    ? publicGameModal.setsHistory.map((_, idx) => (
+                        <th key={idx} style={{ padding: 6, border: '1px solid #ddd' }}>S{idx + 1}</th>
+                      ))
+                    : null}
+                  <th style={{ padding: 6, border: '1px solid #ddd' }}>{language === 'en' ? 'Sets' : 'Sets'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team1}</td>
+                  {Array.isArray(publicGameModal.setsHistory)
+                    ? publicGameModal.setsHistory.map((set, idx) => (
+                        <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
+                          {set.score1}
+                        </td>
+                      ))
+                    : null}
+                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                    {publicGameModal.sets1 ?? '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team2}</td>
+                  {Array.isArray(publicGameModal.setsHistory)
+                    ? publicGameModal.setsHistory.map((set, idx) => (
+                        <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
+                          {set.score2}
+                        </td>
+                      ))
+                    : null}
+                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                    {publicGameModal.sets2 ?? '-'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div style={{ marginTop: 12, textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
+              {language === 'en' ? 'Finished' : 'Finalizado'}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/MediaPage.css';
 import texts from '../translations/texts';
+import CloudinaryUpload from '../components/CloudinaryUpload';
 
 const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
 const API_MATCH_IMAGES = process.env.REACT_APP_API_MATCH_IMAGES_URL || 'http://localhost:3001/api/match-images';
@@ -21,10 +22,11 @@ const MediaPage = ({ language }) => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [images, setImages] = useState([]);
 
-  // Estado para imágenes (solo frontend, no persistente)
+  // NUEVO: Estado para URLs de Cloudinary a agregar
+  const [cloudinaryUrls, setCloudinaryUrls] = useState([]);
+
+  // Estado para mostrar el formulario de agregar imágenes
   const [showAddImages, setShowAddImages] = useState(false);
-  const [imageFiles, setImageFiles] = useState([]);
-  const fileInputRef = useRef(null);
 
   // Modal para ver imagen en tamaño original
   const [modalImage, setModalImage] = useState(null);
@@ -54,26 +56,33 @@ const MediaPage = ({ language }) => {
   const handleSelectGame = (game) => {
     setSelectedGame(game);
     setShowAddImages(false);
-    setImageFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-
-    // Cargar imágenes del partido seleccionado
+    setCloudinaryUrls([]);
     fetchImages(game._id);
   };
 
-  // Manejo de agregar imágenes usando Multer/Express (subida al backend)
+  // NUEVO: Manejo de subida de imágenes a Cloudinary y guardado en backend
+  const handleCloudinaryUpload = (urlOrUrls) => {
+    // Puede ser string o array
+    if (Array.isArray(urlOrUrls)) {
+      setCloudinaryUrls(urlOrUrls);
+    } else if (urlOrUrls) {
+      setCloudinaryUrls([urlOrUrls]);
+    }
+  };
+
+  // NUEVO: Guardar URLs de Cloudinary en el backend como imágenes del partido
   const handleAddImages = async () => {
-    if (!selectedGame || imageFiles.length === 0) return;
-    const formData = new FormData();
-    Array.from(imageFiles).forEach(file => formData.append('images', file));
-    // No se agregan descripciones
-    await fetch(`${API_MATCH_IMAGES}/${selectedGame._id}`, {
-      method: 'POST',
-      body: formData,
-    });
+    if (!selectedGame || cloudinaryUrls.length === 0) return;
+    // Por cada URL, crea una imagen en el backend
+    for (const url of cloudinaryUrls) {
+      await fetch(`${API_MATCH_IMAGES}/${selectedGame._id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+    }
     setShowAddImages(false);
-    setImageFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setCloudinaryUrls([]);
     fetchImages(selectedGame._id);
   };
 
@@ -142,6 +151,7 @@ const MediaPage = ({ language }) => {
                   <button
                     className="btn btn-success"
                     onClick={handleAddImages}
+                    disabled={cloudinaryUrls.length === 0}
                   >
                     {language === 'en' ? 'Add' : 'Agregar'}
                   </button>
@@ -149,8 +159,7 @@ const MediaPage = ({ language }) => {
                     className="btn btn-secondary"
                     onClick={() => {
                       setShowAddImages(false);
-                      setImageFiles([]);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
+                      setCloudinaryUrls([]);
                     }}
                   >
                     {language === 'en' ? 'Cancel' : 'Cancelar'}
@@ -159,40 +168,28 @@ const MediaPage = ({ language }) => {
               )}
             </div>
           )}
-          {/* Formulario de subida de imágenes solo para editores/admin */}
+          {/* NUEVO: Formulario de subida de imágenes a Cloudinary */}
           {(userRole === 'content-editor' || userRole === 'admin') && showAddImages && (
             <div className="mb-4">
               <label className="form-label">
                 {language === 'en'
-                  ? 'Select one or more images'
-                  : 'Selecciona una o más imágenes'}
+                  ? 'Upload one or more images (Cloudinary)'
+                  : 'Sube una o más imágenes (Cloudinary)'}
               </label>
-              <input
-                type="file"
-                className="form-control mb-2"
-                accept="image/*"
-                multiple
-                ref={fileInputRef}
-                onChange={e => {
-                  setImageFiles(e.target.files ? Array.from(e.target.files) : []);
-                }}
-              />
-              {imageFiles.length > 0 && (
-                <div>
-                  {Array.from(imageFiles).map((file, idx) => (
-                    <div key={idx} className="mb-2">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt=""
-                        style={{ maxWidth: 120, marginRight: 8, marginBottom: 4 }}
-                      />
-                    </div>
-                  ))}
+              <CloudinaryUpload onUpload={handleCloudinaryUpload} multiple />
+              {cloudinaryUrls.length > 0 && (
+                <div className="mt-2">
+                  <strong>{language === 'en' ? 'Images to add:' : 'Imágenes a agregar:'}</strong>
+                  <div className="d-flex flex-wrap" style={{ gap: 10 }}>
+                    {cloudinaryUrls.map((url, idx) => (
+                      <img key={idx} src={url} alt="" style={{ maxWidth: 120, maxHeight: 120, objectFit: 'cover' }} />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )}
-          {/* Renderiza las imágenes usando la URL del backend */}
+          {/* Renderiza las imágenes usando la URL del backend o Cloudinary */}
           <div className="row">
             {images.map((image, idx) => (
               <div key={idx} className="col-md-4 d-flex flex-column align-items-center">

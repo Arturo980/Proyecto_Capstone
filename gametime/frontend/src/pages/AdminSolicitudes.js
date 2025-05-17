@@ -85,6 +85,7 @@ const AdminSolicitudes = () => {
                 <td>
                   <button
                     className="btn btn-success btn-sm me-2"
+                    style={{ marginBottom: 8 }}
                     disabled={accion[usuario._id] === 'loading'}
                     onClick={() => handleAccion(usuario._id, 'aprobar')}
                   >
@@ -92,6 +93,7 @@ const AdminSolicitudes = () => {
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
+                    style={{ marginBottom: 0}}
                     disabled={accion[usuario._id] === 'loading'}
                     onClick={() => handleAccion(usuario._id, 'rechazar')}
                   >

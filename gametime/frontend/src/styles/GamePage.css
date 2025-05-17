@@ -94,7 +94,7 @@
   background-color: #9c9c9c; /* Cambiar a un color azul más vibrante */
   border-radius: 10px; /* Bordes más redondeados */
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Sombra más prominente */
-  margin: 0 40px; /* Aumentar espacio entre los cuadros de puntuación */
+  margin: 0 25px; /* Aumentar espacio entre los cuadros de puntuación */
 }
 
 .date-time {
@@ -317,20 +317,61 @@
   max-width: 400px; /* Limitar el ancho máximo del modal */
 }
 
-.close-modal {
+.close-modal,
+.btn.close-button {
   position: absolute;
-  top: 10px;
+  top: 5px;
   right: 10px;
+  z-index: 2;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   background: none;
   border: none;
-  font-size: 16px;
-  cursor: pointer;
   color: #007bff;
+  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.close-modal:hover {
-  transform: scale(1.2); /* Ampliar ligeramente al pasar el cursor */
+.close-modal:hover,
+.btn.close-button:hover {
+  transform: scale(1.2);
+  background: none;
+}
+
+/* MODAL: Espacio arriba del team-names-container para el botón de cerrar */
+.team-names-container.modal-header {
+  margin-top: 10px;
+}
+
+/* MODAL: Nombres de equipos alineados izquierda/derecha */
+.team-names-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.team-names-container .team-name,
+.team-names-container span {
+  font-weight: bold;
+  font-size: 20px;
+  flex: 1;
+  text-align: left;
+}
+
+.team-names-container .vs-text,
+.team-names-container span.vs-text {
+  font-size: 18px;
+  color: #555;
+  margin: 0 10px;
+  flex: unset;
+  text-align: center;
 }
 
 /* Media query para pantallas pequeñas */
@@ -346,5 +387,87 @@
 
   .calendar-container {
     width: 100%; /* Ajustar el calendario para que ocupe todo el ancho */
+  }
+}
+
+/* Mejora la responsividad de los cuadros de partidos y la barra de fechas */
+@media (max-width: 900px) {
+  .games-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .game-box {
+    width: 95vw;
+    min-width: 0;
+    max-width: 99vw;
+    padding: 12px;
+  }
+  .score-box {
+    width: 48px;
+    height: 60px;
+    font-size: 18px;
+    margin: 0 10px;
+  }
+  .team-names-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .date-nav-scroll {
+    max-width: 100%;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .games-container {
+    gap: 12px;
+  }
+  .game-box {
+    width: 98vw;
+    padding: 8px;
+    font-size: 15px;
+  }
+  .score-box {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+    margin: 0 4px;
+    line-height: 38px;
+  }
+  .team-name {
+    font-size: 15px;
+  }
+  .vs-text {
+    font-size: 13px;
+    margin: 0 5px;
+  }
+  .date-time {
+    font-size: 12px;
+  }
+  .modal-content {
+    max-width: 98vw;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-box {
+    width: 99vw;
+    padding: 4px;
+    font-size: 13px;
+  }
+  .score-box {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    margin: 0 2px;
+    line-height: 28px;
+  }
+  .modal-content {
+    max-width: 99vw;
+    padding: 4px;
   }
 }
