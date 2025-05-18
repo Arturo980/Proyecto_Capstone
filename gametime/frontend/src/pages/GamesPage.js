@@ -11,10 +11,11 @@ import BeforeMatch from '../components/BeforeMatch';
 import DuringMatch from '../components/DuringMatch';
 import AfterMatch from '../components/AfterMatch';
 
-const API_TEAMS = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/teams';
-const API_LEAGUES = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
-const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+const API_BASE_URL = 'http://192.168.1.104:5000';
+const API_TEAMS = `${API_BASE_URL}/api/teams`;
+const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
+const API_GAMES = `${API_BASE_URL}/api/games`;
+const SOCKET_URL = API_BASE_URL;
 
 const GamesPage = ({ language = 'es' }) => {
   // Obtener el rol del usuario desde localStorage

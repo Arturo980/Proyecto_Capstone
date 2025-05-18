@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = 'http://192.168.1.104:5000';
+
 const AdminSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ const AdminSolicitudes = () => {
   const fetchSolicitudes = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3001/solicitudes-pendientes');
+      const res = await fetch(`${API_BASE_URL}/solicitudes-pendientes`);
       const data = await res.json();
       setSolicitudes(data);
     } catch (err) {
@@ -34,7 +36,7 @@ const AdminSolicitudes = () => {
     setAccion({ ...accion, [id]: 'loading' });
     try {
       const res = await fetch(
-        `http://localhost:3001/${tipo === 'aprobar' ? 'aprobar-usuario' : 'rechazar-usuario'}/${id}`,
+        `${API_BASE_URL}/${tipo === 'aprobar' ? 'aprobar-usuario' : 'rechazar-usuario'}/${id}`,
         { method: 'POST' }
       );
       const data = await res.json();

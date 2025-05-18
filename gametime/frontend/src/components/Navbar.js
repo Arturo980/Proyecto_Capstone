@@ -10,10 +10,13 @@ import toggleIcon from '../assets/images/icons8-settings-384.png'; // Import the
 import whiteCircleIcon from '../assets/images/circulo_blanco.png'; // Importar círculo blanco
 import blackCircleIcon from '../assets/images/circulo_negro.png'; // Importar círculo negro
 
+const API_BASE_URL = 'http://192.168.1.104:5000';
+
 const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   const [showSettings, setShowSettings] = useState(false); // State for showing settings dropdown
   const [isNavbarOpen, setIsNavbarOpen] = useState(false); // State for navbar collapse
   const [isTriangleDown, setIsTriangleDown] = useState(false); // State for animation
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const languageSelectorRef = useRef(null); // Referencia al contenedor del selector de idiomas
   const navbarRef = useRef(null); // Reference for the navbar
   const toggleIconRef = useRef(null); // Reference for the settings button
@@ -34,7 +37,7 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
     let intervalId;
     const fetchPending = () => {
       if (user && user.esAdmin) {
-        fetch('http://localhost:3001/solicitudes-pendientes')
+        fetch(`${API_BASE_URL}/solicitudes-pendientes`)
           .then(res => res.json())
           .then(data => setPendingCount(Array.isArray(data) ? data.length : 0))
           .catch(() => setPendingCount(0));
@@ -131,6 +134,12 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
     window.location.href = '/';
   };
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark" ref={navbarRef}>
       <div className="container-fluid">
@@ -224,7 +233,11 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
                 <img src={toggleIcon} alt="Toggle Settings" className="language-toggle-icon" />
               </button>
               {showSettings && (
-                <div className="settings-options position-absolute">
+                <div
+                  className={
+                    `settings-options position-absolute${isMobile ? ' settings-options-mobile' : ''}`
+                  }
+                >
                   <div className="settings-section">
                     <span className="settings-title">{texts[language]?.navbar_language || 'Language'}</span>
                     <button

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
 
+const API_BASE_URL = 'http://192.168.1.104:5000';
+
 const Login = ({ setIsLoggedIn }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -14,26 +16,20 @@ const Login = ({ setIsLoggedIn }) => {
             return;
         }
         try {
-            console.log('Enviando login:', { correo: email, contraseña: password });
-            const response = await fetch('http://localhost:3001/login', {
+            const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ correo: email, contraseña: password }),
             });
-            console.log('Status de respuesta:', response.status);
             let data;
             try {
                 data = await response.json();
             } catch (jsonErr) {
-                // Intenta leer el texto para mostrarlo en el error
                 const text = await response.text();
                 setError(`Respuesta inesperada del servidor (status ${response.status}): ${text}`);
-                console.error('No se pudo parsear JSON:', jsonErr, 'Contenido recibido:', text);
                 return;
             }
-            console.log('Respuesta del backend:', data);
             if (response.ok) {
-                // Guarda el usuario en localStorage para que la navbar lo pueda leer
                 if (data.usuario) {
                     localStorage.setItem('user', JSON.stringify(data.usuario));
                 }
@@ -41,7 +37,6 @@ const Login = ({ setIsLoggedIn }) => {
                 setError('');
                 navigate('/');
             } else {
-                // Mostrar mensaje especial si la cuenta no está aprobada
                 if (data.error && data.error.includes('aún no ha sido aprobada')) {
                     setError('Tu cuenta aún no ha sido aprobada por el administrador.');
                 } else {
@@ -50,7 +45,6 @@ const Login = ({ setIsLoggedIn }) => {
             }
         } catch (err) {
             setError('Server connection error: ' + err.message);
-            console.error('Error de conexión:', err);
         }
     };
 

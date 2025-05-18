@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Import Link eliminado
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/Global.css'; // Importar el CSS global
@@ -39,6 +39,63 @@ function App() {
       return 'public';
     }
   });
+  const [carouselGames, setCarouselGames] = useState([]);
+  const [leagues, setLeagues] = useState([]);
+  const [activeLeague, setActiveLeague] = useState(null);
+
+  // Obtén la URL de la API de partidos y ligas
+  const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
+  const API_LEAGUES = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
+
+  // Cargar ligas al montar
+  useEffect(() => {
+    const fetchLeagues = async () => {
+      try {
+        const res = await fetch(API_LEAGUES);
+        const data = await res.json();
+        setLeagues(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) setActiveLeague(data[0]._id);
+      } catch {
+        setLeagues([]);
+      }
+    };
+    fetchLeagues();
+  }, []);
+
+  // Cargar partidos para el carrusel (solo partidos de la semana actual de la liga activa)
+  useEffect(() => {
+    if (!activeLeague) return;
+    const fetchGames = async () => {
+      try {
+        const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
+        const data = await res.json();
+        // Calcular inicio y fin de la semana actual (lunes a domingo)
+        const now = new Date();
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // 1=lunes, 7=domingo
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (dayOfWeek - 1));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        // Filtrar partidos de la semana actual
+        const filtered = (data.games || []).filter(g => {
+          if (!g.date) return false;
+          const gameDate = new Date(g.date + 'T' + (g.time || '00:00'));
+          return gameDate >= monday && gameDate <= sunday;
+        }).sort((a, b) => {
+          const da = new Date(a.date + 'T' + (a.time || '00:00'));
+          const db = new Date(b.date + 'T' + (b.time || '00:00'));
+          return da - db;
+        });
+        setCarouselGames(filtered);
+      } catch {
+        setCarouselGames([]);
+      }
+    };
+    fetchGames();
+  }, [activeLeague]);
 
   useEffect(() => {
     // Asegura que el tema claro esté aplicado por defecto
@@ -89,12 +146,10 @@ function App() {
               />
 
               {/* Horizontal Carousel */}
-              {/*
               <HorizontalGamesCarousel
-                games={[]} // <-- Asegura que siempre se pase un array, aunque esté vacío
+                games={carouselGames}
                 language={language}
               />
-              */}
 
               {/* Contenido principal */}
               <div className="main-content">

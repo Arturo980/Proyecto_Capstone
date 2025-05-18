@@ -3,8 +3,9 @@ import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 
-const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
-const API_MATCH_IMAGES = process.env.REACT_APP_API_MATCH_IMAGES_URL || 'http://localhost:3001/api/match-images';
+const API_BASE_URL = 'http://192.168.1.104:5000';
+const API_GAMES = `${API_BASE_URL}/api/games`;
+const API_MATCH_IMAGES = `${API_BASE_URL}/api/match-images`;
 
 const MediaPage = ({ language }) => {
   // Obtener el rol del usuario desde localStorage

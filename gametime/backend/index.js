@@ -659,6 +659,6 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-server.listen(process.env.PORT || 3001, () => {
-  console.log(`Servidor corriendo en http://localhost:${process.env.PORT || 3001}`);
+server.listen(5000, '0.0.0.0', () => {
+  console.log('Servidor corriendo en http://0.0.0.0:5000');
 });

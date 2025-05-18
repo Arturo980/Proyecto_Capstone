@@ -18,9 +18,10 @@ const defaultLeagueConfig = {
   lastSetPoints: 15 // Último set a 15 por defecto
 };
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/teams';
-const LEAGUES_URL = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
-const TEAM_LOGO_UPLOAD_URL = process.env.REACT_APP_API_TEAM_LOGO_URL || 'http://localhost:3001/api/team-logos';
+const API_BASE_URL = 'http://192.168.1.104:5000';
+const API_URL = `${API_BASE_URL}/api/teams`;
+const LEAGUES_URL = `${API_BASE_URL}/api/leagues`;
+const TEAM_LOGO_UPLOAD_URL = `${API_BASE_URL}/api/team-logos`;
 
 const NEW_LEAGUE_OPTION = '__new_league__';
 

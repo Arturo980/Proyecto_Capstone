@@ -3,11 +3,11 @@
   width: 100vw; /* Asegurar que el contenedor abarque todo el ancho de la ventana */
   margin-left: calc(-50vw + 50%); /* Centrar el fondo horizontalmente */
   background-color: #adadad; /* Fondo detrás del carrusel */
-  padding: 20px 10px; /* Reducir el padding superior e inferior */
-  margin-top: 105px; /* Asegurar que el carrusel esté debajo de la navbar */
+  padding: 20px 20px; /* Reducir el padding superior e inferior */
   display: flex; /* Habilitar flexbox para centrar contenido */
   justify-content: center; /* Centrar horizontalmente */
   align-items: center; /* Centrar verticalmente */
+  margin-top: 0px;
 }
 
 .horizontal-carousel {
@@ -30,6 +30,8 @@
   display: inline-flex;
   gap: 15px;
   padding: 10px;
+  align-items: center;
+  justify-content: center; /* Centrar horizontalmente */
   transition: transform 0.3s ease; /* Transición suave para el desplazamiento */
   /* transform: translateX(-20%); */ /* Eliminar desplazamiento inicial */
 }
@@ -86,42 +88,98 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  padding: 1px; /* Reducir el padding general */
+  justify-content: flex-start;
+  /* Cambios para hacerlo más largo y visualmente atractivo */
+  padding: 10px 18px;         /* Menos padding vertical */
   border: 1px solid #ccc;
-  background-color: #777777;
-  width: 200px; /* Ampliar significativamente el ancho de las tarjetas */
+  background-color: #fff;
+  min-width: 180px;
+  max-width: 320px;
+  width: 250px;
+  margin: 0 4px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: box-shadow 0.2s;
+  height: 120px;              /* Limita la altura total */
+  max-height: 140px;          /* Opcional: máximo de altura */
+  overflow: hidden;           /* Oculta contenido que se desborde */
 }
 
-.game-teams-scores {
+.game-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+
+.game-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.game-status-live-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e53935;
+  margin-right: 4px;
+}
+
+.game-status-text {
+  letter-spacing: 1px;
+}
+
+.game-status-channel {
+  margin-left: auto;
+  color: #555;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.game-teams-block {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  margin-bottom: 2px;
   width: 100%;
-  margin-bottom: -10px; /* Reducir el margen inferior para acercar el horario */
-  padding: 5px; /* Mantener el padding interno */
 }
 
-.team-row {
+.game-team-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
+  justify-content: space-between;
 }
 
-.team-name {
-  font-size: 0.9rem;
-  font-weight: bold;
+.game-team-name {
+  font-size: 18px;
+  color: #222;
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.team-score {
-  font-size: 0.9rem;
-  font-weight: bold;
+.game-team-name.winner {
+  font-weight: 700;
+}
+
+.game-score {
+  font-weight: 700;
+  font-size: 24px;
+  color: #222;
+  min-width: 32px;
   text-align: right;
 }
 
-.game-info {
+.game-time-row {
   text-align: center;
-  font-size: 0.8rem;
-  color: #ddd; /* Cambiar a un color más claro para mejor contraste */
-  padding: 5px; /* Mantener el padding interno */
+  font-size: 15px;
+  color: #888;
+  margin-top: 10px;
+  width: 100%;
 }
