@@ -6,6 +6,10 @@ import es from 'date-fns/locale/es';
 import calendar from '../assets/images/calendario.png';
 import texts from '../translations/texts';
 import { io as socketIOClient } from "socket.io-client";
+import LiveScoreModal from '../components/LiveScoreModal';
+import BeforeMatch from '../components/BeforeMatch';
+import DuringMatch from '../components/DuringMatch';
+import AfterMatch from '../components/AfterMatch';
 
 const API_TEAMS = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/teams';
 const API_LEAGUES = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
@@ -409,7 +413,6 @@ const GamesPage = ({ language = 'es' }) => {
   // Bloquear scroll cuando el modal está abierto (igual que TeamsPage)
   useEffect(() => {
     if (selectedGame || editingGame !== null) {
-      document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
@@ -421,6 +424,7 @@ const GamesPage = ({ language = 'es' }) => {
   // NUEVO: Socket.IO
   const [socket, setSocket] = useState(null);
 
+  // Inicializa socket siempre (no solo para admin/editor)
   useEffect(() => {
     const s = socketIOClient(SOCKET_URL, { transports: ['websocket'] });
     setSocket(s);
@@ -428,6 +432,123 @@ const GamesPage = ({ language = 'es' }) => {
       s.disconnect();
     };
   }, []);
+
+  // Escucha eventos de marcador y sets en vivo para TODOS los usuarios (incluida la vista pública)
+  useEffect(() => {
+    if (!socket) return;
+
+    // Actualiza marcador simple
+    const handleScoreUpdate = ({ gameId, score1, score2 }) => {
+      setGames(prevGames =>
+        prevGames.map(g =>
+          g._id === gameId ? { ...g, score1, score2 } : g
+        )
+      );
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId ? { ...prev, score1, score2 } : prev
+      );
+      // NUEVO: Actualiza el marcador en el modal público si está abierto y corresponde a este partido
+      setPublicGameModal(prev =>
+        prev && prev._id === gameId
+          ? { ...prev, score1, score2 }
+          : prev
+      );
+    };
+
+    // Actualiza marcador de set actual (opcional, si quieres mostrar el set actual en público)
+    const handleSetScoreUpdate = ({ gameId, setScore }) => {
+      setGames(prevGames =>
+        prevGames.map(g =>
+          g._id === gameId
+            ? { ...g, score1: setScore.score1, score2: setScore.score2 }
+            : g
+        )
+      );
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId
+          ? { ...prev, score1: setScore.score1, score2: setScore.score2 }
+          : prev
+      );
+      setCurrentSetScore(prev =>
+        liveScoreGame && liveScoreGame._id === gameId ? setScore : prev
+      );
+      // NUEVO: Actualiza el marcador en el modal público si está abierto y corresponde a este partido
+      setPublicGameModal(prev =>
+        prev && prev._id === gameId
+          ? { ...prev, score1: setScore.score1, score2: setScore.score2 }
+          : prev
+      );
+    };
+
+    // Actualiza historial de sets y estado del partido
+    const handleSetsHistoryUpdate = ({ gameId, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }) => {
+      setGames(prevGames =>
+        prevGames.map(g =>
+          g._id === gameId
+            ? { ...g, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }
+            : g
+        )
+      );
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId
+          ? { ...prev, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }
+          : prev
+      );
+    };
+
+    socket.on('score_update', handleScoreUpdate);
+    socket.on('set_score_update', handleSetScoreUpdate);
+    socket.on('sets_history_update', handleSetsHistoryUpdate);
+
+    return () => {
+      socket.off('score_update', handleScoreUpdate);
+      socket.off('set_score_update', handleSetScoreUpdate);
+      socket.off('sets_history_update', handleSetsHistoryUpdate);
+    };
+  }, [socket, liveScoreGame]);
+
+  // NUEVO: Sincronizar currentSetScore y liveSets por socket.io
+  useEffect(() => {
+    if (!socket) return;
+
+    // Escuchar cambios de marcador de set actual
+    const handleSetScoreUpdate = ({ gameId, setScore }) => {
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId ? { ...prev } : prev
+      );
+      setCurrentSetScore(prev =>
+        liveScoreGame && liveScoreGame._id === gameId ? setScore : prev
+      );
+    };
+
+    // Escuchar historial de sets actualizado
+    const handleSetsHistoryUpdate = ({ gameId, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }) => {
+      setLiveSets(prev =>
+        liveScoreGame && liveScoreGame._id === gameId ? setsHistory : prev
+      );
+      setCurrentSetScore({ score1: 0, score2: 0 });
+      setLiveScoreGame(prev =>
+        prev && prev._id === gameId
+          ? { ...prev, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }
+          : prev
+      );
+      setGames(prevGames =>
+        prevGames.map(g =>
+          g._id === gameId
+            ? { ...g, setsHistory, sets1, sets2, score1, score2, partidoFinalizado }
+            : g
+        )
+      );
+    };
+
+    socket.on('set_score_update', handleSetScoreUpdate);
+    socket.on('sets_history_update', handleSetsHistoryUpdate);
+
+    return () => {
+      socket.off('set_score_update', handleSetScoreUpdate);
+      socket.off('sets_history_update', handleSetsHistoryUpdate);
+    };
+  }, [socket, liveScoreGame, setGames]);
 
   // NUEVO: Función para actualizar el marcador en el backend y emitir por socket.io
   const updateScore = useCallback((gameId, score1, score2) => {
@@ -496,7 +617,54 @@ const GamesPage = ({ language = 'es' }) => {
     return false;
   }
 
-  // Finalizar set manualmente
+  // Sumar/restar puntos del set actual y emitir por socket
+  const handleSetScoreChange = (team, delta) => {
+    setCurrentSetScore(prev => {
+      let s1 = prev.score1, s2 = prev.score2;
+      if (team === 1) s1 = Math.max(0, s1 + delta);
+      if (team === 2) s2 = Math.max(0, s2 + delta);
+      const newScore = { score1: s1, score2: s2 };
+      // Emitir por socket para sincronizar con otros clientes
+      if (socket && liveScoreGame) {
+        socket.emit('set_score_update', {
+          gameId: liveScoreGame._id,
+          setScore: newScore
+        });
+      }
+      // Actualiza el score1 y score2 del partido en la lista de games
+      if (liveScoreGame) {
+        setGames(prevGames =>
+          prevGames.map(g =>
+            g._id === liveScoreGame._id
+              ? { ...g, score1: newScore.score1, score2: newScore.score2 }
+              : g
+          )
+        );
+        setLiveScoreGame(prev =>
+          prev && prev._id === liveScoreGame._id
+            ? { ...prev, score1: newScore.score1, score2: newScore.score2 }
+            : prev
+        );
+        // --- GUARDAR EL MARCADOR ACTUAL DEL SET EN EL BACKEND ---
+        fetch(`${API_GAMES}/${liveScoreGame._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            score1: newScore.score1,
+            score2: newScore.score2
+          }),
+        });
+      }
+      setPublicGameModal(prev =>
+        prev && prev._id === liveScoreGame?._id
+          ? { ...prev, score1: newScore.score1, score2: newScore.score2 }
+          : prev
+      );
+      return newScore;
+    });
+  };
+
+  // Finalizar set manualmente y emitir historial por socket
   const handleFinishSet = async () => {
     const setIndex = liveSets.length;
     const { score1, score2 } = currentSetScore;
@@ -508,9 +676,6 @@ const GamesPage = ({ language = 'es' }) => {
     }
     // Agrega el set al historial
     const newSets = [...liveSets, { score1, score2 }];
-    setLiveSets(newSets);
-    setCurrentSetScore({ score1: 0, score2: 0 });
-
     // Calcula sets ganados
     let sets1 = 0, sets2 = 0;
     newSets.forEach(s => {
@@ -537,7 +702,21 @@ const GamesPage = ({ language = 'es' }) => {
         partidoFinalizado
       }),
     });
+    // Emitir por socket para sincronizar sets y estado del partido
+    if (socket) {
+      socket.emit('sets_history_update', {
+        gameId: liveScoreGame._id,
+        setsHistory: newSets,
+        sets1,
+        sets2,
+        score1,
+        score2,
+        partidoFinalizado
+      });
+    }
     // Actualiza estado local
+    setLiveSets(newSets);
+    setCurrentSetScore({ score1: 0, score2: 0 });
     setLiveScoreGame(prev => ({
       ...prev,
       setsHistory: newSets,
@@ -556,21 +735,58 @@ const GamesPage = ({ language = 'es' }) => {
     );
   };
 
-  // Sumar/restar puntos del set actual
-  const handleSetScoreChange = (team, delta) => {
-    setCurrentSetScore(prev => {
-      let s1 = prev.score1, s2 = prev.score2;
-      if (team === 1) s1 = Math.max(0, s1 + delta);
-      if (team === 2) s2 = Math.max(0, s2 + delta);
-      return { score1: s1, score2: s2 };
-    });
-  };
-
   // --- Render ---
   // Mueve el useState fuera del render condicional para cumplir las reglas de hooks
   const [publicGameModal, setPublicGameModal] = useState(null);
 
-  // Añade los estados para el modal de citados ANTES del render condicional
+  // NUEVO: Estado para marcador en vivo del set actual en el modal público
+  const [liveSetScore, setLiveSetScore] = useState({ score1: 0, score2: 0 });
+
+  // NUEVO: Escuchar marcador en vivo del set actual para el modal público
+  useEffect(() => {
+    if (!publicGameModal || !socket) return;
+
+    // Inicializa con el score actual si el partido está en curso
+    if (!publicGameModal.partidoFinalizado) {
+      setLiveSetScore({
+        score1: typeof publicGameModal.score1 === 'number' ? publicGameModal.score1 : 0,
+        score2: typeof publicGameModal.score2 === 'number' ? publicGameModal.score2 : 0,
+      });
+    }
+
+    const handleSetScoreUpdate = ({ gameId, setScore }) => {
+      // Si el partido ya está finalizado, limpia el marcador en vivo
+      if (publicGameModal.partidoFinalizado) {
+        setLiveSetScore({ score1: 0, score2: 0 });
+        return;
+      }
+      if (gameId === publicGameModal._id) {
+        setLiveSetScore(setScore);
+      }
+    };
+
+    // También escucha si el partido se finaliza por socket y limpia el marcador en vivo
+    const handleSetsHistoryUpdate = ({ gameId, partidoFinalizado }) => {
+      if (gameId === publicGameModal._id && partidoFinalizado) {
+        setLiveSetScore({ score1: 0, score2: 0 });
+      }
+    };
+
+    socket.on('set_score_update', handleSetScoreUpdate);
+    socket.on('sets_history_update', handleSetsHistoryUpdate);
+
+    // Si el partido ya está finalizado (por actualización de estado), limpia el marcador en vivo
+    if (publicGameModal.partidoFinalizado) {
+      setLiveSetScore({ score1: 0, score2: 0 });
+    }
+
+    return () => {
+      socket.off('set_score_update', handleSetScoreUpdate);
+      socket.off('sets_history_update', handleSetsHistoryUpdate);
+    };
+  }, [publicGameModal, socket]);
+
+  // Añade los estados para el modal de citados ANTES de cualquier uso
   const [pendingCitadosGame, setPendingCitadosGame] = useState(null);
   const [pendingCitados, setPendingCitados] = useState([]);
 
@@ -682,16 +898,32 @@ const GamesPage = ({ language = 'es' }) => {
               className="col-md-4 mb-3"
               style={{ cursor: 'pointer' }}
               onClick={() => {
+                // Mostrar el resultado final en el modal público si el partido está finalizado
                 if (game.partidoFinalizado) {
-                  setPublicGameModal(game);
+                  setPublicGameModal({
+                    ...game,
+                    // Asegura que sets1 y sets2 estén actualizados
+                    sets1: typeof game.sets1 === 'number' ? game.sets1 : (
+                      Array.isArray(game.setsHistory)
+                        ? game.setsHistory.filter(s => s.score1 > s.score2).length
+                        : 0
+                    ),
+                    sets2: typeof game.sets2 === 'number' ? game.sets2 : (
+                      Array.isArray(game.setsHistory)
+                        ? game.setsHistory.filter(s => s.score2 > s.score1).length
+                        : 0
+                    ),
+                    partidoFinalizado: true
+                  });
                 } else if (canEditMatchData) {
                   // Mostrar primero el modal de citados si aún no están definidos
                   if (!game.citados || game.citados.trim() === '') {
                     setPendingCitadosGame(game);
-                    // Inicializa los citados vacíos
                     setPendingCitados([]);
                   } else {
-                    setLiveScoreGame(game);
+                    if (!game.partidoFinalizado) {
+                      setLiveScoreGame(game);
+                    }
                   }
                 } else {
                   handleShowGame(game);
@@ -1055,171 +1287,71 @@ const GamesPage = ({ language = 'es' }) => {
         )}
         {/* Modal para editar marcador en vivo SOLO si el partido NO está finalizado */}
         {liveScoreGame && !liveScoreGame.partidoFinalizado && (
-          <div className="modal-overlay" onClick={() => setLiveScoreGame(null)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <button
-                className="btn btn-secondary close-button"
-                onClick={() => setLiveScoreGame(null)}
-              >
-                &times;
-              </button>
-              <div className="team-names-container modal-header">
-                <span className="team-name">{liveScoreGame.team1}</span>
-                <span className="vs-text">{texts[language]?.vs || 'vs'}</span>
-                <span className="team-name" style={{ textAlign: 'right' }}>{liveScoreGame.team2}</span>
-              </div>
-              {/* Mostrar historial de sets */}
-              <div style={{ marginBottom: 16 }}>
-                <strong>{language === 'en' ? 'Sets played:' : 'Sets jugados:'}</strong>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-                  {liveSets.map((set, idx) => (
-                    <span key={idx} className="score-box" style={{ fontSize: 18 }}>
-                      {set.score1} - {set.score2}
-                    </span>
-                  ))}
-                  {liveSets.length === 0 && (
-                    <span style={{ color: '#888' }}>
-                      {language === 'en' ? 'No sets finished yet.' : 'Aún no hay sets finalizados.'}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {/* Set actual */}
-              <div className="mb-2">
-                <strong>{language === 'en' ? 'Current Set' : 'Set Actual'}:</strong>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 16 }}>
-                  {/* Equipo 1 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <button
-                      className="btn btn-success btn-sm"
-                      style={{ fontSize: 24, width: 40, marginBottom: 6 }}
-                      onClick={e => { e.stopPropagation(); handleSetScoreChange(1, +1); }}
-                      disabled={liveScoreGame.partidoFinalizado}
-                    >+</button>
-                    <span className="score-box" style={{ fontSize: 28 }}>{currentSetScore.score1}</span>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      style={{ fontSize: 24, width: 40, marginTop: 6 }}
-                      onClick={e => { e.stopPropagation(); handleSetScoreChange(1, -1); }}
-                      disabled={currentSetScore.score1 <= 0 || liveScoreGame.partidoFinalizado}
-                    >-</button>
-                  </div>
-                  {/* Separador */}
-                  <span style={{ fontSize: 32, fontWeight: 'bold' }}>:</span>
-                  {/* Equipo 2 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <button
-                      className="btn btn-success btn-sm"
-                      style={{ fontSize: 24, width: 40, marginBottom: 6 }}
-                      onClick={e => { e.stopPropagation(); handleSetScoreChange(2, +1); }}
-                      disabled={liveScoreGame.partidoFinalizado}
-                    >+</button>
-                    <span className="score-box" style={{ fontSize: 28 }}>{currentSetScore.score2}</span>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      style={{ fontSize: 24, width: 40, marginTop: 6 }}
-                      onClick={e => { e.stopPropagation(); handleSetScoreChange(2, -1); }}
-                      disabled={currentSetScore.score2 <= 0 || liveScoreGame.partidoFinalizado}
-                    >-</button>
-                  </div>
-                </div>
-                <div style={{ marginTop: 16, textAlign: 'center' }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleFinishSet}
-                    disabled={liveScoreGame.partidoFinalizado}
-                  >
-                    {language === 'en' ? 'Finish Set' : 'Finalizar Set'}
-                  </button>
-                  <div style={{ fontSize: 13, color: '#888', marginTop: 6 }}>
-                    {liveScoreGame.partidoFinalizado
-                      ? (language === 'en'
-                        ? 'Match finished.'
-                        : 'Partido finalizado.')
-                      : (language === 'en'
-                        ? `A set ends at 25 points (or ${leagueConfig.lastSetPoints} in last set) with 2-point difference. Finish manually.`
-                        : `Un set termina a 25 puntos (o ${leagueConfig.lastSetPoints} en el último) y diferencia de 2. Finaliza manualmente.`)
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <LiveScoreModal
+            game={liveScoreGame}
+            leagueConfig={leagueConfig}
+            socket={socket}
+            games={games}
+            setGames={setGames}
+            setLiveScoreGame={setLiveScoreGame}
+            setPublicGameModal={setPublicGameModal}
+            language={language}
+          />
         )}
-        {/* Modal de sets finalizados para admin/editor */}
-        {publicGameModal && (
-          <div className="modal-overlay" onClick={() => setPublicGameModal(null)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
-              <button
-                className="btn btn-secondary close-button"
-                onClick={() => setPublicGameModal(null)}
-              >
-                &times;
-              </button>
-              <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                <h3 style={{ marginBottom: 0 }}>
-                  {publicGameModal.team1} {texts[language]?.vs || 'vs'} {publicGameModal.team2}
-                </h3>
-                <div style={{ fontSize: 18, margin: '8px 0' }}>
-                  <b>{(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}</b>
-                </div>
-                <div style={{ fontSize: 15, color: '#888' }}>
-                  {publicGameModal.date} {publicGameModal.time}
-                </div>
-              </div>
-              {/* Tabla de sets */}
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
-                <thead>
-                  <tr style={{ background: '#f0f0f0' }}>
-                    <th style={{ padding: 6, border: '1px solid #ddd' }}></th>
-                    {Array.isArray(publicGameModal.setsHistory)
-                      ? publicGameModal.setsHistory.map((_, idx) => (
-                          <th key={idx} style={{ padding: 6, border: '1px solid #ddd' }}>S{idx + 1}</th>
-                        ))
-                      : null}
-                    <th style={{ padding: 6, border: '1px solid #ddd' }}>{language === 'en' ? 'Sets' : 'Sets'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team1}</td>
-                    {Array.isArray(publicGameModal.setsHistory)
-                      ? publicGameModal.setsHistory.map((set, idx) => (
-                          <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
-                            {set.score1}
-                          </td>
-                        ))
-                      : null}
-                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
-                      {publicGameModal.sets1 ?? '-'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', textAlign: 'right' }}>{publicGameModal.team2}</td>
-                    {Array.isArray(publicGameModal.setsHistory)
-                      ? publicGameModal.setsHistory.map((set, idx) => (
-                          <td key={idx} style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center' }}>
-                            {set.score2}
-                          </td>
-                        ))
-                      : null}
-                    <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
-                      {publicGameModal.sets2 ?? '-'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div style={{ marginTop: 12, textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
-                {language === 'en' ? 'Finished' : 'Finalizado'}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Antes del partido: crear/editar partidos */}
+        <BeforeMatch
+          leagues={leagues}
+          activeLeague={activeLeague}
+          setActiveLeague={setActiveLeague}
+          teams={teams}
+          games={games}
+          setGames={setGames}
+          form={form}
+          setForm={setForm}
+          editingGame={editingGame}
+          setEditingGame={setEditingGame}
+          handleFormChange={handleFormChange}
+          handleAddOrEditGame={handleAddOrEditGame}
+          handleEditGame={handleEditGame}
+          handleDeleteGame={handleDeleteGame}
+          handleCancelEdit={handleCancelEdit}
+          deleteGameId={deleteGameId}
+          confirmDeleteGame={confirmDeleteGame}
+          cancelDeleteGame={cancelDeleteGame}
+          language={language}
+          texts={texts}
+          selectedCitados={selectedCitados}
+          setSelectedCitados={setSelectedCitados}
+          handleCitadoToggle={handleCitadoToggle}
+          canEditMatchData={canEditMatchData}
+          canEditCitadosAndSets={canEditCitadosAndSets}
+          roster1={roster1}
+          roster2={roster2}
+        />
+        {/* Durante el partido: marcador en vivo */}
+        <DuringMatch
+          liveScoreGame={liveScoreGame}
+          setLiveScoreGame={setLiveScoreGame}
+          leagueConfig={leagueConfig}
+          socket={socket}
+          games={games}
+          setGames={setGames}
+          setPublicGameModal={setPublicGameModal}
+          language={language}
+        />
+        {/* Después del partido: resultado final */}
+        <AfterMatch
+          publicGameModal={publicGameModal}
+          setPublicGameModal={setPublicGameModal}
+          language={language}
+          texts={texts}
+        />
       </div>
     );
   }
 
   // --- Vista pública (público general) ---
+  // Elimina el marcador de la caja de partido, solo muestra si el partido está en curso o finalizado
   return (
     <div className="page-container">
       <div className="calendar-header">
@@ -1261,7 +1393,6 @@ const GamesPage = ({ language = 'es' }) => {
               value={selectedDate}
               locale={language === 'en' ? undefined : es}
               tileClassName={({ date }) => {
-                // Asegura que la fecha sea interpretada correctamente en zona local
                 if (
                   date.getFullYear() === currentYear &&
                   date.getMonth() === currentMonth &&
@@ -1296,8 +1427,13 @@ const GamesPage = ({ language = 'es' }) => {
       <div className="games-container">
         {filteredGames.length > 0 ? (
           filteredGames.map((game, index) => (
-            <div key={game._id || index} className="game-box">
-              {/* CAMBIO: Equipos alineados izquierda/derecha */}
+            <div
+              key={game._id || index}
+              className="game-box"
+              onClick={() => setPublicGameModal(game)}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Equipos alineados izquierda/derecha */}
               <div className="team-names-container" style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1313,19 +1449,11 @@ const GamesPage = ({ language = 'es' }) => {
               <div className="date-time">
                 {game.time}
               </div>
-              {/* CAMBIO: Marcador responsive */}
-              <div
-                className="score-box-container"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 10,
-                  flexWrap: 'nowrap'
-                }}
-              >
-                <div className="score-box" style={{ minWidth: 40 }}>{game.score1 !== null ? game.score1 : '-'}</div>
-                <div className="score-box" style={{ minWidth: 40 }}>{game.score2 !== null ? game.score2 : '-'}</div>
+              {/* Estado del partido: En curso o Finalizado */}
+              <div style={{ marginTop: 10, textAlign: 'center', fontWeight: 'bold', color: game.partidoFinalizado ? '#007bff' : '#28a745' }}>
+                {game.partidoFinalizado
+                  ? (language === 'en' ? 'Finished' : 'Finalizado')
+                  : (language === 'en' ? 'In progress' : 'En curso')}
               </div>
             </div>
           ))
@@ -1333,7 +1461,7 @@ const GamesPage = ({ language = 'es' }) => {
           <p>{language === 'en' ? 'No games scheduled for this date.' : 'No hay partidos programados para esta fecha.'}</p>
         )}
       </div>
-      {/* Modal detalle de sets del partido */}
+      {/* Modal detalle de sets y marcador en vivo para público */}
       {publicGameModal && (
         <div className="modal-overlay" onClick={() => setPublicGameModal(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
@@ -1347,14 +1475,14 @@ const GamesPage = ({ language = 'es' }) => {
               <h3 style={{ marginBottom: 0 }}>
                 {publicGameModal.team1} {texts[language]?.vs || 'vs'} {publicGameModal.team2}
               </h3>
-              <div style={{ fontSize: 18, margin: '8px 0' }}>
-                <b>{(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}</b>
+              <div style={{ fontSize: 22, margin: '8px 0', fontWeight: 'bold' }}>
+                {(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}
               </div>
               <div style={{ fontSize: 15, color: '#888' }}>
                 {publicGameModal.date} {publicGameModal.time}
               </div>
             </div>
-            {/* Tabla de sets */}
+            {/* Tabla de sets con marcador en vivo */}
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
               <thead>
                 <tr style={{ background: '#f0f0f0' }}>
@@ -1364,6 +1492,12 @@ const GamesPage = ({ language = 'es' }) => {
                         <th key={idx} style={{ padding: 6, border: '1px solid #ddd' }}>S{idx + 1}</th>
                       ))
                     : null}
+                  {/* NUEVO: Columna en vivo si el partido no está finalizado */}
+                  {!publicGameModal.partidoFinalizado && (
+                    <th style={{ padding: 6, border: '1px solid #ddd', color: '#007bff' }}>
+                      {language === 'en' ? 'Live' : 'En vivo'}
+                    </th>
+                  )}
                   <th style={{ padding: 6, border: '1px solid #ddd' }}>{language === 'en' ? 'Sets' : 'Sets'}</th>
                 </tr>
               </thead>
@@ -1377,6 +1511,12 @@ const GamesPage = ({ language = 'es' }) => {
                         </td>
                       ))
                     : null}
+                  {/* NUEVO: Puntaje en vivo del set actual */}
+                  {!publicGameModal.partidoFinalizado && (
+                    <td style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
+                      {liveSetScore.score1}
+                    </td>
+                  )}
                   <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
                     {publicGameModal.sets1 ?? '-'}
                   </td>
@@ -1390,14 +1530,22 @@ const GamesPage = ({ language = 'es' }) => {
                         </td>
                       ))
                     : null}
+                  {/* NUEVO: Puntaje en vivo del set actual */}
+                  {!publicGameModal.partidoFinalizado && (
+                    <td style={{ padding: 6, border: '1px solid #ddd', textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
+                      {liveSetScore.score2}
+                    </td>
+                  )}
                   <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
                     {publicGameModal.sets2 ?? '-'}
                   </td>
                 </tr>
               </tbody>
             </table>
-            <div style={{ marginTop: 12, textAlign: 'center', color: '#007bff', fontWeight: 'bold' }}>
-              {language === 'en' ? 'Finished' : 'Finalizado'}
+            <div style={{ marginTop: 12, textAlign: 'center', color: '#007bff', fontWeight: 'bold', fontSize: 18 }}>
+              {publicGameModal.partidoFinalizado
+                ? (language === 'en' ? 'Finished' : 'Finalizado')
+                : (language === 'en' ? 'Live' : 'En vivo')}
             </div>
           </div>
         </div>

@@ -14,7 +14,6 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Asegurar que el contenedor principal abarque toda la ventana */
-  margin-top: -56px; /* Eliminar márgenes adicionales */
 }
 
 .main-content {

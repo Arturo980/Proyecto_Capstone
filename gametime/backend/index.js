@@ -72,7 +72,9 @@ const Partido = mongoose.model('Partido', {
   score2: { type: Number, default: null },
   citados: { type: String, default: '' }, // NUEVO: citados (string, lista separada por coma)
   sets1: { type: Number, default: null }, // NUEVO: sets ganados equipo 1
-  sets2: { type: Number, default: null }  // NUEVO: sets ganados equipo 2
+  sets2: { type: Number, default: null }, // NUEVO: sets ganados equipo 2
+  // Guarda el historial de sets: [{score1, score2}, ...]
+  setsHistory: { type: Array, default: [] }
 });
 
 // Carpeta donde se guardarán las imágenes
@@ -305,15 +307,57 @@ app.post('/api/games', async (req, res) => {
 app.put('/api/games/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const partido = await Partido.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const update = { ...req.body };
+    // Si setsHistory viene como string (por error), intenta parsear
+    if (typeof update.setsHistory === 'string') {
+      try {
+        update.setsHistory = JSON.parse(update.setsHistory);
+      } catch {
+        update.setsHistory = [];
+      }
+    }
+    // Si setsHistory viene, calcula sets1, sets2 y partidoFinalizado
+    if (Array.isArray(update.setsHistory)) {
+      let sets1 = 0, sets2 = 0;
+      update.setsHistory.forEach(s => {
+        if (s.score1 > s.score2) sets1++;
+        else if (s.score2 > s.score1) sets2++;
+      });
+      update.sets1 = sets1;
+      update.sets2 = sets2;
+      // Busca la liga para saber cuántos sets se necesitan para ganar
+      let partidoFinalizado = false;
+      const partido = await Partido.findById(id);
+      let setsToWin = 3;
+      if (partido && partido.league) {
+        const liga = await mongoose.model('Liga').findById(partido.league);
+        if (liga && typeof liga.setsToWin === 'number') setsToWin = liga.setsToWin;
+      }
+      if (sets1 === setsToWin || sets2 === setsToWin) {
+        partidoFinalizado = true;
+      }
+      update.partidoFinalizado = partidoFinalizado;
+    }
+    const partido = await Partido.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!partido) return res.status(404).json({ error: 'Partido no encontrado' });
 
+    // Emitir eventos de socket según el tipo de actualización
     if (
       Object.keys(req.body).length === 2 &&
       req.body.hasOwnProperty('score1') &&
       req.body.hasOwnProperty('score2')
     ) {
       io.emit('score_update', { gameId: id, score1: req.body.score1, score2: req.body.score2 });
+    } else if (update.setsHistory) {
+      io.emit('sets_history_update', {
+        gameId: id,
+        setsHistory: partido.setsHistory,
+        sets1: partido.sets1,
+        sets2: partido.sets2,
+        score1: partido.score1,
+        score2: partido.score2,
+        partidoFinalizado: partido.partidoFinalizado
+      });
     } else {
       io.emit('game_updated', partido);
     }

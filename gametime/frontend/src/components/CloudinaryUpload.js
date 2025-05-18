@@ -69,7 +69,6 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
 
   return (
     <div>
-      <h1>Upload Image</h1>
       <input
         type="file"
         name="file"

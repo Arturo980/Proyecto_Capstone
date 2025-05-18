@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
+import LeagueConfigModal from '../components/LeagueConfigModal'; // Nuevo import
 import settingsIcon from '../assets/images/icons8-settings-384.png';
 
 const defaultTeam = {
@@ -38,10 +39,12 @@ const TeamsPage = ({ language, userRole }) => {
   const [logoType, setLogoType] = useState('url'); // 'url' o 'file'
   const [logoFile, setLogoFile] = useState(null);
   const [leagues, setLeagues] = useState([]);
-  const [activeLeague, setActiveLeague] = useState(null);
+  const [activeLeague, setActiveLeague] = useState(''); // Cambia el valor inicial a string vacío
   const [leagueConfig, setLeagueConfig] = useState(defaultLeagueConfig);
   const [showLeagueConfigModal, setShowLeagueConfigModal] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
+  const [showDeleteLeagueModal, setShowDeleteLeagueModal] = useState(false);
+  const [leagueToDelete, setLeagueToDelete] = useState(null);
   const fileInputRef = useRef(null);
 
   // Cargar ligas y equipos al montar
@@ -49,21 +52,22 @@ const TeamsPage = ({ language, userRole }) => {
     fetchLeagues();
   }, []);
 
-  useEffect(() => {
-    if (activeLeague) fetchTeamsAndLeague(activeLeague);
-  }, [activeLeague]);
-
+  // Cuando se cargan las ligas, no selecciones ninguna por defecto
   const fetchLeagues = async () => {
     const res = await fetch(LEAGUES_URL);
     let data = await res.json();
     if (!Array.isArray(data)) {
       data = [];
     }
-    // Ordenar alfabéticamente por nombre (case-insensitive)
     data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     setLeagues(data);
-    if (data.length > 0) setActiveLeague(data[0]._id);
+    setActiveLeague(''); // Siempre deja la selección en "Selecciona una liga"
   };
+
+  // Solo busca equipos si hay una liga seleccionada
+  useEffect(() => {
+    if (activeLeague) fetchTeamsAndLeague(activeLeague);
+  }, [activeLeague]);
 
   const fetchTeamsAndLeague = async (leagueId) => {
     setLoading(true);
@@ -171,8 +175,41 @@ const TeamsPage = ({ language, userRole }) => {
     }
   };
 
+  // Reemplaza handleDeleteLeague para abrir el modal en vez de usar window.confirm
+  const handleDeleteLeague = (leagueId) => {
+    setShowLeagueConfigModal(false); // Cierra el modal de configuración
+    setLeagueToDelete(leagueId);
+    setShowDeleteLeagueModal(true);
+  };
+
+  const confirmDeleteLeague = async () => {
+    if (!leagueToDelete) return;
+    setShowLeagueConfigModal(false); // Asegura que el modal de configuración esté cerrado
+    const res = await fetch(`${LEAGUES_URL}/${leagueToDelete}`, { method: 'DELETE' });
+    if (res.ok) {
+      setLeagues(prev => prev.filter(l => l._id !== leagueToDelete));
+      if (activeLeague === leagueToDelete) {
+        const remaining = leagues.filter(l => l._id !== leagueToDelete);
+        setActiveLeague(remaining.length > 0 ? remaining[0]._id : '');
+        setTeams([]);
+      }
+    } else {
+      const data = await res.json();
+      alert(data.error || (language === 'en'
+        ? 'Could not delete league.'
+        : 'No se pudo eliminar la liga.'));
+    }
+    setShowDeleteLeagueModal(false);
+    setLeagueToDelete(null);
+  };
+
+  const cancelDeleteLeague = () => {
+    setShowDeleteLeagueModal(false);
+    setLeagueToDelete(null);
+  };
+
   // Eliminar liga
-  const handleDeleteLeague = async (leagueId) => {
+  const handleDeleteLeagueOld = async (leagueId) => {
     if (!window.confirm(language === 'en'
       ? 'Are you sure you want to delete this league and all its teams?'
       : '¿Seguro que deseas eliminar esta liga y todos sus equipos?')) return;
@@ -194,7 +231,8 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // Guardar equipo (crear o editar)
-  const handleSaveTeam = async () => {
+  const handleSaveTeam = async (e) => {
+    if (e) e.preventDefault(); // Permite que funcione tanto con onClick como con onSubmit
     if (!teamForm.name || !activeLeague) return;
     setLoading(true);
 
@@ -303,11 +341,17 @@ const TeamsPage = ({ language, userRole }) => {
     setTeamForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Cambia handleAddRoster y handleAddStaff para aceptar varios nombres separados por coma o salto de línea
   const handleAddRoster = () => {
     if (rosterInput.trim()) {
+      // Permite separar por coma o salto de línea
+      const names = rosterInput
+        .split(/[\n,]+/)
+        .map(n => n.trim())
+        .filter(Boolean);
       setTeamForm((prev) => ({
         ...prev,
-        roster: [...prev.roster, rosterInput.trim()],
+        roster: [...prev.roster, ...names],
       }));
       setRosterInput('');
     }
@@ -322,9 +366,13 @@ const TeamsPage = ({ language, userRole }) => {
 
   const handleAddStaff = () => {
     if (staffInput.trim()) {
+      const names = staffInput
+        .split(/[\n,]+/)
+        .map(n => n.trim())
+        .filter(Boolean);
       setTeamForm((prev) => ({
         ...prev,
-        staff: [...prev.staff, staffInput.trim()],
+        staff: [...prev.staff, ...names],
       }));
       setStaffInput('');
     }
@@ -436,17 +484,23 @@ const TeamsPage = ({ language, userRole }) => {
             onChange={handleLeagueSelect}
             style={{ maxWidth: 300 }}
           >
-            {(Array.isArray(leagues) ? leagues : []).map(l => (
+            {/* Primera opción: Seleccionar liga */}
+            <option value="" disabled>
+              {texts[language]?.select_league_option || (language === 'en' ? 'Select a league' : 'Selecciona una liga')}
+            </option>
+            {/* Opciones de ligas existentes */}
+            {leagues.map(l => (
               <option key={l._id} value={l._id}>{l.name}</option>
             ))}
+            {/* Opción para crear nueva liga (solo para usuarios con permisos) */}
             {(userRole === 'content-editor' || userRole === 'admin') && (
               <option value={NEW_LEAGUE_OPTION}>
-                {texts[language]?.create_new_league || (language === 'en' ? 'Create new league...' : 'Crear nueva liga...')}
+                {texts[language]?.create_new_league || (language === 'en' ? 'Create new league...' : 'Agregar nueva liga')}
               </option>
             )}
           </select>
           {/* Botón de configuración solo para admin/editor y liga existente */}
-          {(userRole === 'content-editor' || userRole === 'admin') && activeLeague && (
+          {(userRole === 'content-editor' || userRole === 'admin') && activeLeague && leagues.length > 0 && (
             <button
               className="btn btn-link p-0"
               style={{ border: 'none', background: 'none' }}
@@ -460,69 +514,33 @@ const TeamsPage = ({ language, userRole }) => {
       </div>
       {/* Modal de configuración de liga (solo para editar liga existente) */}
       {showLeagueConfigModal && activeLeague && (
-        <div className="modal-overlay" onClick={() => setShowLeagueConfigModal(false)}>
+        <LeagueConfigModal
+          league={leagues.find(l => l._id === activeLeague)}
+          onSave={handleSaveEditConfig}
+          onDelete={() => handleDeleteLeague(activeLeague)}
+          onClose={() => setShowLeagueConfigModal(false)}
+          loading={loading}
+          language={language}
+        />
+      )}
+      {/* Modal de confirmación para eliminar liga */}
+      {showDeleteLeagueModal && (
+        <div className="modal-overlay" onClick={cancelDeleteLeague}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button
-              className="btn btn-secondary close-button"
-              onClick={() => setShowLeagueConfigModal(false)}
-            >
-              &times;
-            </button>
-            <h4>{texts[language]?.league_design || (language === 'en' ? 'League Design' : 'Diseño de Liga')}</h4>
-            <form onSubmit={handleSaveEditConfig}>
-              <div className="d-flex flex-column gap-2 mt-3">
-                <div>
-                  <label className="form-label mb-0 me-1">
-                    {texts[language]?.sets_label || (language === 'en' ? 'Sets:' : 'Sets:')}
-                  </label>
-                  <select
-                    className="form-select d-inline-block"
-                    name="setsToWin"
-                    value={editConfig.setsToWin}
-                    onChange={handleEditConfigChange}
-                    style={{ width: 120, display: 'inline-block', marginLeft: 8 }}
-                  >
-                    <option value={2}>3</option>
-                    <option value={3}>5</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label mb-0 me-1">
-                    {texts[language]?.last_set_points_label || (language === 'en' ? 'Last set points:' : 'Puntos último set:')}
-                  </label>
-                  <select
-                    className="form-select d-inline-block"
-                    name="lastSetPoints"
-                    value={editConfig.lastSetPoints}
-                    onChange={handleEditConfigChange}
-                    style={{ width: 80, display: 'inline-block', marginLeft: 8 }}
-                  >
-                    <option value={15}>15</option>
-                    <option value={25}>25</option>
-                  </select>
-                </div>
-                <div className="d-flex gap-2 mt-2">
-                  <button
-                    className="btn btn-success"
-                    type="submit"
-                    disabled={loading}
-                  >
-                    {texts[language]?.save || (language === 'en' ? 'Save' : 'Guardar')}
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    type="button"
-                    onClick={() => {
-                      setShowLeagueConfigModal(false);
-                      handleDeleteLeague(activeLeague);
-                    }}
-                    disabled={loading}
-                  >
-                    {texts[language]?.delete_league || (language === 'en' ? 'Delete League' : 'Eliminar Liga')}
-                  </button>
-                </div>
-              </div>
-            </form>
+            <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
+            <p>
+              {language === 'en'
+                ? 'Are you sure you want to delete this league and all its teams?'
+                : '¿Seguro que deseas eliminar esta liga y todos sus equipos?'}
+            </p>
+            <div className="delete-league-modal-buttons">
+              <button className="btn btn-danger" style={{ minWidth: 140 }} onClick={confirmDeleteLeague}>
+                {language === 'en' ? 'Delete League' : 'Eliminar Liga'}
+              </button>
+              <button className="btn btn-secondary" style={{ minWidth: 140 }} onClick={cancelDeleteLeague}>
+                {language === 'en' ? 'Cancel' : 'Cancelar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -606,6 +624,7 @@ const TeamsPage = ({ language, userRole }) => {
             value={teamCount}
             min={0}
             readOnly
+            style={{ width: 'auto' }} // Cambia el ancho aquí
           />
           <button className="btn btn-primary mt-3" onClick={openAddTeam} disabled={loading}>
             {texts[language]?.add_team || (language === 'en' ? 'Add Team' : 'Agregar Equipo')}
@@ -723,133 +742,157 @@ const TeamsPage = ({ language, userRole }) => {
               &times;
             </button>
             <h2>{editingTeam !== 'new' ? (language === 'en' ? 'Edit Team' : 'Editar Equipo') : (language === 'en' ? 'Add Team' : 'Agregar Equipo')}</h2>
-            <label className="form-label">{language === 'en' ? 'Team Name' : 'Nombre del Equipo'}</label>
-            <input
-              type="text"
-              className="form-control mb-2"
-              name="name"
-              value={teamForm.name}
-              onChange={handleTeamFormChange}
-            />
+            <form onSubmit={handleSaveTeam}>
+              <label className="form-label">{language === 'en' ? 'Team Name' : 'Nombre del Equipo'}</label>
+              <input
+                type="text"
+                className="form-control mb-2"
+                name="name"
+                value={teamForm.name}
+                onChange={handleTeamFormChange}
+              />
 
-            {/* NUEVO: Selector de tipo de logo */}
-            <div className="mb-2">
-              <label className="form-label">{language === 'en' ? 'Logo' : 'Logo'}</label>
+              {/* NUEVO: Selector de tipo de logo */}
               <div className="mb-2">
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="logoType"
-                    id="logoUrl"
-                    checked={logoType === 'url'}
-                    onChange={() => {
-                      setLogoType('url');
-                      setLogoFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor="logoUrl">
-                    {language === 'en' ? 'By URL' : 'Por URL'}
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="logoType"
-                    id="logoFile"
-                    checked={logoType === 'file'}
-                    onChange={() => {
-                      setLogoType('file');
-                      setTeamForm((prev) => ({ ...prev, logo: '' }));
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor="logoFile">
-                    {language === 'en' ? 'Upload Image' : 'Subir Imagen'}
-                  </label>
-                </div>
-              </div>
-              {logoType === 'url' && (
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  name="logo"
-                  value={teamForm.logo}
-                  onChange={handleTeamFormChange}
-                  placeholder={language === 'en' ? 'Logo URL' : 'URL del Logo'}
-                />
-              )}
-              {logoType === 'file' && (
-                <CloudinaryUpload onUpload={handleCloudinaryUpload} />
-              )}
-              {/* Preview del logo */}
-              {getLogoPreview() && (
+                <label className="form-label">{language === 'en' ? 'Logo' : 'Logo'}</label>
                 <div className="mb-2">
-                  <img src={getLogoPreview()} alt="logo preview" style={{ maxWidth: 120, marginTop: 8 }} />
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="logoType"
+                      id="logoUrl"
+                      checked={logoType === 'url'}
+                      onChange={() => {
+                        setLogoType('url');
+                        setLogoFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="logoUrl">
+                      {language === 'en' ? 'By URL' : 'Por URL'}
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="logoType"
+                      id="logoFile"
+                      checked={logoType === 'file'}
+                      onChange={() => {
+                        setLogoType('file');
+                        setTeamForm((prev) => ({ ...prev, logo: '' }));
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="logoFile">
+                      {language === 'en' ? 'Upload Image' : 'Subir Imagen'}
+                    </label>
+                  </div>
                 </div>
-              )}
-            </div>
+                {logoType === 'url' && (
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    name="logo"
+                    value={teamForm.logo}
+                    onChange={handleTeamFormChange}
+                    placeholder={language === 'en' ? 'Logo URL' : 'URL del Logo'}
+                  />
+                )}
+                {logoType === 'file' && (
+                  <CloudinaryUpload onUpload={handleCloudinaryUpload} />
+                )}
+                {/* Preview del logo */}
+                {getLogoPreview() && (
+                  <div className="mb-2">
+                    <img src={getLogoPreview()} alt="logo preview" style={{ maxWidth: 120, marginTop: 8 }} />
+                  </div>
+                )}
+              </div>
 
-            <label className="form-label">{language === 'en' ? 'Roster' : 'Plantilla'}</label>
-            <div className="mb-2 d-flex">
-              <input
-                type="text"
-                className="form-control me-2"
-                value={rosterInput}
-                onChange={e => setRosterInput(e.target.value)}
-                placeholder={language === 'en' ? 'Add player' : 'Agregar jugador'}
-              />
-              <button className="btn btn-success" type="button" onClick={handleAddRoster}>
-                +
+              <label className="form-label">{language === 'en' ? 'Roster' : 'Plantilla'}</label>
+              <div className="mb-2 d-flex">
+                <textarea
+                  className="form-control me-2"
+                  value={rosterInput}
+                  onChange={e => setRosterInput(e.target.value)}
+                  placeholder={
+                    language === 'en'
+                      ? 'Add player(s), separated by comma or new line'
+                      : 'Agregar jugador(es), separados por coma o salto de línea'
+                  }
+                  rows={1}
+                  style={{ resize: 'vertical', minHeight: 38, maxHeight: 120 }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddRoster();
+                    }
+                  }}
+                />
+                <button className="btn btn-success" type="button" onClick={handleAddRoster}>
+                  +
+                </button>
+              </div>
+              <ul>
+                {teamForm.roster.map((player, idx) => (
+                  <li key={idx} className="d-flex align-items-center">
+                    {player}
+                    <button
+                      className="btn btn-link text-danger ms-2 p-0"
+                      type="button"
+                      onClick={() => handleRemoveRoster(idx)}
+                    >
+                      &times;
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <label className="form-label">{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</label>
+              <div className="mb-2 d-flex">
+                <textarea
+                  className="form-control me-2"
+                  value={staffInput}
+                  onChange={e => setStaffInput(e.target.value)}
+                  placeholder={
+                    language === 'en'
+                      ? 'Add staff member(s), separated by comma or new line'
+                      : 'Agregar staff, separados por coma o salto de línea'
+                  }
+                  rows={1}
+                  style={{ resize: 'vertical', minHeight: 38, maxHeight: 120 }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddStaff();
+                    }
+                  }}
+                />
+                <button className="btn btn-success" type="button" onClick={handleAddStaff}>
+                  +
+                </button>
+              </div>
+              <ul>
+                {teamForm.staff.map((member, idx) => (
+                  <li key={idx} className="d-flex align-items-center">
+                    {member}
+                    <button
+                      className="btn btn-link text-danger ms-2 p-0"
+                      type="button"
+                      onClick={() => handleRemoveStaff(idx)}
+                    >
+                      &times;
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <button className="btn btn-primary mt-3" type="submit" disabled={loading}>
+                {language === 'en' ? 'Save' : 'Guardar'}
               </button>
-            </div>
-            <ul>
-              {teamForm.roster.map((player, idx) => (
-                <li key={idx} className="d-flex align-items-center">
-                  {player}
-                  <button
-                    className="btn btn-link text-danger ms-2 p-0"
-                    type="button"
-                    onClick={() => handleRemoveRoster(idx)}
-                  >
-                    &times;
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <label className="form-label">{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</label>
-            <div className="mb-2 d-flex">
-              <input
-                type="text"
-                className="form-control me-2"
-                value={staffInput}
-                onChange={e => setStaffInput(e.target.value)}
-                placeholder={language === 'en' ? 'Add staff' : 'Agregar staff'}
-              />
-              <button className="btn btn-success" type="button" onClick={handleAddStaff}>
-                +
-              </button>
-            </div>
-            <ul>
-              {teamForm.staff.map((member, idx) => (
-                <li key={idx} className="d-flex align-items-center">
-                  {member}
-                  <button
-                    className="btn btn-link text-danger ms-2 p-0"
-                    type="button"
-                    onClick={() => handleRemoveStaff(idx)}
-                  >
-                    &times;
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <button className="btn btn-primary mt-3" onClick={handleSaveTeam} disabled={loading}>
-              {language === 'en' ? 'Save' : 'Guardar'}
-            </button>
+            </form>
           </div>
         </div>
       )}
@@ -876,76 +919,5 @@ const TeamsPage = ({ language, userRole }) => {
     </div>
   );
 };
-
-// Componente separado para el modal de configuración de liga
-function LeagueConfigModal({ league, onSave, onDelete, onClose, loading, language }) {
-  const [editSetsToWin, setEditSetsToWin] = React.useState(league?.setsToWin ?? 3);
-  const [editLastSetPoints, setEditLastSetPoints] = React.useState(league?.lastSetPoints ?? 15);
-
-  React.useEffect(() => {
-    setEditSetsToWin(league?.setsToWin ?? 3);
-    setEditLastSetPoints(league?.lastSetPoints ?? 15);
-  }, [league]);
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <button
-          className="btn btn-secondary close-button"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        <h4>{language === 'en' ? 'League Design' : 'Diseño de Liga'}</h4>
-        <div className="d-flex flex-column gap-2 mt-3">
-          <div>
-            <label className="form-label mb-0 me-1">
-              {language === 'en' ? 'Sets:' : 'Sets:'}
-            </label>
-            <select
-              className="form-select d-inline-block"
-              value={editSetsToWin}
-              onChange={e => setEditSetsToWin(Number(e.target.value))}
-              style={{ width: 120, display: 'inline-block', marginLeft: 8 }}
-            >
-              <option value={2}>3</option>
-              <option value={3}>5</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label mb-0 me-1">
-              {language === 'en' ? 'Last set points:' : 'Puntos último set:'}
-            </label>
-            <select
-              className="form-select d-inline-block"
-              value={editLastSetPoints}
-              onChange={e => setEditLastSetPoints(Number(e.target.value))}
-              style={{ width: 80, display: 'inline-block', marginLeft: 8 }}
-            >
-              <option value={15}>15</option>
-              <option value={25}>25</option>
-            </select>
-          </div>
-          <div className="d-flex gap-2 mt-2">
-            <button
-              className="btn btn-success"
-              onClick={() => onSave(editSetsToWin, editLastSetPoints)}
-              disabled={loading}
-            >
-              {language === 'en' ? 'Save' : 'Guardar'}
-            </button>
-            <button
-              className="btn btn-danger"
-              onClick={onDelete}
-              disabled={loading}
-            >
-              {language === 'en' ? 'Delete League' : 'Eliminar Liga'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default TeamsPage;
