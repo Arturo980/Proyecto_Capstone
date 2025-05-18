@@ -74,7 +74,8 @@ const Partido = mongoose.model('Partido', {
   sets1: { type: Number, default: null }, // NUEVO: sets ganados equipo 1
   sets2: { type: Number, default: null }, // NUEVO: sets ganados equipo 2
   // Guarda el historial de sets: [{score1, score2}, ...]
-  setsHistory: { type: Array, default: [] }
+  setsHistory: { type: Array, default: [] },
+  partidoFinalizado: { type: Boolean, default: false } // <-- Añadido explícitamente
 });
 
 // Carpeta donde se guardarán las imágenes
@@ -338,6 +339,10 @@ app.put('/api/games/:id', async (req, res) => {
       }
       update.partidoFinalizado = partidoFinalizado;
     }
+    // Si partidoFinalizado viene explícitamente en el body, respétalo (por si acaso)
+    if (typeof req.body.partidoFinalizado === 'boolean') {
+      update.partidoFinalizado = req.body.partidoFinalizado;
+    }
     const partido = await Partido.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!partido) return res.status(404).json({ error: 'Partido no encontrado' });
 
@@ -347,7 +352,7 @@ app.put('/api/games/:id', async (req, res) => {
       req.body.hasOwnProperty('score1') &&
       req.body.hasOwnProperty('score2')
     ) {
-      io.emit('score_update', { gameId: id, score1: req.body.score1, score2: req.body.score2 });
+      io.emit('score_update', { gameId: id, score1: req.body.score1, score2: req.body.score2, partidoFinalizado: partido.partidoFinalizado });
     } else if (update.setsHistory) {
       io.emit('sets_history_update', {
         gameId: id,

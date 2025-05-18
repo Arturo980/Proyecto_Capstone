@@ -382,7 +382,7 @@
   }
 
   .date-nav-scroll {
-    max-width: 100%; /* Permitir que la barra ocupe todo el ancho en pantallas pequeñas */
+    max-width: 20%; /* Permitir que la barra ocupe todo el ancho en pantallas pequeñas */
   }
 
   .calendar-container {
@@ -416,7 +416,7 @@
     margin-bottom: 12px;
   }
   .date-nav-scroll {
-    max-width: 100%;
+    max-width: 20%;
     gap: 4px;
   }
 }
