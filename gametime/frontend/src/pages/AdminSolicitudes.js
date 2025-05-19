@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE_URL = 'http://192.168.1.104:5000';
+import { API_BASE_URL } from '../assets/Configuration/config';
 
 const AdminSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);

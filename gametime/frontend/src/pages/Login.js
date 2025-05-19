@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
-
-const API_BASE_URL = 'http://192.168.1.104:5000';
+import { API_BASE_URL } from '../assets/Configuration/config';
 
 const Login = ({ setIsLoggedIn }) => {
     const [email, setEmail] = useState('');

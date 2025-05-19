@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
+import { API_BASE_URL } from '../assets/Configuration/config';
 
-const API_BASE_URL = 'http://192.168.1.104:5000';
 const API_GAMES = `${API_BASE_URL}/api/games`;
 const API_MATCH_IMAGES = `${API_BASE_URL}/api/match-images`;
 

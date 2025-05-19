@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css'; // Reuse existing styles
-
-const API_BASE_URL = 'http://192.168.1.104:5000';
+import { API_BASE_URL } from '../assets/Configuration/config';
 
 const Register = () => {
     const [username, setUsername] = useState('');

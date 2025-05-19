@@ -10,8 +10,8 @@ import LiveScoreModal from '../components/LiveScoreModal';
 import BeforeMatch from '../components/BeforeMatch';
 import DuringMatch from '../components/DuringMatch';
 import AfterMatch from '../components/AfterMatch';
+import { API_BASE_URL } from '../assets/Configuration/config';
 
-const API_BASE_URL = 'http://192.168.1.104:5000';
 const API_TEAMS = `${API_BASE_URL}/api/teams`;
 const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
 const API_GAMES = `${API_BASE_URL}/api/games`;
