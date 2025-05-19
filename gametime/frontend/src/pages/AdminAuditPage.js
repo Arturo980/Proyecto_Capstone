@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../assets/Configuration/config.js';
 
-const API_AUDIT_LOG = process.env.REACT_APP_API_AUDIT_LOG_URL || 'http://localhost:3001/api/audit-log';
-const API_RESTORE = process.env.REACT_APP_API_RESTORE_URL || 'http://localhost:3001/api/restore';
+const API_AUDIT_LOG = `${API_BASE_URL}/api/audit-log`;
+const API_RESTORE = `${API_BASE_URL}/api/restore`;
 
 const entityLabels = {
   team: 'Equipo',

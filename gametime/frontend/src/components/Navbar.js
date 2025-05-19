@@ -9,8 +9,7 @@ import texts from '../translations/texts';
 import toggleIcon from '../assets/images/icons8-settings-384.png'; // Import the new image
 import whiteCircleIcon from '../assets/images/circulo_blanco.png'; // Importar círculo blanco
 import blackCircleIcon from '../assets/images/circulo_negro.png'; // Importar círculo negro
-
-const API_BASE_URL = 'http://192.168.1.104:5000';
+import { API_BASE_URL } from '../assets/Configuration/config.js'; // <-- Agrega esta línea
 
 const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   const [showSettings, setShowSettings] = useState(false); // State for showing settings dropdown

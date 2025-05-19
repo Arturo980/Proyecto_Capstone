@@ -25,7 +25,7 @@ const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST', 'PUT']
+    methods: ['GET', 'POST', 'PUT', 'OPTIONS']
   }
 });
 
@@ -55,6 +55,7 @@ const Liga = mongoose.model('Liga', {
 // Modelo de Equipo con referencia a liga
 const Equipo = mongoose.model('Equipo', {
   name: { type: String, required: true },
+  abbreviation: { type: String, default: '' }, // NUEVO: abreviatura
   logo: String,
   roster: [String],
   staff: [String],
@@ -309,6 +310,11 @@ app.put('/api/games/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const update = { ...req.body };
+
+    // Asegura que score1 y score2 sean números si existen
+    if (update.hasOwnProperty('score1')) update.score1 = Number(update.score1);
+    if (update.hasOwnProperty('score2')) update.score2 = Number(update.score2);
+
     // Si setsHistory viene como string (por error), intenta parsear
     if (typeof update.setsHistory === 'string') {
       try {
@@ -546,6 +552,53 @@ app.post('/api/restore/:entity/:id', async (req, res) => {
     user: getUserEmailFromRequest(req)
   });
   res.json({ message: 'Restaurado', restored });
+});
+
+// Endpoint para el carrusel: partidos de la semana con info de equipos y liga
+app.get('/api/games/week', async (req, res) => {
+  try {
+    const { league } = req.query;
+    // Calcula el rango de fechas de la semana actual
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setHours(0, 0, 0, 0);
+    // Lunes como inicio de semana
+    startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    // Construye el query
+    const query = {
+      date: { $gte: startOfWeek.toISOString().slice(0, 10), $lt: endOfWeek.toISOString().slice(0, 10) }
+    };
+    if (league) query.league = league;
+
+    const partidos = await mongoose.model('Partido').find(query).populate('league');
+    const equipos = await mongoose.model('Equipo').find();
+
+    // Usa la abreviatura si existe, si no el nombre
+    const getTeamData = (teamName) => {
+      const eq = equipos.find(e => e.name === teamName);
+      return {
+        abbr: eq?.abbreviation?.trim() ? eq.abbreviation : (eq?.name || teamName),
+        logo: eq?.logo || ''
+      };
+    };
+
+    const result = partidos.map(match => ({
+      home_team_abbr: getTeamData(match.team1).abbr,
+      home_team_logo: getTeamData(match.team1).logo,
+      away_team_abbr: getTeamData(match.team2).abbr,
+      away_team_logo: getTeamData(match.team2).logo,
+      date: `${match.date}T${match.time}`,
+      league_name: match.league?.name || '',
+      league_id: match.league?._id?.toString() || ''
+    }));
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo obtener los partidos de la semana', details: err.message });
+  }
 });
 
 // Ruta raíz para comprobar que el servidor funciona y muestra datos de la base

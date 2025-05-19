@@ -4,9 +4,11 @@ import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 import LeagueConfigModal from '../components/LeagueConfigModal'; // Nuevo import
 import settingsIcon from '../assets/images/icons8-settings-384.png';
+import { API_BASE_URL } from '../assets/Configuration/config.js';
 
 const defaultTeam = {
   name: '',
+  abbreviation: '', // NUEVO: abreviatura
   logo: '',
   roster: [],
   staff: [],
@@ -18,7 +20,6 @@ const defaultLeagueConfig = {
   lastSetPoints: 15 // Último set a 15 por defecto
 };
 
-const API_BASE_URL = 'http://192.168.1.104:5000';
 const API_URL = `${API_BASE_URL}/api/teams`;
 const LEAGUES_URL = `${API_BASE_URL}/api/leagues`;
 const TEAM_LOGO_UPLOAD_URL = `${API_BASE_URL}/api/team-logos`;
@@ -751,6 +752,18 @@ const TeamsPage = ({ language, userRole }) => {
                 name="name"
                 value={teamForm.name}
                 onChange={handleTeamFormChange}
+              />
+
+              {/* NUEVO: Input para abreviatura */}
+              <label className="form-label">{language === 'en' ? 'Abbreviation' : 'Abreviatura'}</label>
+              <input
+                type="text"
+                className="form-control mb-2"
+                name="abbreviation"
+                value={teamForm.abbreviation}
+                onChange={handleTeamFormChange}
+                maxLength={6}
+                placeholder={language === 'en' ? 'e.g. FCB' : 'Ej: FCB'}
               />
 
               {/* NUEVO: Selector de tipo de logo */}

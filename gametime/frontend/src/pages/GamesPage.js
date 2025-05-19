@@ -10,8 +10,8 @@ import LiveScoreModal from '../components/LiveScoreModal';
 import BeforeMatch from '../components/BeforeMatch';
 import DuringMatch from '../components/DuringMatch';
 import AfterMatch from '../components/AfterMatch';
+import { API_BASE_URL } from '../assets/Configuration/config.js';
 
-const API_BASE_URL = 'http://192.168.1.104:5000';
 const API_TEAMS = `${API_BASE_URL}/api/teams`;
 const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
 const API_GAMES = `${API_BASE_URL}/api/games`;
@@ -92,11 +92,16 @@ const GamesPage = ({ language = 'es' }) => {
     }
   }, [activeLeague, leagues]);
 
+  // NUEVO: Estado global para errores de red
+  const [fetchError, setFetchError] = useState(null);
+
   const fetchLeagues = useCallback(async () => {
     try {
       const res = await fetch(API_LEAGUES);
       if (!res.ok) {
-        console.error('Error al obtener ligas:', res.status, res.statusText);
+        setFetchError(language === 'en'
+          ? 'Failed to fetch leagues from server.'
+          : 'No se pudo obtener las ligas del servidor.');
         setLeagues([]);
         return;
       }
@@ -105,44 +110,57 @@ const GamesPage = ({ language = 'es' }) => {
       data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
       setLeagues(data);
       if (data.length > 0) setActiveLeague(data[0]._id);
+      setFetchError(null); // clear error if successful
     } catch (err) {
-      console.error('No se pudo conectar con el backend para obtener ligas:', err.message);
+      setFetchError(language === 'en'
+        ? 'Network error: could not connect to backend for leagues.'
+        : 'Error de red: no se pudo conectar al backend para obtener ligas.');
       setLeagues([]);
     }
-  }, []);
+  }, [language]);
 
   const fetchTeams = useCallback(async () => {
     try {
       const res = await fetch(`${API_TEAMS}?league=${activeLeague}`);
       if (!res.ok) {
-        console.error('Error al obtener equipos:', res.status, res.statusText);
+        setFetchError(language === 'en'
+          ? 'Failed to fetch teams from server.'
+          : 'No se pudo obtener los equipos del servidor.');
         setTeams([]);
         return;
       }
       const data = await res.json();
       setTeams(data.teams || []);
+      setFetchError(null);
     } catch (err) {
-      console.error('No se pudo conectar con el backend para obtener equipos:', err.message);
+      setFetchError(language === 'en'
+        ? 'Network error: could not connect to backend for teams.'
+        : 'Error de red: no se pudo conectar al backend para obtener equipos.');
       setTeams([]);
     }
-  }, [activeLeague]);
+  }, [activeLeague, language]);
 
   // Cambia fetchGames para manejar errores de red y mostrar un mensaje claro en consola
   const fetchGames = useCallback(async () => {
     try {
       const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
       if (!res.ok) {
-        console.error('Error al obtener partidos:', res.status, res.statusText);
+        setFetchError(language === 'en'
+          ? 'Failed to fetch games from server.'
+          : 'No se pudo obtener los partidos del servidor.');
         setGames([]);
         return;
       }
       const data = await res.json();
       setGames(data.games || []);
+      setFetchError(null);
     } catch (err) {
-      console.error('No se pudo conectar con el backend para obtener partidos:', err.message);
+      setFetchError(language === 'en'
+        ? 'Network error: could not connect to backend for games.'
+        : 'Error de red: no se pudo conectar al backend para obtener partidos.');
       setGames([]);
     }
-  }, [activeLeague]);
+  }, [activeLeague, language]);
 
   // Cargar ligas al montar
   useEffect(() => {
@@ -580,8 +598,9 @@ const GamesPage = ({ language = 'es' }) => {
   }, [socket, liveScoreGame, setGames]);
 
   // NUEVO: Función para actualizar el marcador en el backend y emitir por socket.io
-  const updateScore = useCallback((gameId, score1, score2) => {
-    // Actualiza el estado local inmediatamente para feedback instantáneo
+  const updateScore = useCallback(async (gameId, score1, score2) => {
+    score1 = typeof score1 === 'number' ? score1 : 0;
+    score2 = typeof score2 === 'number' ? score2 : 0;
     setGames(prevGames =>
       prevGames.map(g =>
         g._id === gameId ? { ...g, score1, score2 } : g
@@ -590,13 +609,19 @@ const GamesPage = ({ language = 'es' }) => {
     setLiveScoreGame(prev =>
       prev && prev._id === gameId ? { ...prev, score1, score2 } : prev
     );
-    // Llama al backend (el backend emitirá a todos por socket.io)
-    fetch(`${API_GAMES}/${gameId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ score1, score2 }),
-    });
-    // Emite por socket.io para feedback instantáneo a otros clientes
+    try {
+      const res = await fetch(`${API_GAMES}/${gameId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score1, score2 }),
+      });
+      if (!res.ok) {
+        setFetchError('Error: No se pudo actualizar el marcador en el servidor.');
+      }
+    } catch (err) {
+      setFetchError('Error de red: no se pudo conectar al backend para actualizar el marcador.');
+      console.error('updateScore fetch error:', err);
+    }
     if (socket) {
       socket.emit('score_update', { gameId, score1, score2 });
     }
@@ -624,8 +649,11 @@ const GamesPage = ({ language = 'es' }) => {
   // NUEVO: Handlers para botones +1/-1 (asegúrate de que esté antes del render)
   const handleScoreChange = (team, delta) => {
     if (!liveScoreGame) return;
-    const newScore1 = team === 1 ? Math.max(0, (liveScoreGame.score1 || 0) + delta) : liveScoreGame.score1;
-    const newScore2 = team === 2 ? Math.max(0, (liveScoreGame.score2 || 0) + delta) : liveScoreGame.score2;
+    // Asegura que los valores sean números y no undefined/null
+    const score1 = typeof liveScoreGame.score1 === 'number' ? liveScoreGame.score1 : 0;
+    const score2 = typeof liveScoreGame.score2 === 'number' ? liveScoreGame.score2 : 0;
+    const newScore1 = team === 1 ? Math.max(0, score1 + delta) : score1;
+    const newScore2 = team === 2 ? Math.max(0, score2 + delta) : score2;
     updateScore(liveScoreGame._id, newScore1, newScore2);
   };
 
@@ -675,14 +703,24 @@ const GamesPage = ({ language = 'es' }) => {
             : prev
         );
         // --- GUARDAR EL MARCADOR ACTUAL DEL SET EN EL BACKEND ---
-        fetch(`${API_GAMES}/${liveScoreGame._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            score1: newScore.score1,
-            score2: newScore.score2
-          }),
-        });
+        (async () => {
+          try {
+            const res = await fetch(`${API_GAMES}/${liveScoreGame._id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                score1: newScore.score1,
+                score2: newScore.score2
+              }),
+            });
+            if (!res.ok) {
+              setFetchError('Error: No se pudo actualizar el marcador en el servidor.');
+            }
+          } catch (err) {
+            setFetchError('Error de red: no se pudo conectar al backend para actualizar el marcador.');
+            console.error('handleSetScoreChange fetch error:', err);
+          }
+        })();
       }
       setPublicGameModal(prev =>
         prev && prev._id === liveScoreGame?._id
@@ -822,6 +860,21 @@ const GamesPage = ({ language = 'es' }) => {
   if (userRole === 'admin' || userRole === 'content-editor' || userRole === 'match-manager') {
     return (
       <div className="container mt-5">
+        {/* NUEVO: Banner de error de red */}
+        {fetchError && (
+          <div style={{
+            background: '#ffdddd',
+            color: '#a00',
+            padding: '10px 16px',
+            border: '1px solid #a00',
+            borderRadius: 6,
+            marginBottom: 16,
+            fontWeight: 'bold'
+          }}>
+            {fetchError}
+            <span style={{ float: 'right', cursor: 'pointer' }} onClick={() => setFetchError(null)}>×</span>
+          </div>
+        )}
         <h2>{language === 'en' ? 'Games' : 'Partidos'}</h2>
         {/* Selector de liga */}
         <div className="mb-4">
@@ -951,7 +1004,11 @@ const GamesPage = ({ language = 'es' }) => {
                     setPendingCitados([]);
                   } else {
                     if (!game.partidoFinalizado) {
-                      setLiveScoreGame(game);
+                      setLiveScoreGame({
+                        ...game,
+                        score1: typeof game.score1 === 'number' ? game.score1 : 0,
+                        score2: typeof game.score2 === 'number' ? game.score2 : 0,
+                      });
                     }
                   }
                 } else {
@@ -1284,22 +1341,28 @@ const GamesPage = ({ language = 'es' }) => {
                 <button
                   className="btn btn-success"
                   onClick={async () => {
-                    // Guarda los citados en el backend y luego muestra el marcador
-                    await fetch(`${API_GAMES}/${pendingCitadosGame._id}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ citados: pendingCitados.join(', ') }),
-                    });
-                    // Actualiza el estado local de games
-                    setGames(prevGames =>
-                      prevGames.map(g =>
-                        g._id === pendingCitadosGame._id
-                          ? { ...g, citados: pendingCitados.join(', ') }
-                          : g
-                      )
-                    );
-                    setLiveScoreGame({ ...pendingCitadosGame, citados: pendingCitados.join(', ') });
-                    setPendingCitadosGame(null);
+                    try {
+                      // Guarda los citados en el backend y luego muestra el marcador
+                      await fetch(`${API_GAMES}/${pendingCitadosGame._id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ citados: pendingCitados.join(', ') }),
+                      });
+                      // Actualiza el estado local de games
+                      setGames(prevGames =>
+                        prevGames.map(g =>
+                          g._id === pendingCitadosGame._id
+                            ? { ...g, citados: pendingCitados.join(', ') }
+                            : g
+                        )
+                      );
+                      setLiveScoreGame({ ...pendingCitadosGame, citados: pendingCitados.join(', ') });
+                      setPendingCitadosGame(null);
+                    } catch (err) {
+                      setFetchError(language === 'en'
+                        ? 'Failed to update called players. Please check your connection.'
+                        : 'No se pudo actualizar los citados. Verifica tu conexión.');
+                    }
                   }}
                   disabled={pendingCitados.length === 0}
                 >
@@ -1383,6 +1446,21 @@ const GamesPage = ({ language = 'es' }) => {
   // Elimina el marcador de la caja de partido, solo muestra si el partido está en curso o finalizado
   return (
     <div className="page-container">
+      {/* NUEVO: Banner de error de red para público */}
+      {fetchError && (
+        <div style={{
+          background: '#ffdddd',
+          color: '#a00',
+          padding: '10px 16px',
+          border: '1px solid #a00',
+          borderRadius: 6,
+          marginBottom: 16,
+          fontWeight: 'bold'
+        }}>
+          {fetchError}
+          <span style={{ float: 'right', cursor: 'pointer' }} onClick={() => setFetchError(null)}>×</span>
+        </div>
+      )}
       <div className="calendar-header">
         <h3>
           {selectedDate.toLocaleString(language === 'en' ? 'en-US' : 'es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
