@@ -1,8 +1,10 @@
 // filepath: c:\Users\artun\Desktop\Proyectos\Proyecto_Capstone\gametime\frontend\src\components\LiveScoreModal.js
 import React, { useState, useEffect } from 'react';
 import texts from '../translations/texts';
+// Importa la URL base de la API desde el config
+import { API_BASE_URL } from '../assets/Configuration/config';
 
-const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
+const API_GAMES = `${API_BASE_URL}/api/games`;
 
 function LiveScoreModal({
   game,
