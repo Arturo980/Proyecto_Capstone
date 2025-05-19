@@ -1,8 +1,5 @@
 import React, { useState, useRef } from 'react';
-
-// Asegúrate de que estos valores sean correctos y el preset esté configurado como unsigned en Cloudinary
-const preset_name = "yu1h90st"; // <-- Debe ser el nombre EXACTO del unsigned upload preset en Cloudinary
-const cloud_name = "drlqmol4c"; // <-- Tu cloud_name de Cloudinary
+import { CLOUDINARY_PRESET_NAME, CLOUDINARY_CLOUD_NAME } from '../assets/Configuration/config';
 
 const CloudinaryUpload = ({ onUpload, multiple = false }) => {
   const [image, setImage] = useState('');
@@ -22,9 +19,9 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
       for (let i = 0; i < files.length; i++) {
         const data = new FormData();
         data.append('file', files[i]);
-        data.append('upload_preset', preset_name);
+        data.append('upload_preset', CLOUDINARY_PRESET_NAME);
         try {
-          const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+          const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: data
           });
@@ -44,9 +41,9 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
     } else {
       const data = new FormData();
       data.append('file', files[0]);
-      data.append('upload_preset', preset_name);
+      data.append('upload_preset', CLOUDINARY_PRESET_NAME);
       try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
           method: 'POST',
           body: data
         });

@@ -16,6 +16,7 @@ import AdminSolicitudes from './pages/AdminSolicitudes'; // Importar la página 
 import AdminAuditPage from './pages/AdminAuditPage';
 import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
+import { API_BASE_URL } from './assets/Configuration/config';
 
 function App() {
   const [language, setLanguage] = useState('en');
@@ -44,8 +45,8 @@ function App() {
   const [activeLeague, setActiveLeague] = useState(null);
 
   // Obtén la URL de la API de partidos y ligas
-  const API_GAMES = process.env.REACT_APP_API_GAMES_URL || 'http://localhost:3001/api/games';
-  const API_LEAGUES = process.env.REACT_APP_API_URL?.replace('/teams', '/leagues') || 'http://localhost:3001/api/leagues';
+  const API_GAMES = `${API_BASE_URL}/api/games`;
+  const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
 
   // Cargar ligas al montar
   useEffect(() => {

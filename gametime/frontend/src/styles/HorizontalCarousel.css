@@ -1,185 +1,165 @@
-.horizontal-carousel-wrapper {
-  position: relative; /* Habilitar posicionamiento relativo */
-  width: 100vw; /* Asegurar que el contenedor abarque todo el ancho de la ventana */
-  margin-left: calc(-50vw + 50%); /* Centrar el fondo horizontalmente */
-  background-color: #adadad; /* Fondo detrás del carrusel */
-  padding: 20px 20px; /* Reducir el padding superior e inferior */
-  display: flex; /* Habilitar flexbox para centrar contenido */
-  justify-content: center; /* Centrar horizontalmente */
-  align-items: center; /* Centrar verticalmente */
-  margin-top: 0px;
+.carousel-container {
+  width: 100vw;
+  padding: 10px 0;
+  background: #575757;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  box-sizing: border-box;
+  /* Nuevo: permite scroll horizontal en móviles */
+  overflow-x: auto;
 }
 
-.horizontal-carousel {
+.carousel-title {
   display: flex;
   align-items: center;
-  position: relative; /* Para posicionar las flechas */
-  width: 60%; /* Ajustar al ancho del contenido del carrusel */
-  margin: -20px 60px 0 auto; /* Agregar margen a la derecha para separarlo del borde */
+  gap: 16px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-width: 220px;
+  margin-left: 16px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
-.carousel-track-container {
-  overflow-x: hidden; /* Ocultar la barra de desplazamiento */
-  flex: 1; /* Hacer que el contenedor ocupe todo el espacio disponible */
-  position: relative; /* Habilitar posicionamiento relativo */
-  align-items: center; /* Centrar el contenido verticalmente */
-  display: flex; /* Asegurar que el contenedor use flexbox */
-}
-
-.carousel-track {
-  display: inline-flex;
-  gap: 15px;
-  padding: 10px;
-  align-items: center;
-  justify-content: center; /* Centrar horizontalmente */
-  transition: transform 0.3s ease; /* Transición suave para el desplazamiento */
-  /* transform: translateX(-20%); */ /* Eliminar desplazamiento inicial */
-}
-
-.scroll-left-button,
-.scroll-right-button {
-  position: absolute;
-  top: 50%; /* Centrar verticalmente */
-  transform: translateY(-50%); /* Ajustar para centrar */
-  background-color: transparent; /* Fondo transparente */
+.carousel-dropdown {
+  background: #fff;
+  color: #00695c;
   border: none;
-  width: 40px; /* Tamaño del botón */
-  height: 40px; /* Tamaño del botón */
-  display: none; /* Ocultar botones por defecto */
-  align-items: center;
-  justify-content: center;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 700;
   cursor: pointer;
-  z-index: 2; /* Asegurar que estén por encima del contenido */
-  opacity: 0.3; /* Reducir opacidad cuando no se pasa el cursor */
-  transition: opacity 0.3s ease; /* Transición suave para cambios de opacidad */
+  font-size: 1rem;
 }
 
-.scroll-left-button {
-  left: 10px; /* Posicionar a la izquierda dentro del carrusel */
+.carousel-scroll {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  flex: 1;
+  margin-left: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #223b85 #575757;
+  /* Nuevo: asegura alineación horizontal en móviles */
+  min-width: 0;
 }
-
-.scroll-right-button {
-  right: 10px; /* Posicionar a la derecha dentro del carrusel */
+.carousel-scroll::-webkit-scrollbar {
+  height: 8px;
 }
-
-.scroll-left-button:hover,
-.scroll-right-button:hover {
-  opacity: 1; /* Restaurar opacidad completa al pasar el cursor */
+.carousel-scroll::-webkit-scrollbar-thumb {
+  background: #223b85;
+  border-radius: 4px;
 }
-
-.horizontal-carousel-wrapper:hover .scroll-left-button,
-.horizontal-carousel-wrapper:hover .scroll-right-button {
-  display: flex; /* Mostrar botones al pasar el ratón */
-}
-
-.arrow-icon {
-  width: 100%; /* Ajustar el ancho de la imagen al botón */
-  height: 100%; /* Ajustar la altura de la imagen al botón */
-  object-fit: contain; /* Asegurar que la imagen mantenga su proporción */
-  transition: transform 0.3s ease; /* Transición suave para el hover */
-}
-
-.scroll-left-button:hover .arrow-icon,
-.scroll-right-button:hover .arrow-icon {
-  transform: scale(1.1); /* Aumentar tamaño al pasar el cursor */
+.carousel-scroll::-webkit-scrollbar-track {
+  background: #575757;
 }
 
 .game-card {
+  background: #0d1c3f;
+  border-radius: 8px;
+  min-width: 100px;
+  max-width: 400px;
+  padding: 10px 10px 6px 10px;
+  color: #fff;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  /* Cambios para hacerlo más largo y visualmente atractivo */
-  padding: 10px 18px;         /* Menos padding vertical */
-  border: 1px solid #ccc;
-  background-color: #fff;
-  min-width: 180px;
-  max-width: 320px;
-  width: 250px;
-  margin: 0 4px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  transition: box-shadow 0.2s;
-  height: 120px;              /* Limita la altura total */
-  max-height: 140px;          /* Opcional: máximo de altura */
-  overflow: hidden;           /* Oculta contenido que se desborde */
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.15s;
 }
 
-.game-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+.teams {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.game-status-row {
+.team {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  width: 100%;
 }
 
-.game-status-live-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
+.team-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
   border-radius: 50%;
-  background: #e53935;
-  margin-right: 4px;
+  background: #fff;
 }
 
-.game-status-text {
-  letter-spacing: 1px;
+.game-date {
+  color: #b0b0b0;
+  font-size: 0.85rem;
 }
 
-.game-status-channel {
-  margin-left: auto;
-  color: #555;
-  font-weight: 400;
-  font-size: 12px;
+/* --- Responsive Styles --- */
+@media (max-width: 900px) {
+  .carousel-container {
+    flex-direction: row; /* Mantiene partidos a la derecha */
+    align-items: flex-start;
+    padding: 8px 0;
+    overflow-x: auto;
+  }
+  .carousel-title {
+    margin-left: 12px;
+    margin-bottom: 8px;
+    min-width: 180px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .carousel-scroll {
+    margin-left: 0;
+    gap: 12px;
+    min-width: 0;
+  }
 }
 
-.game-teams-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 2px;
-  width: 100%;
-}
-
-.game-team-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.game-team-name {
-  font-size: 18px;
-  color: #222;
-  flex: 1;
-  text-align: left;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.game-team-name.winner {
-  font-weight: 700;
-}
-
-.game-score {
-  font-weight: 700;
-  font-size: 24px;
-  color: #222;
-  min-width: 32px;
-  text-align: right;
-}
-
-.game-time-row {
-  text-align: center;
-  font-size: 15px;
-  color: #888;
-  margin-top: 10px;
-  width: 100%;
+@media (max-width: 600px) {
+  .carousel-container {
+    width: 100vw;
+    padding: 4px 0;
+    flex-direction: row; /* Mantiene partidos a la derecha */
+    align-items: flex-start;
+    overflow-x: auto;
+  }
+  .carousel-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-left: 8px;
+    margin-bottom: 6px;
+    font-size: 0.98rem;
+    min-width: 140px;
+    max-width: 160px;
+    flex-shrink: 0;
+    margin-right: 10px;
+  }
+  .carousel-dropdown {
+    padding: 6px 10px;
+    font-size: 0.98rem;
+    width: 100%;
+    max-width: 140px;
+  }
+  .carousel-scroll {
+    gap: 8px;
+    padding-bottom: 4px;
+    min-width: 0;
+  }
+  .game-card {
+    min-width: 200px;
+    max-width: 300px;
+    padding: 7px 6px 4px 6px;
+    font-size: 0.92rem;
+  }
+  .team-logo {
+    width: 18px;
+    height: 18px;
+  }
+  .game-date {
+    font-size: 0.75rem;
+  }
 }

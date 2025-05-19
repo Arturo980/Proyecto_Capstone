@@ -662,3 +662,59 @@ app.use((req, res) => {
 server.listen(5000, '0.0.0.0', () => {
   console.log('Servidor corriendo en http://0.0.0.0:5000');
 });
+
+app.get('/api/games/week', async (req, res) => {
+  try {
+    const { league } = req.query;
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    const query = {
+      date: { $gte: startOfWeek.toISOString().slice(0, 10), $lt: endOfWeek.toISOString().slice(0, 10) }
+    };
+    if (league) query.league = league;
+
+    // DEBUG: imprime el rango de fechas y la query
+    console.log('Rango de semana:', startOfWeek.toISOString().slice(0, 10), '-', endOfWeek.toISOString().slice(0, 10));
+    console.log('Query:', query);
+
+    const partidos = await mongoose.model('Partido').find(query).populate('league');
+    // DEBUG: imprime las fechas de los partidos encontrados
+    console.log('Partidos encontrados:', partidos.map(p => ({
+      date: p.date,
+      time: p.time,
+      team1: p.team1,
+      team2: p.team2,
+      league: p.league?.name
+    })));
+
+    // Cambia la respuesta para mantener compatibilidad con el frontend:
+    // El frontend espera un array, no un objeto { partidos }
+    // Por compatibilidad, mapea igual que antes:
+    const equipos = await mongoose.model('Equipo').find();
+    const getTeamData = (teamName) => {
+      const eq = equipos.find(e => e.name === teamName);
+      return {
+        abbr: eq?.name || teamName,
+        logo: eq?.logo || ''
+      };
+    };
+    const result = partidos.map(match => ({
+      home_team_abbr: getTeamData(match.team1).abbr,
+      home_team_logo: getTeamData(match.team1).logo,
+      away_team_abbr: getTeamData(match.team2).abbr,
+      away_team_logo: getTeamData(match.team2).logo,
+      date: `${match.date}T${match.time}`,
+      league_name: match.league?.name || '',
+      league_id: match.league?._id?.toString() || ''
+    }));
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo obtener los partidos de la semana', details: err.message });
+  }
+});
