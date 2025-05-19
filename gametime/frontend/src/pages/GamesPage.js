@@ -327,7 +327,20 @@ const GamesPage = ({ language = 'es' }) => {
   const handleAddOrEditGame = async (e) => {
     e.preventDefault();
     if (!form.team1 || !form.team2 || !form.date || !form.time) return;
-    let body = { team1: form.team1, team2: form.team2, date: form.date, time: form.time, league: activeLeague };
+
+    // Busca los objetos de los equipos seleccionados para obtener abbr
+    const team1Obj = teams.find(t => t.name === form.team1);
+    const team2Obj = teams.find(t => t.name === form.team2);
+
+    let body = {
+      team1: form.team1,
+      team2: form.team2,
+      team1_abbr: team1Obj?.abbr || form.team1, // Abreviación o nombre si no existe
+      team2_abbr: team2Obj?.abbr || form.team2,
+      date: form.date,
+      time: form.time,
+      league: activeLeague
+    };
     // Solo admin puede enviar citados y sets
     if (canEditCitadosAndSets) {
       body.citados = selectedCitados.join(', ');
@@ -821,7 +834,7 @@ const GamesPage = ({ language = 'es' }) => {
 
   if (userRole === 'admin' || userRole === 'content-editor' || userRole === 'match-manager') {
     return (
-      <div className="container mt-5">
+      <div className="container" style={{ margin: 0 }}>
         <h2>{language === 'en' ? 'Games' : 'Partidos'}</h2>
         {/* Selector de liga */}
         <div className="mb-4">
@@ -1221,9 +1234,6 @@ const GamesPage = ({ language = 'es' }) => {
               <h4 style={{ textAlign: 'center', marginBottom: 10 }}>
                 {language === 'en' ? 'Select Called Players' : 'Selecciona los citados'}
               </h4>
-              <div style={{ marginBottom: 10, textAlign: 'center' }}>
-                <b>{pendingCitadosGame.team1}</b> {texts[language]?.vs || 'vs'} <b>{pendingCitadosGame.team2}</b>
-              </div>
               <div style={{
                 display: 'flex',
                 flexDirection: 'row',

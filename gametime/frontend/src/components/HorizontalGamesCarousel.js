@@ -67,11 +67,10 @@ const HorizontalGamesCarousel = () => {
             <div className="game-card" key={idx}>
               <div className="teams">
                 <div className="team">
-                  {/* Si tienes logo, puedes mostrarlo aquí */}
-                  <span>{game.team1}</span>
+                  <span>{game.team1_abbr}</span>
                 </div>
                 <div className="team">
-                  <span>{game.team2}</span>
+                  <span>{game.team2_abbr}</span>
                 </div>
               </div>
               <div className="game-date">

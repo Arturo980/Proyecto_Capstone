@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 
 const defaultTeam = {
   name: '',
+  abbr: '', // <-- Agrega este campo
   logo: '',
   roster: [],
   staff: [],
@@ -473,7 +474,7 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container" style={{ margin: 0 }}>
       <h2>{texts[language]?.teams_title || (language === 'en' ? 'Teams' : 'Equipos')}</h2>
       {/* Selector de liga */}
       <div className="mb-4">
@@ -751,6 +752,19 @@ const TeamsPage = ({ language, userRole }) => {
                 name="name"
                 value={teamForm.name}
                 onChange={handleTeamFormChange}
+              />
+
+              {/* NUEVO: Campo para abreviación */}
+              <label className="form-label">{language === 'en' ? 'Abbreviation' : 'Abreviación'}</label>
+              <input
+                type="text"
+                className="form-control mb-2"
+                name="abbr"
+                value={teamForm.abbr || ''}
+                onChange={handleTeamFormChange}
+                maxLength={6}
+                placeholder={language === 'en' ? 'e.g. UCH' : 'Ej: UCH'}
+                required
               />
 
               {/* NUEVO: Selector de tipo de logo */}

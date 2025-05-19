@@ -55,6 +55,7 @@ const Liga = mongoose.model('Liga', {
 // Modelo de Equipo con referencia a liga
 const Equipo = mongoose.model('Equipo', {
   name: { type: String, required: true },
+  abbr: { type: String, required: true }, // Nuevo: abreviación obligatoria
   logo: String,
   roster: [String],
   staff: [String],
@@ -66,6 +67,8 @@ const Partido = mongoose.model('Partido', {
   league: { type: mongoose.Schema.Types.ObjectId, ref: 'Liga', required: true },
   team1: { type: String, required: true },
   team2: { type: String, required: true },
+  team1_abbr: { type: String, required: true }, // Nuevo: abbr equipo 1
+  team2_abbr: { type: String, required: true }, // Nuevo: abbr equipo 2
   date: { type: String, required: true }, // formato: yyyy-mm-dd
   time: { type: String, required: true }, // formato: hh:mm
   score1: { type: Number, default: null },
@@ -294,9 +297,15 @@ app.get('/api/games', async (req, res) => {
 // POST /api/games
 app.post('/api/games', async (req, res) => {
   try {
-    const partido = new Partido(req.body);
+    // Busca las abreviaciones de los equipos
+    const equipo1 = await Equipo.findOne({ name: req.body.team1, league: req.body.league });
+    const equipo2 = await Equipo.findOne({ name: req.body.team2, league: req.body.league });
+    const partido = new Partido({
+      ...req.body,
+      team1_abbr: equipo1?.abbr || req.body.team1,
+      team2_abbr: equipo2?.abbr || req.body.team2
+    });
     await partido.save();
-    // Notifica a los clientes usando solo socket.io
     io.emit('game_created', partido);
     res.status(201).json(partido);
   } catch (err) {
@@ -309,6 +318,14 @@ app.put('/api/games/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const update = { ...req.body };
+    // Si se cambia el equipo, actualiza la abreviación
+    if (update.team1 || update.team2) {
+      const partido = await Partido.findById(id);
+      const equipo1 = await Equipo.findOne({ name: update.team1 || partido.team1, league: update.league || partido.league });
+      const equipo2 = await Equipo.findOne({ name: update.team2 || partido.team2, league: update.league || partido.league });
+      if (equipo1) update.team1_abbr = equipo1.abbr;
+      if (equipo2) update.team2_abbr = equipo2.abbr;
+    }
     // Si setsHistory viene como string (por error), intenta parsear
     if (typeof update.setsHistory === 'string') {
       try {
