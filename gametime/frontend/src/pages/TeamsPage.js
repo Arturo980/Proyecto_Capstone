@@ -16,8 +16,10 @@ const defaultTeam = {
 
 const defaultLeagueConfig = {
   name: '',
-  setsToWin: 3, // Mejor de 5 por defecto
-  lastSetPoints: 15 // Último set a 15 por defecto
+  setsToWin: 3,
+  lastSetPoints: 15,
+  pointsWin: 3,    // NUEVO
+  pointsLose: 0    // NUEVO
 };
 
 const API_URL = `${API_BASE_URL}/api/teams`;
@@ -139,7 +141,7 @@ const TeamsPage = ({ language, userRole }) => {
     const { name, value } = e.target;
     setLeagueConfig(prev => ({
       ...prev,
-      [name]: name === 'setsToWin' || name === 'lastSetPoints' ? Number(value) : value
+      [name]: ['setsToWin', 'lastSetPoints', 'pointsWin', 'pointsLose'].includes(name) ? Number(value) : value
     }));
     setLeagueName(name === 'name' ? value : leagueConfig.name);
   };
@@ -160,7 +162,9 @@ const TeamsPage = ({ language, userRole }) => {
       body: JSON.stringify({
         name: leagueConfig.name,
         setsToWin: leagueConfig.setsToWin,
-        lastSetPoints: leagueConfig.lastSetPoints
+        lastSetPoints: leagueConfig.lastSetPoints,
+        pointsWin: leagueConfig.pointsWin,      // NUEVO
+        pointsLose: leagueConfig.pointsLose     // NUEVO
       }),
     });
     if (res.ok) {
@@ -407,7 +411,7 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // Estado para edición de configuración de la liga seleccionada
-  const [editConfig, setEditConfig] = useState({ setsToWin: 3, lastSetPoints: 15 });
+  const [editConfig, setEditConfig] = useState({ setsToWin: 3, lastSetPoints: 15, pointsWin: 3, pointsLose: 0 });
 
   // Sincroniza editConfig con la liga seleccionada cada vez que cambia activeLeague o leagues
   useEffect(() => {
@@ -415,7 +419,9 @@ const TeamsPage = ({ language, userRole }) => {
       const liga = leagues.find(l => l._id === activeLeague);
       setEditConfig({
         setsToWin: liga?.setsToWin ?? 3,
-        lastSetPoints: liga?.lastSetPoints ?? 15
+        lastSetPoints: liga?.lastSetPoints ?? 15,
+        pointsWin: liga?.pointsWin ?? 3,      // NUEVO
+        pointsLose: liga?.pointsLose ?? 0     // NUEVO
       });
     }
   }, [activeLeague, leagues]);
@@ -425,7 +431,7 @@ const TeamsPage = ({ language, userRole }) => {
     const { name, value } = e.target;
     setEditConfig(prev => ({
       ...prev,
-      [name]: name === 'setsToWin' || name === 'lastSetPoints' ? Number(value) : value
+      [name]: ['setsToWin', 'lastSetPoints', 'pointsWin', 'pointsLose'].includes(name) ? Number(value) : value
     }));
   };
 
@@ -435,12 +441,14 @@ const TeamsPage = ({ language, userRole }) => {
     if (!activeLeague) return;
     setLoading(true);
     try {
-      // Mostrar en consola la ruta y el payload antes de hacer la petición
       const leagueId = activeLeague;
       const url = `${LEAGUES_URL}/${leagueId}`;
       const payload = {
+        name: editConfig.name, // Asegura que el nombre se envía
         setsToWin: editConfig.setsToWin,
-        lastSetPoints: editConfig.lastSetPoints
+        lastSetPoints: editConfig.lastSetPoints,
+        pointsWin: editConfig.pointsWin,
+        pointsLose: editConfig.pointsLose
       };
       // Solo intenta si leagueId parece un ObjectId (24 caracteres hex)
       if (!/^[a-fA-F0-9]{24}$/.test(leagueId)) {
@@ -458,7 +466,7 @@ const TeamsPage = ({ language, userRole }) => {
         setLeagues(prev =>
           prev.map(l =>
             l._id === activeLeague
-              ? { ...l, setsToWin: updated.setsToWin, lastSetPoints: updated.lastSetPoints }
+              ? { ...l, ...updated }
               : l
           )
         );
@@ -523,6 +531,8 @@ const TeamsPage = ({ language, userRole }) => {
           onClose={() => setShowLeagueConfigModal(false)}
           loading={loading}
           language={language}
+          editConfig={editConfig} // Pasa editConfig y handleEditConfigChange si tu modal lo soporta
+          handleEditConfigChange={handleEditConfigChange}
         />
       )}
       {/* Modal de confirmación para eliminar liga */}
@@ -594,6 +604,34 @@ const TeamsPage = ({ language, userRole }) => {
                   <option value={15}>15</option>
                   <option value={25}>25</option>
                 </select>
+              </div>
+              <div>
+                <label className="form-label mb-0 me-1">
+                  {language === 'en' ? 'Points for Win:' : 'Puntos por victoria:'}
+                </label>
+                <input
+                  type="number"
+                  className="form-control d-inline-block"
+                  name="pointsWin"
+                  value={leagueConfig.pointsWin}
+                  onChange={handleLeagueConfigChange}
+                  style={{ width: 80, display: 'inline-block' }}
+                  min={0}
+                />
+              </div>
+              <div>
+                <label className="form-label mb-0 me-1">
+                  {language === 'en' ? 'Points for Loss:' : 'Puntos por derrota:'}
+                </label>
+                <input
+                  type="number"
+                  className="form-control d-inline-block"
+                  name="pointsLose"
+                  value={leagueConfig.pointsLose}
+                  onChange={handleLeagueConfigChange}
+                  style={{ width: 80, display: 'inline-block' }}
+                  min={0}
+                />
               </div>
               <div className="d-flex gap-2 mt-2">
                 <button className="btn btn-success" onClick={async () => {

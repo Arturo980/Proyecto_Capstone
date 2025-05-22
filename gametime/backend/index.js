@@ -49,7 +49,9 @@ const Usuario = mongoose.model('Usuario', {
 const Liga = mongoose.model('Liga', {
   name: { type: String, required: true, unique: true },
   setsToWin: { type: Number, default: 3 },      // Mejor de 5 por defecto (gana 3)
-  lastSetPoints: { type: Number, default: 15 }  // Último set a 15 por defecto
+  lastSetPoints: { type: Number, default: 15 }, // Último set a 15 por defecto
+  pointsWin: { type: Number, default: 3 },      // NUEVO: puntos por victoria
+  pointsLose: { type: Number, default: 0 }      // NUEVO: puntos por derrota
 });
 
 // Modelo de Equipo con referencia a liga
@@ -130,7 +132,9 @@ app.post('/api/leagues', async (req, res) => {
     const liga = new Liga({
       name: req.body.name,
       setsToWin: req.body.setsToWin ?? 3,
-      lastSetPoints: req.body.lastSetPoints ?? 15
+      lastSetPoints: req.body.lastSetPoints ?? 15,
+      pointsWin: req.body.pointsWin ?? 3,   // NUEVO
+      pointsLose: req.body.pointsLose ?? 0  // NUEVO
     });
     await liga.save();
     res.status(201).json(liga);
@@ -661,6 +665,8 @@ app.put('/api/leagues/:id', async (req, res) => {
     if (typeof req.body.setsToWin === 'number') update.setsToWin = req.body.setsToWin;
     if (typeof req.body.lastSetPoints === 'number') update.lastSetPoints = req.body.lastSetPoints;
     if (typeof req.body.name === 'string') update.name = req.body.name;
+    if (typeof req.body.pointsWin === 'number') update.pointsWin = req.body.pointsWin;   // NUEVO
+    if (typeof req.body.pointsLose === 'number') update.pointsLose = req.body.pointsLose; // NUEVO
     const liga = await Liga.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!liga) {
       return res.status(404).json({ error: 'Liga no encontrada' });
