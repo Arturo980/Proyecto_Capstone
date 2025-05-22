@@ -765,7 +765,7 @@ body.theme-light .date-nav-day.highlight-date {
   margin-right: 0 !important;
   margin-bottom: 12px;
   display: block;
-  width: 10%;
+  width: 100%;
 }
 
 /* Opcional: centra los botones en el modal de confirmación */

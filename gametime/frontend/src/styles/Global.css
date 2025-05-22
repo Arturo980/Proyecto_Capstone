@@ -20,7 +20,7 @@ html, body {
   flex: 1; /* Hacer que el contenido principal ocupe el espacio restante */
   display: flex;
   flex-direction: column;
-  margin: 50px auto; /* Añadir margen superior e inferior */
+  margin: 20px auto; /* Añadir margen superior e inferior */
   width: 100%; /* Asegurar que no exceda el ancho */
   max-width: 1200px; /* Limitar el ancho máximo */
   padding: 20px; /* Aumentar el padding lateral */

@@ -42,7 +42,12 @@ function App() {
   });
   const [carouselGames, setCarouselGames] = useState([]);
   const [leagues, setLeagues] = useState([]);
-  const [activeLeague, setActiveLeague] = useState(null);
+  const [activeLeague, setActiveLeague] = useState(''); // <-- Cambia null por ''
+
+  // NUEVO: Estados para equipos y partidos de la liga activa
+  const [teams, setTeams] = useState([]);
+  const [games, setGames] = useState([]);
+  const [leagueConfig, setLeagueConfig] = useState({});
 
   // Obtén la URL de la API de partidos y ligas
   const API_GAMES = `${API_BASE_URL}/api/games`;
@@ -56,12 +61,37 @@ function App() {
         const data = await res.json();
         setLeagues(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length > 0) setActiveLeague(data[0]._id);
+        else setActiveLeague(''); // <-- Asegura que nunca sea null
       } catch {
         setLeagues([]);
+        setActiveLeague(''); // <-- Asegura que nunca sea null
       }
     };
     fetchLeagues();
   }, []);
+
+  // NUEVO: Cargar equipos y partidos de la liga activa
+  useEffect(() => {
+    if (!activeLeague) {
+      setTeams([]);
+      setGames([]);
+      setLeagueConfig({});
+      return;
+    }
+    // Equipos
+    fetch(`${API_BASE_URL}/api/teams?league=${activeLeague}`)
+      .then(res => res.json())
+      .then(data => setTeams(data.teams || []))
+      .catch(() => setTeams([]));
+    // Partidos
+    fetch(`${API_BASE_URL}/api/games?league=${activeLeague}`)
+      .then(res => res.json())
+      .then(data => setGames(data.games || []))
+      .catch(() => setGames([]));
+    // Configuración de liga
+    const liga = leagues.find(l => l._id === activeLeague);
+    setLeagueConfig(liga || {});
+  }, [activeLeague, leagues]);
 
   // Cargar partidos para el carrusel (solo partidos de la semana actual de la liga activa)
   useEffect(() => {
@@ -166,7 +196,15 @@ function App() {
                           </div>
                           <div className="col-md-4">
                             <h3>{texts[language].standings_title}</h3>
-                            <StandingsTable language={language} /> {/* Pasar el idioma */}
+                            <StandingsTable
+                              language={language}
+                              leagues={leagues}
+                              activeLeague={activeLeague}
+                              setActiveLeague={setActiveLeague}
+                              teams={teams}
+                              games={games}
+                              leagueConfig={leagueConfig}
+                            />
                           </div>
                         </div>
                       </div>

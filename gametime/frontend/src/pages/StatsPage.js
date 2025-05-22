@@ -2,7 +2,7 @@ import React from 'react';
 
 const StatsPage = ({ language }) => {
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h2>{language === 'en' ? 'Statistics' : 'Estadísticas'}</h2>
       {/* Aquí puedes mostrar un mensaje o dejarlo vacío si no hay datos */}
       <div className="alert alert-info">
