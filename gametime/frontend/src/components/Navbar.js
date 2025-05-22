@@ -64,16 +64,6 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
     setIsTriangleDown(false); // Asegurar que el triángulo se restablezca
   };
 
-  const handleMouseEnter = () => {
-    setShowSettings(true); // Show settings dropdown on hover
-    if (!isTriangleDown) setIsTriangleDown(true); // Ensure the triangle rotates down
-  };
-
-  const handleMouseLeave = () => {
-    setShowSettings(false); // Hide settings dropdown when mouse leaves
-    if (isTriangleDown) setIsTriangleDown(false); // Ensure the triangle rotates back up
-  };
-
   const handleClickOutside = (event) => {
     if (
       languageSelectorRef.current &&
@@ -106,26 +96,6 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
     setShowSettings((prevState) => !prevState); // Alternar el menú de configuración
     setIsTriangleDown((prevState) => !prevState); // Alternar el estado del triángulo
   };
-
-  useEffect(() => {
-    const handleTouchOutside = (event) => {
-      if (
-        languageSelectorRef.current &&
-        !languageSelectorRef.current.contains(event.target) &&
-        event.target !== toggleIconRef.current
-      ) {
-        setShowSettings(false); // Cerrar el menú de configuración
-        setIsTriangleDown(false); // Restablecer el estado del triángulo
-      }
-    };
-
-    document.addEventListener('mousedown', handleTouchOutside); // Manejar clics fuera del menú
-    document.addEventListener('touchstart', handleTouchOutside); // Manejar toques fuera del menú
-    return () => {
-      document.removeEventListener('mousedown', handleTouchOutside);
-      document.removeEventListener('touchstart', handleTouchOutside);
-    };
-  }, []);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -220,14 +190,12 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
             <div
               className="language-selector position-relative"
               ref={languageSelectorRef}
-              onMouseEnter={handleMouseEnter} // Open on hover
-              onMouseLeave={handleMouseLeave} // Close when mouse leaves
             >
               <button
                 className={`btn triangle-btn ${isTriangleDown ? 'triangle-down' : ''}`}
                 aria-label="Settings"
-                onClick={handleToggleClick} // Usar la función de toggle
-                ref={toggleIconRef} // Referencia al botón de configuración
+                onClick={handleToggleClick}
+                ref={toggleIconRef}
               >
                 <img src={toggleIcon} alt="Toggle Settings" className="language-toggle-icon" />
               </button>

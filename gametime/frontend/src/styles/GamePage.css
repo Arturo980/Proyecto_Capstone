@@ -18,12 +18,42 @@
   color: #333;
 }
 
+/* Soporte de tema para el header del calendario */
+body.theme-dark .calendar-header h3 {
+  color: #fff;
+}
+
+body.theme-light .calendar-header h3 {
+  color: #23272b;
+}
+
+.calendar-header h3 {
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  /* El color será sobrescrito por el tema */
+}
+
 .games-container {
   display: flex;
   flex-wrap: wrap; /* Permitir que los cuadros se ajusten a la siguiente fila */
   gap: 30px; /* Espacio entre los cuadros */
-  justify-content: center; /* Centrar los cuadros horizontalmente */
-  width: 100%; /* Asegurar que ocupe todo el ancho */
+  justify-content: flex-start; /* Cambia de center a flex-start para evitar que los cuadros se agrupen a la derecha en móviles */
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Centrado absoluto de cada cuadro en móviles */
+@media (max-width: 900px) {
+  .games-container {
+    justify-content: center !important;
+    align-items: center;
+  }
+  .game-box {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    /* ...existing code... */
+  }
 }
 
 .game-container {
@@ -47,6 +77,8 @@
   background-color: #f9f9f9;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra más prominente */
   transition: transform 0.2s ease, box-shadow 0.2s ease; /* Agregar animación */
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .game-box:hover {
@@ -175,6 +207,22 @@
   text-transform: uppercase;
 }
 
+/* Soporte de tema para el header del calendario */
+body.theme-dark .calendar-header h3 {
+  color: #fff;
+}
+
+body.theme-light .calendar-header h3 {
+  color: #23272b;
+}
+
+.calendar-header h3 {
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  /* El color será sobrescrito por el tema */
+}
+
 .selected-date {
   font-size: 20px;
   font-weight: bold;
@@ -267,29 +315,67 @@
   transition: background-color 0.2s ease, color 0.2s ease;
   flex-shrink: 0; /* Evitar que los días se reduzcan en tamaño */
   border-radius: 50%; /* Hacer los días redondos */
-  border: 1px solid transparent; /* Agregar un borde inicial transparente */
+  border: none !important; /* El borde normal nunca se muestra */
 }
 
-.date-nav-day:hover {
-  background-color: #f0f0f0; /* Cambiar el fondo al pasar el cursor */
-  border-color: #007bff; /* Resaltar el borde al pasar el cursor */
+/* Día seleccionado: fondo y color destacados según el tema */
+body.theme-dark .date-nav-day.selected-day {
+  background-color: #2575fc !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
 }
 
-.date-nav-day.disabled-date {
-  color: #ccc; /* Color gris para fechas sin partidos */
-  cursor: default;
+body.theme-light .date-nav-day.selected-day {
+  background-color: #2575fc !important;
+  color: #fff !important;
+}
+
+/* Día seleccionado y con partido: prioriza el azul de seleccionado */
+body.theme-dark .date-nav-day.selected-day.highlight-date,
+body.theme-dark .date-nav-day.highlight-date.selected-day {
+  background-color: #2575fc !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+body.theme-light .date-nav-day.selected-day.highlight-date,
+body.theme-light .date-nav-day.highlight-date.selected-day {
+  background-color: #2575fc !important;
+  color: #fff !important;
+  border: 2px solid #23272b !important;
+}
+
+/* Soporte de tema para los días del calendario */
+body.theme-dark .date-nav-day {
+  color: #fff;
+  background-color: transparent;
+}
+
+body.theme-light .date-nav-day {
+  color: #23272b;
+  background-color: #fff;
+}
+
+/* Días con partidos: resalta el fondo y el borde según el tema */
+body.theme-dark .date-nav-day.highlight-date {
+  background-color: #ffe066 !important;
+  color: #23272b !important;
+  border: 2px solid #ffd700 !important;
+  font-weight: bold;
+}
+
+body.theme-light .date-nav-day.highlight-date {
+  background-color: #ffe066 !important;
+  color: #23272b !important;
+  border: 2px solid #ffd700 !important;
+  font-weight: bold;
 }
 
 .date-nav-day.highlight-date {
-  background-color: #ffe066;
-  color: #000;
-  border-color: #ffd700;
-}
-
-.date-nav-day.selected-day {
-  background-color: #007bff; /* Fondo azul para la fecha seleccionada */
-  color: #fff; /* Texto blanco */
-  border-color: #0056b3; /* Borde más oscuro para la fecha seleccionada */
+  background-color: #ffe066 !important;
+  color: #23272b !important;
+  border: 2px solid #ffd700 !important;
+  font-weight: bold;
 }
 
 /* Estilos para el modal */
@@ -316,17 +402,42 @@
   position: relative;
   width: 90%;
   max-width: 400px; /* Limitar el ancho máximo del modal */
+  padding-top: 56px; /* Asegura suficiente espacio arriba en el modal para el botón de cerrar */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Si hay un título o encabezado, sepáralo del botón de cerrar */
+.modal-content > h2,
+.modal-content > h3,
+.modal-content > h4,
+.modal-content > .modal-title {
+  margin-top: 0;
+  margin-bottom: 24px;
+  /* Empuja el contenido hacia abajo para que no quede a la altura del botón de cerrar */
+}
+
+/* Si usas un div para el header, puedes agregar una clase y separar */
+.modal-content .modal-header {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+/* Si hay formularios o contenido principal, sepáralos del borde superior */
+.modal-content form,
+.modal-content > div:not(.btn.close-button):not(.close-modal):not(.modal-header) {
+  margin-top: 16px;
 }
 
 .close-modal,
 .btn.close-button {
   position: absolute;
-  top: 5px;
-  right: 10px;
+  top: 16px;
+  right: 24px;
   z-index: 2;
-  font-size: 24px;
-  width: 36px;
-  height: 36px;
+  font-size: 28px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -338,10 +449,15 @@
   transition: transform 0.2s ease;
 }
 
-.close-modal:hover,
-.btn.close-button:hover {
-  transform: scale(1.2);
-  background: none;
+/* Solo afecta el botón de cerrar del modal, no otros botones secundarios */
+.btn.close-button {
+  min-width: unset;
+  min-height: unset;
+  width: 40px !important;
+  height: 40px !important;
+  font-size: 28px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
 }
 
 /* MODAL: Espacio arriba del team-names-container para el botón de cerrar */
@@ -375,6 +491,105 @@
   text-align: center;
 }
 
+/* Nuevos estilos para la responsividad y alineación de nombres de equipos en el modal */
+.game-team-names {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.game-team-name {
+  font-weight: bold;
+  font-size: 18px;
+  flex: 1 1 0%;
+  min-width: 0;
+  white-space: nowrap;         /* <-- Cambia a nowrap para evitar saltos de línea extraños */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;          /* <-- Evita cortes de palabra feos */
+}
+
+.game-team-name.left {
+  text-align: center;
+}
+
+.game-team-name.right {
+  text-align: center;
+}
+
+.game-vs-text {
+  font-weight: bold;
+  font-size: 16px;
+  color: #555;
+  margin: 0 10px;
+  flex: 0 0 auto;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Responsive: en pantallas pequeñas, permite salto de línea solo si es necesario */
+@media (max-width: 900px) {
+  .game-team-names {
+    gap: 9px;
+  }
+  .game-team-name {
+    font-size: 15px;
+    max-width: 48vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    display: block;
+  }
+  .game-vs-text {
+    font-size: 13px;
+    margin: 0 4px;
+  }
+  .game-box {
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .game-team-names {
+    gap: 13px;
+  }
+  .game-team-name {
+    font-size: 13px;
+    max-width: 40vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+  }
+  .game-vs-text {
+    font-size: 12px;
+    margin: 0 2px;
+  }
+  .game-box {
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-box {
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .game-box {
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
 /* Media query para pantallas pequeñas */
 @media (max-width: 768px) {
   .scoreboardDateNav {
@@ -403,6 +618,8 @@
     min-width: 0;
     max-width: 99vw;
     padding: 12px;
+    margin-right: auto;
+    margin-left: auto;
   }
   .score-box {
     width: 48px;
@@ -430,6 +647,8 @@
     width: 98vw;
     padding: 8px;
     font-size: 15px;
+    margin-right: auto;
+    margin-left: auto;
   }
   .score-box {
     width: 38px;
@@ -459,6 +678,8 @@
     width: 99vw;
     padding: 4px;
     font-size: 13px;
+    margin-right: auto;
+    margin-left: auto;
   }
   .score-box {
     width: 28px;
@@ -471,4 +692,226 @@
     max-width: 99vw;
     padding: 4px;
   }
+}
+
+@media (max-width: 400px) {
+  .game-box {
+    width: 99vw;
+    min-width: 0;
+    max-width: 99vw;
+    padding: 2vw 2vw 2vw 2vw;
+    font-size: 12px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .team-names-public,
+  .game-team-names {
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  .team-name-public,
+  .game-team-name {
+    font-size: 13px !important;
+    max-width: 40vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vs-text-public,
+  .game-vs-text {
+    font-size: 11px !important;
+    margin: 0 2px !important;
+  }
+  .date-time {
+    font-size: 11px;
+  }
+  .score-box {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    margin: 0 1px;
+    line-height: 24px;
+  }
+  .modal-content {
+    max-width: 99vw;
+    padding: 2vw;
+  }
+}
+
+/* Elimina el margin-right de .btn-danger.me-2 solo en el modal de confirmación */
+.modal-content .btn-danger.me-2 {
+  margin-right: 0 !important;
+  margin-bottom: 12px;
+  display: block;
+  width: 100%;
+}
+
+/* Elimina el margin-left de .btn-secondary.ms-2 solo en el modal y agrega separación abajo */
+.modal-content .btn-secondary.ms-2 {
+  margin-left: 0 !important;
+  margin-bottom: 12px;
+  display: block;
+  width: 100%;
+}
+
+/* Asegura que el botón de cancelar también tenga separación si es necesario */
+.modal-content .btn-secondary {
+  display: block;
+  width: 100%;
+}
+
+/* Aplica mismo estilo al botón .btn-success[type="submit"] en el modal de confirmación */
+.modal-content .btn-success[type="submit"] {
+  margin-right: 0 !important;
+  margin-bottom: 12px;
+  display: block;
+  width: 10%;
+}
+
+/* Opcional: centra los botones en el modal de confirmación */
+@media (max-width: 600px) {
+  .modal-content .btn-danger,
+  .modal-content .btn-secondary,
+  .modal-content .btn-success[type="submit"] {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    display: block;
+    position: absolute;
+  }
+}
+
+/* Cambia el color del ícono de calendario según el tema */
+body.theme-light .calendar-icon .material-symbols-outlined {
+  color: #23272b !important; /* Negro para tema claro */
+}
+
+body.theme-dark .calendar-icon .material-symbols-outlined {
+  color: #fff !important; /* Blanco para tema oscuro */
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 50,
+    'opsz' 40 !important;
+  font-family: 'Material Symbols Outlined', sans-serif !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-size: inherit;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tema oscuro para game-box */
+body.theme-dark .game-box {
+  background-color: #23272b;
+  border-color: #444;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+
+body.theme-dark .game-box .team-name,
+body.theme-dark .game-box .team-name-public,
+body.theme-dark .game-box .vs-text,
+body.theme-dark .game-box .vs-text-public,
+body.theme-dark .game-box .date-time {
+  color: #fff;
+}
+
+body.theme-dark .game-box .score-box {
+  background-color: #444;
+  color: #fff;
+}
+
+/* Tema claro para game-box */
+body.theme-light .game-box {
+  background-color: #f9f9f9;
+  border-color: #ddd;
+  color: #23272b;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+body.theme-light .game-box .team-name,
+body.theme-light .game-box .team-name-public,
+body.theme-light .game-box .vs-text,
+body.theme-light .game-box .vs-text-public,
+body.theme-light .game-box .date-time {
+  color: #23272b;
+}
+
+body.theme-light .game-box .score-box {
+  background-color: #9c9c9c;
+  color: #fff;
+}
+
+/* Tabla de resultados en el modal: tema oscuro */
+body.theme-dark .modal-content table {
+  background: #23272b;
+  color: #fff;
+}
+
+body.theme-dark .modal-content th,
+body.theme-dark .modal-content td {
+  background: #23272b;
+  color: #fff;
+  border: 1px solid #000 !important;
+}
+
+body.theme-dark .modal-content th {
+  background: #343a40;
+  color: #fff;
+}
+
+body.theme-dark .modal-content td[style*="background: #eee"],
+body.theme-dark .modal-content td[style*="background:#eee"] {
+  background: #343a40 !important;
+  color: #fff !important;
+}
+
+/* Tabla de resultados en el modal: tema claro */
+body.theme-light .modal-content table {
+  background: #fff;
+  color: #23272b;
+}
+
+body.theme-light .modal-content th,
+body.theme-light .modal-content td {
+  background: #fff;
+  color: #23272b;
+  border: 1px solid #ddd;
+}
+
+body.theme-light .modal-content th {
+  background: #f0f0f0;
+  color: #23272b;
+}
+
+body.theme-light .modal-content td[style*="background: #eee"],
+body.theme-light .modal-content td[style*="background:#eee"] {
+  background: #f0f0f0 !important;
+  color: #23272b !important;
+}
+
+/* Tema oscuro: columna Sets igual que th */
+body.theme-dark .modal-content th,
+body.theme-dark .modal-content td.sets-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+  border: 1px solid #000 !important;
+}
+
+/* Tema claro: columna Sets igual que th */
+body.theme-light .modal-content th,
+body.theme-light .modal-content td.sets-cell {
+  background: #f0f0f0 !important;
+  color: #23272b !important;
+  border: 1px solid #ddd !important;
 }

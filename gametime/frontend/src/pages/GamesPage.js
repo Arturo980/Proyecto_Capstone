@@ -3,7 +3,6 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import '../styles/GamePage.css';
 import es from 'date-fns/locale/es';
-import calendar from '../assets/images/calendario.png';
 import texts from '../translations/texts';
 import { io as socketIOClient } from "socket.io-client";
 import LiveScoreModal from '../components/LiveScoreModal';
@@ -934,113 +933,121 @@ const GamesPage = ({ language = 'es' }) => {
           </div>
         )}
         <div className="row justify-content-center">
-          {games.map((game, idx) => (
-            <div
-              key={game._id || idx}
-              className="col-md-4 mb-3"
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                // Mostrar el resultado final en el modal público si el partido está finalizado
-                if (game.partidoFinalizado) {
-                  setPublicGameModal({
-                    ...game,
-                    // Asegura que sets1 y sets2 estén actualizados
-                    sets1: typeof game.sets1 === 'number' ? game.sets1 : (
-                      Array.isArray(game.setsHistory)
-                        ? game.setsHistory.filter(s => s.score1 > s.score2).length
-                        : 0
-                    ),
-                    sets2: typeof game.sets2 === 'number' ? game.sets2 : (
-                      Array.isArray(game.setsHistory)
-                        ? game.setsHistory.filter(s => s.score2 > s.score1).length
-                        : 0
-                    ),
-                    partidoFinalizado: true
-                  });
-                } else if (canEditMatchData) {
-                  // Mostrar primero el modal de citados si aún no están definidos
-                  if (!game.citados || game.citados.trim() === '') {
-                    setPendingCitadosGame(game);
-                    setPendingCitados([]);
-                  } else {
-                    if (!game.partidoFinalizado) {
-                      setLiveScoreGame(game);
+          {games.map((game, idx) => {
+            // Buscar los objetos de equipo para obtener el logo
+            const team1Obj = teams.find(t => t.name === game.team1);
+            const team2Obj = teams.find(t => t.name === game.team2);
+            const team1Logo = team1Obj?.logo;
+            const team2Logo = team2Obj?.logo;
+            return (
+              <div
+                key={game._id || idx}
+                className="col-md-4 mb-3"
+              >
+                <div
+                  className="card h-100"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    // Mostrar el resultado final en el modal público si el partido está finalizado
+                    if (game.partidoFinalizado) {
+                      setPublicGameModal({
+                        ...game,
+                        // Asegura que sets1 y sets2 estén actualizados
+                        sets1: typeof game.sets1 === 'number' ? game.sets1 : (
+                          Array.isArray(game.setsHistory)
+                            ? game.setsHistory.filter(s => s.score1 > s.score2).length
+                            : 0
+                        ),
+                        sets2: typeof game.sets2 === 'number' ? game.sets2 : (
+                          Array.isArray(game.setsHistory)
+                            ? game.setsHistory.filter(s => s.score2 > s.score1).length
+                            : 0
+                        ),
+                        partidoFinalizado: true
+                      });
+                    } else if (canEditMatchData) {
+                      // Mostrar primero el modal de citados si aún no están definidos
+                      if (!game.citados || game.citados.trim() === '') {
+                        setPendingCitadosGame(game);
+                        setPendingCitados([]);
+                      } else {
+                        if (!game.partidoFinalizado) {
+                          setLiveScoreGame(game);
+                        }
+                      }
+                    } else {
+                      handleShowGame(game);
                     }
-                  }
-                } else {
-                  handleShowGame(game);
-                }
-              }}
-            >
-              <div className="card h-100">
-                <div className="card-body">
-                  {/* CAMBIO: Mostrar equipos alineados a izquierda y derecha */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    marginBottom: 8
-                  }}>
-                    <span style={{ fontWeight: 'bold', fontSize: 18, textAlign: 'left', flex: 1 }}>{game.team1}</span>
-                    <span style={{ fontWeight: 'bold', fontSize: 16, color: '#555', margin: '0 10px' }}>
-                      {texts[language]?.vs || 'vs'}
-                    </span>
-                    <span style={{ fontWeight: 'bold', fontSize: 18, textAlign: 'right', flex: 1 }}>{game.team2}</span>
-                  </div>
-                  <div className="mb-2">
-                    <span>{game.date} - {game.time}</span>
-                  </div>
-                  {/* CAMBIO: Marcador responsive */}
-                  <div
-                    className="score-box-container"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 10,
-                      flexWrap: 'nowrap'
-                    }}
-                  >
-                    <span className="score-box" style={{ minWidth: 40 }}>{game.score1 !== null ? game.score1 : '-'}</span>
-                    <span className="score-box" style={{ minWidth: 40 }}>{game.score2 !== null ? game.score2 : '-'}</span>
-                  </div>
-                  {/* NUEVO: Mostrar sets si existen */}
-                  {(game.sets1 !== undefined || game.sets2 !== undefined) && (
+                  }}
+                >
+                  <div className="card-body">
+                    {/* Mostrar abreviaciones y logos debajo */}
+                    <div className="game-team-names">
+                      <span className="game-team-name left">{game.team1_abbr || game.team1}</span>
+                      <span className="game-vs-text">{texts[language]?.vs || 'vs'}</span>
+                      <span className="game-team-name right">{game.team2_abbr || game.team2}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        {team1Logo && (
+                          <img
+                            src={team1Logo}
+                            alt={game.team1_abbr || game.team1}
+                            style={{ maxHeight: 90, maxWidth: 120, marginRight: 4, objectFit: 'contain', display: 'inline-block' }}
+                          />
+                        )}
+                      </div>
+                      <div style={{ width: 48 }}></div>
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        {team2Logo && (
+                          <img
+                            src={team2Logo}
+                            alt={game.team2_abbr || game.team2}
+                            style={{ maxHeight: 90, maxWidth: 120, marginLeft: 4, objectFit: 'contain', display: 'inline-block' }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <span>{game.date} - {game.time}</span>
+                    </div>
+                    {/* NUEVO: Mostrar sets si existen */}
+                    {(game.sets1 !== undefined || game.sets2 !== undefined) && (
+                      <div className="mt-2">
+                        <span>Sets: {game.sets1 ?? '-'} - {game.sets2 ?? '-'}</span>
+                      </div>
+                    )}
+                    {/* Si el partido está finalizado, muestra un aviso */}
+                    {game.partidoFinalizado && (
+                      <div style={{ color: '#007bff', fontWeight: 'bold', marginTop: 8 }}>
+                        {language === 'en' ? 'Finished' : 'Finalizado'}
+                      </div>
+                    )}
                     <div className="mt-2">
-                      <span>Sets: {game.sets1 ?? '-'} - {game.sets2 ?? '-'}</span>
+                      {/* Solo admin y content-editor pueden editar configuración */}
+                      {(userRole === 'admin' || userRole === 'content-editor') && (
+                        <button
+                          className="btn btn-outline-secondary btn-sm me-2"
+                          onClick={e => { e.stopPropagation(); handleEditConfigGame(game); }}
+                        >
+                          {language === 'en' ? 'Edit' : 'Editar'}
+                        </button>
+                      )}
+                      {/* Solo admin y content-editor pueden eliminar */}
+                      {(userRole === 'admin' || userRole === 'content-editor') && (
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={e => { e.stopPropagation(); handleDeleteGame(game._id); }}
+                        >
+                          {language === 'en' ? 'Delete' : 'Eliminar'}
+                        </button>
+                      )}
                     </div>
-                  )}
-                  {/* Si el partido está finalizado, muestra un aviso */}
-                  {game.partidoFinalizado && (
-                    <div style={{ color: '#007bff', fontWeight: 'bold', marginTop: 8 }}>
-                      {language === 'en' ? 'Finished' : 'Finalizado'}
-                    </div>
-                  )}
-                  <div className="mt-2">
-                    {/* Solo admin y content-editor pueden editar configuración */}
-                    {(userRole === 'admin' || userRole === 'content-editor') && (
-                      <button
-                        className="btn btn-outline-secondary btn-sm me-2"
-                        onClick={e => { e.stopPropagation(); handleEditConfigGame(game); }}
-                      >
-                        {language === 'en' ? 'Edit' : 'Editar'}
-                      </button>
-                    )}
-                    {/* Solo admin y content-editor pueden eliminar */}
-                    {(userRole === 'admin' || userRole === 'content-editor') && (
-                      <button
-                        className="btn btn-outline-danger btn-sm"
-                        onClick={e => { e.stopPropagation(); handleDeleteGame(game._id); }}
-                      >
-                        {language === 'en' ? 'Delete' : 'Eliminar'}
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {/* Modal para editar configuración */}
         {editConfigGame && (
@@ -1419,8 +1426,11 @@ const GamesPage = ({ language = 'es' }) => {
           <button
             className="calendar-icon"
             onClick={() => setShowModal(true)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src={calendar} alt={language === 'en' ? 'Open calendar' : 'Abrir calendario'} />
+            <span className="material-symbols-outlined" style={{ fontSize: 36, color: 'inherit' }}>
+              calendar_month
+            </span>
           </button>
         </div>
       </div>
@@ -1466,7 +1476,13 @@ const GamesPage = ({ language = 'es' }) => {
       <div className="games-container">
         {filteredGames.length > 0 ? (
           filteredGames.map((game, index) => {
-            // Nuevo: Determinar estado del partido
+            // Obtener abbr y logo de cada equipo
+            const team1Obj = teams.find(t => t.name === game.team1);
+            const team2Obj = teams.find(t => t.name === game.team2);
+            const team1Abbr = game.team1_abbr || team1Obj?.abbr || game.team1;
+            const team2Abbr = game.team2_abbr || team2Obj?.abbr || game.team2;
+            const team1Logo = team1Obj?.logo;
+            const team2Logo = team2Obj?.logo;
             let matchStatus = '';
             if (game.partidoFinalizado) {
               matchStatus = language === 'en' ? 'Finished' : 'Finalizado';
@@ -1482,23 +1498,22 @@ const GamesPage = ({ language = 'es' }) => {
                 onClick={() => setPublicGameModal(game)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Equipos alineados izquierda/derecha para público */}
+                {/* Abreviaciones */}
                 <div
                   className="team-names-public"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: 10,
-                    marginBottom: 8,
-                    width: '80%'
+                    marginBottom: 4,
+                    width: '100%'
                   }}
                 >
                   <div
                     className="team-name-public"
                     style={{
-                      textAlign: 'left',
-                      flex: 1,
+                      textAlign: 'center',
+                      flex: '1 1 0%',
                       fontWeight: 'bold',
                       fontSize: 18,
                       whiteSpace: 'nowrap',
@@ -1506,7 +1521,7 @@ const GamesPage = ({ language = 'es' }) => {
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {game.team1}
+                    {team1Abbr}
                   </div>
                   <div
                     className="vs-text-public"
@@ -1522,8 +1537,8 @@ const GamesPage = ({ language = 'es' }) => {
                   <div
                     className="team-name-public"
                     style={{
-                      textAlign: 'right',
-                      flex: 1,
+                      textAlign: 'center',
+                      flex: '1 1 0%',
                       fontWeight: 'bold',
                       fontSize: 18,
                       whiteSpace: 'nowrap',
@@ -1531,7 +1546,30 @@ const GamesPage = ({ language = 'es' }) => {
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {game.team2}
+                    {team2Abbr}
+                  </div>
+                </div>
+                {/* Logos alineados igual que los nombres */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    marginBottom: 8,
+                    width: '100%'
+                  }}
+                >
+                  <div style={{ flex: '1 1 0%', textAlign: 'center', minWidth: 0 }}>
+                    {team1Logo && (
+                      <img src={team1Logo} alt={team1Abbr} style={{ maxHeight: 56, maxWidth: 72, objectFit: 'contain', display: 'inline-block' }} />
+                    )}
+                  </div>
+                  <div style={{ width: 32, minWidth: 32 }}></div>
+                  <div style={{ flex: '1 1 0%', textAlign: 'center', minWidth: 0 }}>
+                    {team2Logo && (
+                      <img src={team2Logo} alt={team2Abbr} style={{ maxHeight: 56, maxWidth: 72, objectFit: 'contain', display: 'inline-block' }} />
+                    )}
                   </div>
                 </div>
                 {/* SOLO HORARIO, NO FECHA */}
@@ -1561,71 +1599,104 @@ const GamesPage = ({ language = 'es' }) => {
       {/* Modal detalle de sets y marcador en vivo para público */}
       {publicGameModal && (
         <div className="modal-overlay" onClick={() => setPublicGameModal(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600, paddingTop: 56, position: 'relative' }}>
             <button
               className="btn btn-secondary close-button"
               onClick={() => setPublicGameModal(null)}
             >
               &times;
             </button>
-            <div style={{ textAlign: 'center', marginBottom: 10 }}>
-              {/* Equipos alineados izquierda/derecha en el modal */}
+            {/* Equipos alineados izquierda/derecha */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              width: '100%',
+              marginTop: 0
+            }}>
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 10,
-                  marginBottom: 8,
-                  width: '100%'
+                  textAlign: 'center',
+                  flex: '1 1 0%',
+                  fontWeight: 'bold',
+                  fontSize: 'clamp(13px, 4vw, 20px)',
+                  whiteSpace: 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-word',
                 }}
               >
-                <div
-                  style={{
-                    textAlign: 'left',
-                    flex: 1,
-                    fontWeight: 'bold',
-                    fontSize: 20,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  {publicGameModal.team1}
-                </div>
-                <div
-                  style={{
-                    margin: '0 10px',
-                    fontWeight: 'bold',
-                    fontSize: 18,
-                    color: '#555'
-                  }}
-                >
-                  {texts[language]?.vs || 'vs'}
-                </div>
-                <div
-                  style={{
-                    textAlign: 'right',
-                    flex: 1,
-                    fontWeight: 'bold',
-                    fontSize: 20,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  {publicGameModal.team2}
-                </div>
+                {(() => {
+                  const team1Obj = teams.find(t => t.abbr === publicGameModal.team1_abbr || t.name === publicGameModal.team1);
+                  return team1Obj?.name || publicGameModal.team1;
+                })()}
               </div>
-              <div style={{ fontSize: 22, margin: '8px 0', fontWeight: 'bold' }}>
-                {(publicGameModal.sets1 ?? 0)} - {(publicGameModal.sets2 ?? 0)}
+              <div
+                style={{
+                  margin: '0 10px',
+                  fontWeight: 'bold',
+                  fontSize: 'clamp(11px, 3vw, 18px)',
+                  color: '#555',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {texts[language]?.vs || 'vs'}
               </div>
-              <div style={{ fontSize: 15, color: '#888' }}>
-                {publicGameModal.date} {publicGameModal.time}
+              <div
+                style={{
+                  textAlign: 'center',
+                  flex: '1 1 0%',
+                  fontWeight: 'bold',
+                  fontSize: 'clamp(13px, 4vw, 20px)',
+                  whiteSpace: 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {(() => {
+                  const team2Obj = teams.find(t => t.abbr === publicGameModal.team2_abbr || t.name === publicGameModal.team2);
+                  return team2Obj?.name || publicGameModal.team2;
+                })()}
+              </div>
+            </div>
+            {/* Logos de los equipos debajo del nombre - MÁS GRANDES */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              width: '100%'
+            }}>
+              <div style={{ flex: '1 1 0%', textAlign: 'center', minWidth: 0 }}>
+                {(() => {
+                  const team1Obj = teams.find(t => t.abbr === publicGameModal.team1_abbr || t.name === publicGameModal.team1);
+                  return team1Obj?.logo ? (
+                    <img
+                      src={team1Obj.logo}
+                      alt={team1Obj.name}
+                      style={{ maxHeight: 130, maxWidth: 140, objectFit: 'contain', display: 'inline-block' }}
+                    />
+                  ) : null;
+                })()}
+              </div>
+              <div style={{ width: 48, minWidth: 48 }}></div>
+              <div style={{ flex: '1 1 0%', textAlign: 'center', minWidth: 0 }}>
+                {(() => {
+                  const team2Obj = teams.find(t => t.abbr === publicGameModal.team2_abbr || t.name === publicGameModal.team2);
+                  return team2Obj?.logo ? (
+                    <img
+                      src={team2Obj.logo}
+                      alt={team2Obj.name}
+                      style={{ maxHeight: 130, maxWidth: 140, objectFit: 'contain', display: 'inline-block' }}
+                    />
+                  ) : null;
+                })()}
               </div>
             </div>
             {/* Tabla de sets con marcador en vivo */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4 }}>
               <thead>
                 <tr style={{ background: '#f0f0f0' }}>
                   <th style={{ padding: 6, border: '1px solid #ddd' }}></th>
@@ -1659,7 +1730,14 @@ const GamesPage = ({ language = 'es' }) => {
                       {liveSetScore.score1}
                     </td>
                   )}
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                  <td
+                    className="sets-cell"
+                    style={{
+                      padding: 6,
+                      fontWeight: 'bold',
+                      textAlign: 'center'
+                    }}
+                  >
                     {publicGameModal.sets1 ?? '-'}
                   </td>
                 </tr>
@@ -1678,12 +1756,22 @@ const GamesPage = ({ language = 'es' }) => {
                       {liveSetScore.score2}
                     </td>
                   )}
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 'bold', background: '#eee', textAlign: 'center' }}>
+                  <td
+                    className="sets-cell"
+                    style={{
+                      padding: 6,
+                      fontWeight: 'bold',
+                      textAlign: 'center'
+                    }}
+                  >
                     {publicGameModal.sets2 ?? '-'}
                   </td>
-                </tr>
+                               </tr>
               </tbody>
             </table>
+            <div style={{ fontSize: 15, color: '#888', marginTop: 10 }}>
+              {publicGameModal.date} {publicGameModal.time}
+            </div>
             <div style={{ marginTop: 12, textAlign: 'center', fontWeight: 'bold', fontSize: 18,
               color: publicGameModal.partidoFinalizado
                 ? '#007bff'

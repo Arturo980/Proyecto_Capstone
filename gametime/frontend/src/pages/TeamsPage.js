@@ -697,38 +697,48 @@ const TeamsPage = ({ language, userRole }) => {
             }
           }}
         >
-          <div className="modal-content">
+          <div className="modal-content" style={{ position: 'relative', paddingTop: 56 }}>
+            {/* Botón X absolutamente posicionado arriba a la derecha */}
             <button
               className="btn btn-secondary close-button"
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 24,
+                zIndex: 2
+              }}
               onClick={handleCloseModal}
             >
               &times;
             </button>
-            <h2>{selectedTeam.name}</h2>
-            {selectedTeam.logo && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <img
-                  src={selectedTeam.logo}
-                  alt={selectedTeam.name}
-                  style={{ maxWidth: 120, marginBottom: 16, display: 'block' }}
-                />
-              </div>
-            )}
-            <h3>{language === 'en' ? 'Roster' : 'Plantilla'}</h3>
-            <div className="roster-grid">
-              {selectedTeam.roster.map((player, index) => (
-                <div key={index} className="player-card">
-                  {player}
-                </div>
-              ))}
-            </div>
+            {/* El resto del contenido del modal va debajo */}
             <div>
-              <h4>{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</h4>
-              <ul>
-                {selectedTeam.staff.map((member, index) => (
-                  <li key={index}>{member}</li>
+              <h2 style={{ marginTop: 0 }}>{selectedTeam.name}</h2>
+              {selectedTeam.logo && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img
+                    src={selectedTeam.logo}
+                    alt={selectedTeam.name}
+                    style={{ maxWidth: 120, marginBottom: 16, display: 'block' }}
+                  />
+                </div>
+              )}
+              <h3>{language === 'en' ? 'Roster' : 'Plantilla'}</h3>
+              <div className="roster-grid">
+                {selectedTeam.roster.map((player, index) => (
+                  <div key={index} className="player-card">
+                    {player}
+                  </div>
                 ))}
-              </ul>
+              </div>
+              <div>
+                <h4>{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</h4>
+                <ul>
+                  {selectedTeam.staff.map((member, index) => (
+                    <li key={index}>{member}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

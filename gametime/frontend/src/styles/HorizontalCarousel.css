@@ -60,15 +60,16 @@
 .game-card {
   background: #0d1c3f;
   border-radius: 8px;
-  min-width: 200px;
-  max-width: 400px;
-  padding: 10px 10px 6px 10px;
+  min-width: 230px; /* antes: 200px */
+  max-width: 420px; /* antes: 400px */
+  padding: 10px 32px 6px 10px; /* padding-right aumentado para el círculo */
   color: #fff;
   display: flex;
   flex-direction: column;
   gap: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.15s;
+  position: relative;
 }
 
 .teams {
@@ -94,6 +95,211 @@
 .game-date {
   color: #b0b0b0;
   font-size: 0.85rem;
+}
+
+/* Carrusel horizontal: equipos alineados a la izquierda */
+.teams-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.team-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-logo-horizontal {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  background: transparent !important;
+  /* Elimina el borde blanco si lo deseas */
+  /* border: none; */
+}
+
+.team-abbr-horizontal {
+  font-weight: bold;
+  font-size: 1.08rem;
+  color: #fff;
+  letter-spacing: 0.5px;
+  min-width: 28px;
+  text-align: left;
+}
+
+.vs-horizontal {
+  margin: 0 8px;
+  font-weight: bold;
+  color: #bfc9e0;
+  font-size: 1.05rem;
+}
+
+/* Carrusel vertical: equipos uno debajo del otro, alineados a la izquierda */
+.teams-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.team-vertical {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-logo-vertical {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  background: transparent !important;
+  /* Elimina el borde blanco si lo deseas */
+  /* border: none; */
+}
+
+.team-abbr-vertical {
+  font-weight: bold;
+  font-size: 1.08rem;
+  color: #fff;
+  letter-spacing: 0.5px;
+  min-width: 28px;
+  text-align: left;
+}
+
+.sets-horizontal-carousel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 2px 0;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.sets-label {
+  color: #bfc9e0;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.sets-score {
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Equipos uno debajo del otro, sets a la derecha */
+.teams-vertical-sets {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.team-vertical-sets {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.team-vertical-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-logo-vertical {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  background: transparent !important;
+}
+
+.team-abbr-vertical {
+  font-weight: bold;
+  font-size: 1.08rem;
+  color: #fff;
+  letter-spacing: 0.5px;
+  min-width: 28px;
+  text-align: left;
+}
+
+.team-sets-vertical {
+  font-weight: bold;
+  font-size: 1.15rem;
+  color: #ffffff;
+  min-width: 18px;
+  margin-left: 10px;
+  text-align: right;
+}
+
+/* Responsive: reduce tamaño en móviles */
+@media (max-width: 600px) {
+  .team-logo-horizontal {
+    width: 22px;
+    height: 22px;
+  }
+  .team-abbr-horizontal {
+    font-size: 0.98rem;
+    min-width: 18px;
+  }
+  .vs-horizontal {
+    font-size: 0.95rem;
+    margin: 0 5px;
+  }
+  .teams-horizontal {
+    gap: 6px;
+  }
+  .team-logo-vertical {
+    width: 22px;
+    height: 22px;
+  }
+  .team-abbr-vertical {
+    font-size: 0.98rem;
+    min-width: 18px;
+  }
+  .teams-vertical {
+    gap: 6px;
+  }
+  .sets-horizontal-carousel {
+    font-size: 0.95rem;
+    gap: 5px;
+  }
+  .sets-label {
+    font-size: 0.92rem;
+  }
+  .sets-score {
+    font-size: 0.98rem;
+  }
+  .team-logo-vertical {
+    width: 22px;
+    height: 22px;
+  }
+  .team-abbr-vertical {
+    font-size: 0.98rem;
+    min-width: 18px;
+  }
+  .teams-vertical-sets {
+    gap: 6px;
+  }
+  .team-sets-vertical {
+    font-size: 1rem;
+    min-width: 14px;
+    margin-left: 6px;
+  }
 }
 
 /* --- Responsive Styles --- */
@@ -162,4 +368,53 @@
   .game-date {
     font-size: 0.75rem;
   }
+}
+
+/* --- Estilos para la tabla del modal en el carrusel horizontal --- */
+
+/* Tema oscuro */
+body.theme-dark .modal-content table,
+body.theme-dark .modal-content th,
+body.theme-dark .modal-content td,
+body.theme-dark .modal-content td.sets-cell {
+  border: 1px solid #000 !important;
+}
+
+body.theme-dark .modal-content th,
+body.theme-dark .modal-content td.sets-cell {
+  background: #343a40 !important;
+  color: #fff !important;
+}
+
+/* Tema claro */
+body.theme-light .modal-content table,
+body.theme-light .modal-content th,
+body.theme-light .modal-content td,
+body.theme-light .modal-content td.sets-cell {
+  border: 1px solid #f0f0f0 !important;
+}
+
+body.theme-light .modal-content th,
+body.theme-light .modal-content td.sets-cell {
+  background: #f0f0f0 !important;
+  color: #23272b !important;
+}
+
+.live-dot {
+  background: #e53935;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  box-shadow: 0 0 6px #e53935;
+}
+
+.live-dot-blink {
+  animation: live-blink 2s infinite; /* Más lento: antes 1s, ahora 2s */
+}
+
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
