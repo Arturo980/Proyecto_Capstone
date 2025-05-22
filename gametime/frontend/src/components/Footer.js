@@ -8,9 +8,9 @@ const Footer = ({ language }) => {
   return (
     <footer className="bg-dark text-white text-center py-3">
       <div className="container">
-        <p>&copy; 2025 Gametime. {texts[language]?.footer_rights || texts.en.footer_rights}</p>
+        <p>&copy; 2025 Gametime. {texts[language]?.footer_rights || texts.es.footer_rights}</p>
         <p>
-          {texts[language]?.footer_follow_us || texts.en.footer_follow_us}
+          {texts[language]?.footer_follow_us || texts.es.footer_follow_us}
           <a
             href="https://www.instagram.com/gametimechile?igsh=bzdodGtycnA2d2Y4"
             className="text-white mx-2"

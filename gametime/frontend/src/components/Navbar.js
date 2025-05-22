@@ -206,20 +206,20 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
                   }
                 >
                   <div className="settings-section">
-                    <span className="settings-title">{texts[language]?.navbar_language || 'Language'}</span>
-                    <button
-                      className="btn btn-link d-flex align-items-center no-underline"
-                      onClick={() => handleLanguageChange('en')}
-                    >
-                      <img src={ukFlag} alt="English" className="language-flag me-2" />
-                      <span>English</span>
-                    </button>
+                    <span className="settings-title">{texts[language]?.navbar_language || 'Idioma'}</span>
                     <button
                       className="btn btn-link d-flex align-items-center no-underline"
                       onClick={() => handleLanguageChange('es')}
                     >
                       <img src={chileFlag} alt="Español" className="language-flag me-2" />
                       <span>Español</span>
+                    </button>
+                    <button
+                      className="btn btn-link d-flex align-items-center no-underline"
+                      onClick={() => handleLanguageChange('en')}
+                    >
+                      <img src={ukFlag} alt="English" className="language-flag me-2" />
+                      <span>English</span>
                     </button>
                   </div>
                   <div className="settings-section">

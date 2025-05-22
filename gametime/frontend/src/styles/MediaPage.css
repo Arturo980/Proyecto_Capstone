@@ -113,6 +113,7 @@
 
 .modal-content h2, .modal-content h3, .modal-content h4, .modal-content ul {
   text-align: center;
+  margin-top: 20px;
 }
 
 .modal-content ul {

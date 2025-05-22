@@ -110,9 +110,9 @@ const Register = () => {
                         onChange={(e) => setAccountType(e.target.value)}
                         className="input-field"
                     >
+                        <option value="public">Público</option>
                         <option value="match-manager">Gestor de Partido</option>
                         <option value="content-editor">Editor de Contenido</option>
-                        <option value="public">Publico</option>
                     </select>
                 </div>
                 <button onClick={handleRegister} className="login-button">Register</button>

@@ -19,7 +19,7 @@ import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // I
 import { API_BASE_URL } from './assets/Configuration/config';
 
 function App() {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('es'); // Cambia 'en' por 'es'
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
   // Inicializa isLoggedIn según si hay usuario en localStorage
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
