@@ -54,12 +54,40 @@ const Liga = mongoose.model('Liga', {
   pointsLose: { type: Number, default: 0 }      // NUEVO: puntos por derrota
 });
 
+// Modelo de estadísticas individuales por jugador
+const PlayerStats = mongoose.model('PlayerStats', {
+  playerName: { type: String, required: true },
+  team: { type: String, required: true },
+  league: { type: mongoose.Schema.Types.ObjectId, ref: 'Liga', required: true },
+  acesPerSet: { type: Number, default: 0 },
+  assistsPerSet: { type: Number, default: 0 },
+  attacksPerSet: { type: Number, default: 0 },
+  blocksPerSet: { type: Number, default: 0 },
+  digsPerSet: { type: Number, default: 0 },
+  hittingPercentage: { type: Number, default: 0 },
+  killsPerSet: { type: Number, default: 0 },
+  pointsPerSet: { type: Number, default: 0 }
+});
+
 // Modelo de Equipo con referencia a liga
 const Equipo = mongoose.model('Equipo', {
   name: { type: String, required: true },
   abbr: { type: String, required: true }, // Nuevo: abreviación obligatoria
   logo: String,
-  roster: [String],
+  // roster: [String], // <-- reemplaza por:
+  roster: [{
+    name: { type: String, required: true },
+    stats: {
+      acesPerSet: { type: Number, default: 0 },
+      assistsPerSet: { type: Number, default: 0 },
+      attacksPerSet: { type: Number, default: 0 },
+      blocksPerSet: { type: Number, default: 0 },
+      digsPerSet: { type: Number, default: 0 },
+      hittingPercentage: { type: Number, default: 0 },
+      killsPerSet: { type: Number, default: 0 },
+      pointsPerSet: { type: Number, default: 0 }
+    }
+  }],
   staff: [String],
   league: { type: mongoose.Schema.Types.ObjectId, ref: 'Liga', required: true }
 });
@@ -739,5 +767,41 @@ app.get('/api/games/week', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'No se pudo obtener los partidos de la semana', details: err.message });
+  }
+});
+
+// --- API de estadísticas individuales de jugadores ---
+
+// GET /api/player-stats?league=ID
+app.get('/api/player-stats', async (req, res) => {
+  try {
+    const { league } = req.query;
+    let filter = {};
+    if (league) filter.league = league;
+    const stats = await PlayerStats.find(filter);
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudieron obtener las estadísticas', details: err.message });
+  }
+});
+
+// POST /api/player-stats (crear o actualizar stats de un jugador)
+app.post('/api/player-stats', async (req, res) => {
+  try {
+    const { playerName, team, league, ...stats } = req.body;
+    if (!playerName || !team || !league) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+    // Busca si ya existe stats para este jugador/equipo/liga
+    let playerStats = await PlayerStats.findOne({ playerName, team, league });
+    if (playerStats) {
+      Object.assign(playerStats, stats);
+      await playerStats.save();
+    } else {
+      playerStats = await PlayerStats.create({ playerName, team, league, ...stats });
+    }
+    res.json(playerStats);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudieron guardar las estadísticas', details: err.message });
   }
 });

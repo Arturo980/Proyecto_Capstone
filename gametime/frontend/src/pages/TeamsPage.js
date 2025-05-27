@@ -5,12 +5,14 @@ import CloudinaryUpload from '../components/CloudinaryUpload';
 import LeagueConfigModal from '../components/LeagueConfigModal'; // Nuevo import
 import settingsIcon from '../assets/images/icons8-settings-384.png';
 import { API_BASE_URL } from '../assets/Configuration/config';
+import { useNavigate } from 'react-router-dom'; // NUEVO
 
+// Cambia defaultTeam.roster a array de objetos
 const defaultTeam = {
   name: '',
-  abbr: '', // <-- Agrega este campo
+  abbr: '',
   logo: '',
-  roster: [],
+  roster: [], // [{ name: 'Jugador', stats: {...} }]
   staff: [],
 };
 
@@ -29,11 +31,10 @@ const TEAM_LOGO_UPLOAD_URL = `${API_BASE_URL}/api/team-logos`;
 const NEW_LEAGUE_OPTION = '__new_league__';
 
 const TeamsPage = ({ language, userRole }) => {
+  // Mueve todos los useState arriba, antes de cualquier uso
   const [selectedTeam, setSelectedTeam] = useState(null);
-  // Elimina leagueName del estado inicial, solo úsalo para crear nueva liga
   const [leagueName, setLeagueName] = useState('');
   const [teamCount, setTeamCount] = useState(0);
-
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
   const [teamForm, setTeamForm] = useState(defaultTeam);
@@ -43,20 +44,33 @@ const TeamsPage = ({ language, userRole }) => {
   const [logoType, setLogoType] = useState('url'); // 'url' o 'file'
   const [logoFile, setLogoFile] = useState(null);
   const [leagues, setLeagues] = useState([]);
-  const [activeLeague, setActiveLeague] = useState(''); // Cambia el valor inicial a string vacío
   const [leagueConfig, setLeagueConfig] = useState(defaultLeagueConfig);
   const [showLeagueConfigModal, setShowLeagueConfigModal] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
   const [showDeleteLeagueModal, setShowDeleteLeagueModal] = useState(false);
   const [leagueToDelete, setLeagueToDelete] = useState(null);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Cargar ligas y equipos al montar
+  // Usa sessionStorage para recordar la última liga seleccionada
+  const [activeLeague, setActiveLeague] = useState(() => {
+    // Si hay una liga guardada, úsala; si no, deja vacío
+    return sessionStorage.getItem('teamsActiveLeague') || '';
+  });
+
+  // Guarda la liga seleccionada en sessionStorage cada vez que cambia
+  useEffect(() => {
+    if (activeLeague) {
+      sessionStorage.setItem('teamsActiveLeague', activeLeague);
+    }
+  }, [activeLeague]);
+
+  // Cargar ligas al montar (asegúrate de llamar fetchLeagues en useEffect)
   useEffect(() => {
     fetchLeagues();
   }, []);
 
-  // Cuando se cargan las ligas, no selecciones ninguna por defecto
+  // Cuando se cargan las ligas, si hay una liga guardada en sessionStorage y existe en la lista, selecciónala automáticamente
   const fetchLeagues = async () => {
     const res = await fetch(LEAGUES_URL);
     let data = await res.json();
@@ -65,7 +79,18 @@ const TeamsPage = ({ language, userRole }) => {
     }
     data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     setLeagues(data);
-    setActiveLeague(''); // Siempre deja la selección en "Selecciona una liga"
+
+    // Solo cambia la liga activa si no hay una guardada o la guardada ya no existe
+    const storedLeague = sessionStorage.getItem('teamsActiveLeague');
+    if (storedLeague && data.some(l => l._id === storedLeague)) {
+      setActiveLeague(storedLeague);
+    } else if (data.length > 0) {
+      setActiveLeague(data[0]._id); // Selecciona la primera liga si existe
+      sessionStorage.setItem('teamsActiveLeague', data[0]._id);
+    } else {
+      setActiveLeague('');
+      sessionStorage.removeItem('teamsActiveLeague');
+    }
   };
 
   // Solo busca equipos si hay una liga seleccionada
@@ -301,26 +326,12 @@ const TeamsPage = ({ language, userRole }) => {
 
   const cancelDeleteTeam = () => setDeleteTeamIdx(null);
 
+  // Cambia handleShowTeam para agregar un pequeño delay antes de navegar
   const handleShowTeam = (team) => {
-    setSelectedTeam(team);
+    setTimeout(() => {
+      navigate(`/teams/${team._id}`);
+    }, 500); // 180ms de delay para dar feedback visual
   };
-
-  const handleCloseModal = () => {
-    setSelectedTeam(null);
-    setEditingTeam(null);
-    setTeamForm(defaultTeam);
-  };
-
-  useEffect(() => {
-    if (selectedTeam || editingTeam !== null) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [selectedTeam, editingTeam]);
 
   const openEditTeam = (team, idx) => {
     setEditingTeam(idx);
@@ -357,7 +368,10 @@ const TeamsPage = ({ language, userRole }) => {
         .filter(Boolean);
       setTeamForm((prev) => ({
         ...prev,
-        roster: [...prev.roster, ...names],
+        roster: [
+          ...prev.roster,
+          ...names.map(name => ({ name, stats: { ...playerStatsForm } }))
+        ],
       }));
       setRosterInput('');
     }
@@ -370,31 +384,59 @@ const TeamsPage = ({ language, userRole }) => {
     }));
   };
 
-  const handleAddStaff = () => {
-    if (staffInput.trim()) {
-      const names = staffInput
-        .split(/[\n,]+/)
-        .map(n => n.trim())
-        .filter(Boolean);
-      setTeamForm((prev) => ({
-        ...prev,
-        staff: [...prev.staff, ...names],
-      }));
-      setStaffInput('');
-    }
+  // NUEVO: Estado para modal de edición de stats de jugador
+  const [editingPlayerStats, setEditingPlayerStats] = useState(null); // { team, player, idx }
+  const [playerStatsForm, setPlayerStatsForm] = useState({
+    acesPerSet: 0,
+    assistsPerSet: 0,
+    attacksPerSet: 0,
+    blocksPerSet: 0,
+    digsPerSet: 0,
+    hittingPercentage: 0,
+    killsPerSet: 0,
+    pointsPerSet: 0
+  });
+
+  // NUEVO: Abrir modal de stats de jugador
+  const openEditPlayerStats = (player, idx) => {
+    setEditingPlayerStats({ player, idx });
+    setPlayerStatsForm(player.stats || {
+      acesPerSet: 0,
+      assistsPerSet: 0,
+      attacksPerSet: 0,
+      blocksPerSet: 0,
+      digsPerSet: 0,
+      hittingPercentage: 0,
+      killsPerSet: 0,
+      pointsPerSet: 0
+    });
   };
 
-  const handleRemoveStaff = (idx) => {
-    setTeamForm((prev) => ({
-      ...prev,
-      staff: prev.staff.filter((_, i) => i !== idx),
-    }));
-  };
-
-  // NUEVO: callback para guardar la URL de Cloudinary en el formulario
-  const handleCloudinaryUpload = (url) => {
-    if (url) {
-      setTeamForm((prev) => ({ ...prev, logo: url }));
+  // NUEVO: Guardar stats de jugador en el roster local y opcionalmente en backend
+  const handleSavePlayerStats = async () => {
+    if (editingPlayerStats) {
+      setTeamForm(prev => {
+        const newRoster = [...prev.roster];
+        newRoster[editingPlayerStats.idx] = {
+          ...newRoster[editingPlayerStats.idx],
+          stats: { ...playerStatsForm }
+        };
+        return { ...prev, roster: newRoster };
+      });
+      // Opcional: guardar en backend stats individuales
+      if (activeLeague) {
+        await fetch(`${API_BASE_URL}/api/player-stats`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playerName: editingPlayerStats.player.name,
+            team: teamForm.name,
+            league: activeLeague,
+            ...playerStatsForm
+          })
+        });
+      }
+      setEditingPlayerStats(null);
     }
   };
 
@@ -479,6 +521,42 @@ const TeamsPage = ({ language, userRole }) => {
       alert('Error al guardar la configuración de la liga');
     }
     setLoading(false);
+  };
+
+  // NUEVO: callback para guardar la URL de Cloudinary en el formulario
+  const handleCloudinaryUpload = (url) => {
+    if (url) {
+      setTeamForm((prev) => ({ ...prev, logo: url }));
+    }
+  };
+
+  // Agrega staff(s) al equipo (similar a handleAddRoster)
+  const handleAddStaff = () => {
+    if (staffInput.trim()) {
+      const names = staffInput
+        .split(/[\n,]+/)
+        .map(n => n.trim())
+        .filter(Boolean);
+      setTeamForm((prev) => ({
+        ...prev,
+        staff: [...prev.staff, ...names],
+      }));
+      setStaffInput('');
+    }
+  };
+
+  // Elimina un miembro del staff por índice
+  const handleRemoveStaff = (idx) => {
+    setTeamForm((prev) => ({
+      ...prev,
+      staff: prev.staff.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTeam(null);
+    setEditingTeam(null);
+    setTeamForm(defaultTeam);
   };
 
   return (
@@ -676,7 +754,6 @@ const TeamsPage = ({ language, userRole }) => {
           <div
             key={team._id}
             className="col-md-4 mb-3"
-            // Quita el onClick de la columna
           >
             <div
               className="card h-100"
@@ -725,62 +802,7 @@ const TeamsPage = ({ language, userRole }) => {
           </div>
         ))}
       </div>
-      {/* Modal para ver equipo */}
-      {selectedTeam && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-              handleCloseModal();
-            }
-          }}
-        >
-          <div className="modal-content" style={{ position: 'relative', paddingTop: 56 }}>
-            {/* Botón X absolutamente posicionado arriba a la derecha */}
-            <button
-              className="btn btn-secondary close-button"
-              style={{
-                position: 'absolute',
-                top: 16,
-                right: 24,
-                zIndex: 2
-              }}
-              onClick={handleCloseModal}
-            >
-              &times;
-            </button>
-            {/* El resto del contenido del modal va debajo */}
-            <div>
-              <h2 style={{ marginTop: 0 }}>{selectedTeam.name}</h2>
-              {selectedTeam.logo && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <img
-                    src={selectedTeam.logo}
-                    alt={selectedTeam.name}
-                    style={{ maxWidth: 120, marginBottom: 16, display: 'block' }}
-                  />
-                </div>
-              )}
-              <h3>{language === 'en' ? 'Roster' : 'Plantilla'}</h3>
-              <div className="roster-grid">
-                {selectedTeam.roster.map((player, index) => (
-                  <div key={index} className="player-card">
-                    {player}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <h4>{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</h4>
-                <ul>
-                  {selectedTeam.staff.map((member, index) => (
-                    <li key={index}>{member}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Elimina el modal para ver equipo */}
       {/* Modal para agregar/editar equipo */}
       {(editingTeam !== null) && (userRole === 'content-editor' || userRole === 'admin') && (
         <div className="modal-overlay" onClick={handleCloseModal}>
@@ -899,9 +921,17 @@ const TeamsPage = ({ language, userRole }) => {
                 </button>
               </div>
               <ul>
-                {teamForm.roster.map((player, idx) => (
+                {teamForm.roster.map((playerObj, idx) => (
                   <li key={idx} className="d-flex align-items-center">
-                    {player}
+                    {playerObj.name}
+                    <button
+                      className="btn btn-link text-primary ms-2 p-0"
+                      type="button"
+                      onClick={() => openEditPlayerStats(playerObj, idx)}
+                      title="Editar estadísticas"
+                    >
+                      <span role="img" aria-label="stats">📊</span>
+                    </button>
                     <button
                       className="btn btn-link text-danger ms-2 p-0"
                       type="button"
@@ -976,6 +1006,61 @@ const TeamsPage = ({ language, userRole }) => {
             <button className="btn btn-secondary" onClick={cancelDeleteTeam}>
               {language === 'en' ? 'Cancel' : 'Cancelar'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para editar stats de jugador */}
+      {editingPlayerStats && (
+        <div className="modal-overlay" onClick={() => setEditingPlayerStats(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <button className="btn btn-secondary close-button" onClick={() => setEditingPlayerStats(null)}>
+              &times;
+            </button>
+            <h4>Editar estadísticas: {editingPlayerStats.player.name}</h4>
+            <form onSubmit={e => { e.preventDefault(); handleSavePlayerStats(); }}>
+              <div className="mb-2">
+                <label>Aces por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.acesPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, acesPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Asistencias por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.assistsPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, assistsPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Ataques por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.attacksPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, attacksPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Bloqueos por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.blocksPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, blocksPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Defensas por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.digsPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, digsPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>% Golpeo</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.hittingPercentage}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, hittingPercentage: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Remates por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.killsPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, killsPerSet: Number(e.target.value) }))} />
+              </div>
+              <div className="mb-2">
+                <label>Puntos por set</label>
+                <input type="number" step="0.01" className="form-control" value={playerStatsForm.pointsPerSet}
+                  onChange={e => setPlayerStatsForm(f => ({ ...f, pointsPerSet: Number(e.target.value) }))} />
+              </div>
+              <button className="btn btn-success mt-2" type="submit">Guardar</button>
+            </form>
           </div>
         </div>
       )}

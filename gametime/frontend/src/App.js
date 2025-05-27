@@ -17,6 +17,7 @@ import AdminAuditPage from './pages/AdminAuditPage';
 import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 import { API_BASE_URL } from './assets/Configuration/config';
+import TeamDetailPage from './pages/TeamDetailPage'; // NUEVO, crea este archivo
 
 function App() {
   const [language, setLanguage] = useState('es'); // Cambia 'en' por 'es'
@@ -149,89 +150,140 @@ function App() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // Mostrar splash solo la primera vez que se entra a la app (no en F5 ni navegación interna)
+  const [showSplash, setShowSplash] = useState(() => {
+    // Solo muestra el splash si no existe la marca en sessionStorage
+    return !sessionStorage.getItem('splashShown');
+  });
+  const [showContent, setShowContent] = useState(false);
+  const [splashDots, setSplashDots] = useState('');
+
+  useEffect(() => {
+    if (!showSplash) return;
+    let dotCount = 0;
+    const interval = setInterval(() => {
+      dotCount = (dotCount + 1) % 4;
+      setSplashDots('.'.repeat(dotCount));
+    }, 400);
+    return () => clearInterval(interval);
+  }, [showSplash]);
+
+  // Controla la transición: primero inicia el fade out del splash, luego muestra el contenido
+  useEffect(() => {
+    if (!showSplash) return;
+    const splashVisibleTimer = setTimeout(() => {
+      setShowSplash(false);
+      sessionStorage.setItem('splashShown', '1'); // Marca como mostrado
+      setTimeout(() => setShowContent(true), 500);
+    }, 3000);
+    return () => clearTimeout(splashVisibleTimer);
+  }, [showSplash]);
+
+  // Si el splash ya fue mostrado, muestra el contenido inmediatamente
+  useEffect(() => {
+    if (!showSplash) setShowContent(true);
+  }, [showSplash]);
+
+  // El splash y el contenido principal se renderizan juntos, el splash está por encima
   return (
-    <Router>
-      <Routes>
-        {/* Página de Login */}
-        <Route
-          path="/login"
-          element={<Login setIsLoggedIn={setIsLoggedIn} />}
-        />
-        {/* Página de Registro */}
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-        {/* Rutas principales */}
-        <Route
-          path="*"
-          element={
-            <div id="root" style={{ overflowX: 'hidden' }}>
-              {/* Navbar */}
-              <Navbar
-                className={isNavbarHidden ? 'hidden' : ''}
-                language={language}
-                setLanguage={setLanguage}
-                isLoggedIn={isLoggedIn}
-                setIsLoggedIn={setIsLoggedIn}
-              />
-
-              {/* Horizontal Carousel */}
-              <HorizontalGamesCarousel
-                games={carouselGames}
-                language={language}
-              />
-
-              {/* Contenido principal */}
-              <div className="main-content">
-                <Routes>
-                  {/* Página Home */}
-                  <Route
-                    path="/"
-                    element={
-                      <div className="container">
-                        <div className="row mt-5">
-                          <div className="col-md-8">
-                            <ControlledCarousel language={language} />
-                          </div>
-                          <div className="col-md-4">
-                            <h3>{texts[language].standings_title}</h3>
-                            <StandingsTable
-                              language={language}
-                              leagues={leagues}
-                              activeLeague={activeLeague}
-                              setActiveLeague={setActiveLeague}
-                              teams={teams}
-                              games={games}
-                              leagueConfig={leagueConfig}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    }
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <div id="root" className={showContent ? 'splash-content-show' : 'splash-content-hide'}>
+        <Router>
+          <Routes>
+            {/* Página de Login */}
+            <Route
+              path="/login"
+              element={<Login setIsLoggedIn={setIsLoggedIn} />}
+            />
+            {/* Página de Registro */}
+            <Route
+              path="/register"
+              element={<Register />}
+            />
+            {/* Rutas principales */}
+            <Route
+              path="*"
+              element={
+                <div id="root" style={{ overflowX: 'hidden' }}>
+                  {/* Navbar */}
+                  <Navbar
+                    className={isNavbarHidden ? 'hidden' : ''}
+                    language={language}
+                    setLanguage={setLanguage}
+                    isLoggedIn={isLoggedIn}
+                    setIsLoggedIn={setIsLoggedIn}
                   />
-                  {/* Página de Equipos */}
-                  <Route path="/teams" element={<TeamsPage language={language} userRole={userRole} />} />
-                  {/* Página de Estadísticas */}
-                  <Route path="/stats" element={<StatsPage language={language} />} />
-                  {/* Página de Partidos */}
-                  <Route path="/games" element={<GamesPage language={language} />} />
-                  {/* Página de Media */}
-                  <Route path="/media" element={<MediaPage language={language} />} />
-                  {/* Página de Solicitudes de Admin */}
-                  <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
-                  {/* Página de Auditoría/Admin */}
-                  <Route path="/admin/auditoria" element={<AdminAuditPage language={language} />} />
-                </Routes>
-              </div>
 
-              {/* Footer */}
-              <Footer language={language} />
-            </div>
-          }
-        />
-      </Routes>
-    </Router>
+                  {/* Horizontal Carousel */}
+                  <HorizontalGamesCarousel
+                    games={carouselGames}
+                    language={language}
+                  />
+
+                  {/* Contenido principal */}
+                  <div className="main-content">
+                    <Routes>
+                      {/* Página Home */}
+                      <Route
+                        path="/"
+                        element={
+                          <div className="container">
+                            <div className="row mt-5">
+                              <div className="col-md-8">
+                                <ControlledCarousel language={language} />
+                              </div>
+                              <div className="col-md-4">
+                                <h3>{texts[language].standings_title}</h3>
+                                <StandingsTable
+                                  language={language}
+                                  leagues={leagues}
+                                  activeLeague={activeLeague}
+                                  setActiveLeague={setActiveLeague}
+                                  teams={teams}
+                                  games={games}
+                                  leagueConfig={leagueConfig}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      />
+                      {/* Página de Equipos */}
+                      <Route path="/teams" element={<TeamsPage language={language} userRole={userRole} />} />
+                      {/* NUEVO: Página de detalle de equipo */}
+                      <Route path="/teams/:teamId" element={<TeamDetailPage language={language} />} />
+                      {/* Página de Estadísticas */}
+                      <Route path="/stats" element={<StatsPage language={language} />} />
+                      {/* Página de Partidos */}
+                      <Route path="/games" element={<GamesPage language={language} />} />
+                      {/* Página de Media */}
+                      <Route path="/media" element={<MediaPage language={language} />} />
+                      {/* Página de Solicitudes de Admin */}
+                      <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
+                      {/* Página de Auditoría/Admin */}
+                      <Route path="/admin/auditoria" element={<AdminAuditPage language={language} />} />
+                    </Routes>
+                  </div>
+
+                  {/* Footer */}
+                  <Footer language={language} />
+                </div>
+              }
+            />
+          </Routes>
+        </Router>
+      </div>
+      {showSplash && (
+        <div className={`splash-loading${!showSplash ? ' splash-hide' : ''}`} style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 9999,
+          pointerEvents: 'all'
+        }}>
+          Gametime{splashDots}
+        </div>
+      )}
+    </div>
   );
 }
 
