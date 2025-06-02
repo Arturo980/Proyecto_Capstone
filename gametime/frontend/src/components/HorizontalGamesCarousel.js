@@ -17,6 +17,16 @@ const HorizontalGamesCarousel = () => {
   const [socket, setSocket] = useState(null);
   const [publicGameModal, setPublicGameModal] = useState(null);
   const [liveSetScore, setLiveSetScore] = useState({ score1: 0, score2: 0 });
+  const [loadingDots, setLoadingDots] = useState(0);
+
+  // Animación de puntos para "Cargando..."
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setLoadingDots(dots => (dots + 1) % 3);
+    }, 500);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   // Cargar ligas al montar
   useEffect(() => {
@@ -44,16 +54,27 @@ const HorizontalGamesCarousel = () => {
   useEffect(() => {
     if (!selectedLeague) return;
     setLoading(true);
-    fetch(`${GAMES_URL}?league=${selectedLeague}`)
+
+    // Espera a que ambos: fetch termine y pasen al menos 3 segundos
+    let isMounted = true;
+    const fetchPromise = fetch(`${GAMES_URL}?league=${selectedLeague}`)
       .then((res) => res.json())
       .then((data) => {
-        setGames(Array.isArray(data.games) ? data.games : []);
-        setLoading(false);
+        if (isMounted) {
+          setGames(Array.isArray(data.games) ? data.games : []);
+        }
       })
       .catch(() => {
-        setGames([]);
-        setLoading(false);
+        if (isMounted) setGames([]);
       });
+
+    const delayPromise = new Promise(resolve => setTimeout(resolve, 3000));
+
+    Promise.all([fetchPromise, delayPromise]).then(() => {
+      if (isMounted) setLoading(false);
+    });
+
+    return () => { isMounted = false; };
   }, [selectedLeague]);
 
   // Inicializar socket.io solo una vez
@@ -207,8 +228,6 @@ const HorizontalGamesCarousel = () => {
     };
   }, [publicGameModal, socket]);
 
-  if (loading) return <div>Cargando...</div>;
-
   return (
     <div className="carousel-container">
       <div className="carousel-title">
@@ -225,8 +244,26 @@ const HorizontalGamesCarousel = () => {
           ))}
         </select>
       </div>
-      <div className="carousel-scroll">
-        {games.length === 0 ? (
+      <div
+        className="carousel-scroll"
+        style={{
+          minHeight: 100,
+          transition: "min-height 0.2s"
+        }}
+      >
+        {loading ? (
+          <div
+            style={{
+              color: "#fff",
+              padding: 16,
+              textAlign: "left",
+              width: "100%",
+              fontSize: "clamp(1rem, 2.5vw, 1.3rem)"
+            }}
+          >
+            {`Cargando${'.'.repeat(loadingDots + 1)}`}
+          </div>
+        ) : games.length === 0 ? (
           <div style={{ color: "#fff", padding: 16 }}>
             No hay partidos para esta liga.
           </div>

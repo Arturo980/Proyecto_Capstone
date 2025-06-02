@@ -263,20 +263,35 @@ const TeamsPage = ({ language, userRole }) => {
 
   // Guardar equipo (crear o editar)
   const handleSaveTeam = async (e) => {
-    if (e) e.preventDefault(); // Permite que funcione tanto con onClick como con onSubmit
+    if (e) e.preventDefault();
     if (!teamForm.name || !activeLeague) return;
     setLoading(true);
 
-    let logoToSave = teamForm.logo;
+    let logoToSave = teamForm.logo || '';
     if (logoType === 'file' && logoFile) {
       logoToSave = getLogoPreview();
     }
 
-    // Asegura que el equipo tenga el ID de la liga seleccionada
-    const payload = { ...teamForm, logo: logoToSave, league: activeLeague };
+    // Asegura que el roster sea array de objetos { name, stats }
+    const roster = Array.isArray(teamForm.roster)
+      ? teamForm.roster.map(p =>
+          typeof p === 'string'
+            ? { name: p, stats: { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+            : { ...p, stats: p.stats || { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+        )
+      : [];
 
-    if (editingTeam !== null && editingTeam !== 'new') {
-      const teamId = teams[editingTeam]._id;
+    const payload = {
+      ...teamForm,
+      logo: logoToSave,
+      league: activeLeague,
+      roster,
+      staff: Array.isArray(teamForm.staff) ? teamForm.staff : []
+    };
+
+    if (editingTeam && editingTeam !== 'new') {
+      // PUT usando el _id del equipo (teamForm._id)
+      const teamId = teamForm._id || editingTeam;
       const res = await fetch(`${API_URL}/${teamId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -333,9 +348,17 @@ const TeamsPage = ({ language, userRole }) => {
     }, 500); // 180ms de delay para dar feedback visual
   };
 
-  const openEditTeam = (team, idx) => {
-    setEditingTeam(idx);
-    setTeamForm({ ...team });
+  const openEditTeam = (team) => {
+    // Asegura que el roster sea array de objetos { name, stats }
+    const roster = Array.isArray(team.roster)
+      ? team.roster.map(p =>
+          typeof p === 'string'
+            ? { name: p, stats: { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+            : { ...p, stats: p.stats || { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+        )
+      : [];
+    setEditingTeam(team._id);
+    setTeamForm({ ...team, roster });
     setRosterInput('');
     setStaffInput('');
     setLogoType('url');
@@ -783,7 +806,7 @@ const TeamsPage = ({ language, userRole }) => {
                     </button>
                     <button
                       className="btn btn-outline-secondary btn-sm me-2"
-                      onClick={e => { e.stopPropagation(); openEditTeam(team, idx); }}
+                      onClick={e => { e.stopPropagation(); openEditTeam(team); }}
                       disabled={loading}
                     >
                       {language === 'en' ? 'Edit' : 'Editar'}
@@ -925,14 +948,6 @@ const TeamsPage = ({ language, userRole }) => {
                   <li key={idx} className="d-flex align-items-center">
                     {playerObj.name}
                     <button
-                      className="btn btn-link text-primary ms-2 p-0"
-                      type="button"
-                      onClick={() => openEditPlayerStats(playerObj, idx)}
-                      title="Editar estadísticas"
-                    >
-                      <span role="img" aria-label="stats">📊</span>
-                    </button>
-                    <button
                       className="btn btn-link text-danger ms-2 p-0"
                       type="button"
                       onClick={() => handleRemoveRoster(idx)}
@@ -1010,60 +1025,7 @@ const TeamsPage = ({ language, userRole }) => {
         </div>
       )}
 
-      {/* Modal para editar stats de jugador */}
-      {editingPlayerStats && (
-        <div className="modal-overlay" onClick={() => setEditingPlayerStats(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <button className="btn btn-secondary close-button" onClick={() => setEditingPlayerStats(null)}>
-              &times;
-            </button>
-            <h4>Editar estadísticas: {editingPlayerStats.player.name}</h4>
-            <form onSubmit={e => { e.preventDefault(); handleSavePlayerStats(); }}>
-              <div className="mb-2">
-                <label>Aces por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.acesPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, acesPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Asistencias por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.assistsPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, assistsPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Ataques por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.attacksPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, attacksPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Bloqueos por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.blocksPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, blocksPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Defensas por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.digsPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, digsPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>% Golpeo</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.hittingPercentage}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, hittingPercentage: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Remates por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.killsPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, killsPerSet: Number(e.target.value) }))} />
-              </div>
-              <div className="mb-2">
-                <label>Puntos por set</label>
-                <input type="number" step="0.01" className="form-control" value={playerStatsForm.pointsPerSet}
-                  onChange={e => setPlayerStatsForm(f => ({ ...f, pointsPerSet: Number(e.target.value) }))} />
-              </div>
-              <button className="btn btn-success mt-2" type="submit">Guardar</button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Elimina el modal para editar stats de jugador */}
     </div>
   );
 };

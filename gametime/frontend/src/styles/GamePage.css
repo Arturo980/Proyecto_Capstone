@@ -871,9 +871,12 @@ body.theme-dark .modal-content th {
 }
 
 body.theme-dark .modal-content td[style*="background: #eee"],
-body.theme-dark .modal-content td[style*="background:#eee"] {
+body.theme-dark .modal-content td[style*="background:#eee"],
+body.theme-dark .modal-content td[style*="background: rgb(238, 238, 238)"],
+body.theme-dark .modal-content td[style*="background:rgb(238, 238, 238)"] {
   background: #343a40 !important;
   color: #fff !important;
+  border: 1px solid #000 !important;
 }
 
 /* Tabla de resultados en el modal: tema claro */

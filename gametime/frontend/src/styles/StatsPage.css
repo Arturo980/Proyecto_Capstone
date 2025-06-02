@@ -1,0 +1,66 @@
+.stats-container {
+  padding: 0px 12px;
+}
+
+.stats-title {
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.stats-league-selector {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+}
+
+.stats-search {
+  max-width: 500px;
+  margin: 0 0 24px 0;
+  text-align: left;
+}
+
+.stats-table-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: none;
+}
+
+.stats-table-header {
+  background: #314563;
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  padding: 14px 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.stats-table {
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.stats-table th, .stats-table td {
+  vertical-align: middle !important;
+  text-align: center;
+}
+
+.stats-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.stats-table tbody tr:nth-child(even) {
+  background: #f6f8fa;
+}
+
+.stats-table tbody tr:hover {
+  background: #e9ecef;
+}
+
+@media (max-width: 900px) {
+  .stats-table-card {
+    margin-bottom: 24px;
+  }
+}

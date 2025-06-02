@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/MediaPage.css';
+import avatarGenerico from '../assets/images/avatar-generico.jpg';
 
 const TeamDetailPage = ({ language }) => {
   const { teamId } = useParams();
@@ -59,12 +60,23 @@ const TeamDetailPage = ({ language }) => {
                     fontWeight: 'bold',
                     fontSize: 16,
                     color: '#333',
-                    border: '1px solid #ddd'
+                    border: '1px solid #ddd',
+                    overflow: 'hidden', // Para que la imagen no sobresalga
+                    padding: 0
                   }}
                 >
-                  {/* Si tienes foto: <img src={player.photoUrl} ... /> */}
-                  {/* Si no, solo un avatar genérico o iniciales */}
-                  {/* <img src={player.photoUrl || defaultAvatar} ... /> */}
+                  <img
+                    src={avatarGenerico}
+                    alt="avatar"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: '#fff'
+                    }}
+                  />
                 </div>
                 <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 14, textTransform: 'uppercase' }}>
                   {typeof player === 'string' ? player : player.name}

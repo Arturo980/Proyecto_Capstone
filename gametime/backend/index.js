@@ -778,7 +778,8 @@ app.get('/api/player-stats', async (req, res) => {
     const { league } = req.query;
     let filter = {};
     if (league) filter.league = league;
-    const stats = await PlayerStats.find(filter);
+    // Populate league name for frontend display (optional)
+    const stats = await PlayerStats.find(filter).populate('league', 'name');
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: 'No se pudieron obtener las estadísticas', details: err.message });
@@ -803,5 +804,41 @@ app.post('/api/player-stats', async (req, res) => {
     res.json(playerStats);
   } catch (err) {
     res.status(400).json({ error: 'No se pudieron guardar las estadísticas', details: err.message });
+  }
+});
+
+// PUT /api/player-stats (actualizar múltiples stats)
+app.put('/api/player-stats', async (req, res) => {
+  try {
+    const statsArray = Array.isArray(req.body) ? req.body : [];
+    const updatedStats = [];
+    for (const stat of statsArray) {
+      const { playerName, team, league, ...rest } = stat;
+      if (!playerName || !team || !league) continue;
+      let playerStats = await PlayerStats.findOne({ playerName, team, league });
+      if (playerStats) {
+        Object.assign(playerStats, rest);
+        await playerStats.save();
+      } else {
+        playerStats = await PlayerStats.create({ playerName, team, league, ...rest });
+      }
+      updatedStats.push(playerStats);
+    }
+    res.json(updatedStats);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudieron actualizar las estadísticas', details: err.message });
+  }
+});
+
+// DELETE /api/player-stats/:id (eliminar estadísticas de un jugador)
+app.delete('/api/player-stats/:id', async (req, res) => {
+  try {
+    const deleted = await PlayerStats.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Estadística no encontrada' });
+    }
+    res.json({ message: 'Estadística eliminada' });
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo eliminar la estadística', details: err.message });
   }
 });
