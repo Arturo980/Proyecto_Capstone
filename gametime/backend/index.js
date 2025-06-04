@@ -564,10 +564,10 @@ const AuditLog = mongoose.model('AuditLog', {
   user: { type: String }, // correo del usuario que hizo la acción
 });
 
-// Listar acciones de auditoría (solo admin)
+// Listar SOLO acciones de eliminación (delete) de cualquier usuario y entidad
 app.get('/api/audit-log', async (req, res) => {
-  // Puedes agregar autenticación/rol aquí si lo deseas
-  const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(200);
+  // Devuelve solo logs de acción 'delete', ordenados por fecha descendente
+  const logs = await AuditLog.find({ action: 'delete' }).sort({ timestamp: -1 }).limit(200);
   res.json({ logs });
 });
 
