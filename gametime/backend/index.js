@@ -316,9 +316,11 @@ app.delete('/api/teams/:id', async (req, res) => {
 // GET /api/games?league=ID
 app.get('/api/games', async (req, res) => {
   try {
-    const { league } = req.query;
+    const { league, finished } = req.query;
     let query = {};
     if (league) query.league = league;
+    // Si finished=true, solo partidos finalizados
+    if (finished === 'true') query.partidoFinalizado = true;
     const games = await Partido.find(query).sort({ date: 1, time: 1 });
     res.json({ games });
   } catch (err) {

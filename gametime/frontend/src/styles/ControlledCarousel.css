@@ -1,12 +1,26 @@
+.carousel {
+  width: 90%;
+  max-width: 900px;
+  height: 400px;
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 9px; /* Asegura el border-radius */
+  overflow: hidden;   /* Oculta cualquier desbordamiento de imágenes o controles */
+}
+
 .carousel-image {
   height: 400px;
   object-fit: cover;
+  width: 100%;
+  border-radius: 9px; /* Mantén el border-radius en la imagen */
+  transition: opacity 0.6s ease-in-out, border-radius 0s; /* Asegura transición suave */
 }
 
 .carousel-caption {
   background-color: rgba(0, 0, 0, 0.6);
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 9px;
   width: 100%;
   position: absolute;
   bottom: 0;
@@ -23,12 +37,6 @@
 .carousel-caption p {
   color: white;
   margin: 0;
-}
-
-.carousel {
-  width: 100%;
-  height: 400px;
-  position: relative;
 }
 
 /* Indicadores en la esquina inferior izquierda */
@@ -91,4 +99,21 @@
   border-radius: 50%;
   padding: 10px;
   transition: background-color 0.3s ease;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    flex-direction: column !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    align-items: stretch !important;
+  }
 }

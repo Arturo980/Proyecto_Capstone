@@ -10,6 +10,7 @@ import BeforeMatch from '../components/BeforeMatch';
 import DuringMatch from '../components/DuringMatch';
 import AfterMatch from '../components/AfterMatch';
 import { API_BASE_URL } from '../assets/Configuration/config';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const API_TEAMS = `${API_BASE_URL}/api/teams`;
 const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
@@ -78,6 +79,9 @@ const GamesPage = ({ language = 'es' }) => {
   // NUEVO: Estado para configuración de sets de la liga activa
   const [leagueConfig, setLeagueConfig] = useState({ setsToWin: 3, lastSetPoints: 15 });
 
+  // Estado de carga
+  const [loading, setLoading] = useState(true);
+
   // Actualiza leagueConfig cuando cambia la liga activa o las ligas
   useEffect(() => {
     if (activeLeague && leagues.length > 0) {
@@ -92,6 +96,7 @@ const GamesPage = ({ language = 'es' }) => {
   }, [activeLeague, leagues]);
 
   const fetchLeagues = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch(API_LEAGUES);
       if (!res.ok) {
@@ -107,10 +112,13 @@ const GamesPage = ({ language = 'es' }) => {
     } catch (err) {
       console.error('No se pudo conectar con el backend para obtener ligas:', err.message);
       setLeagues([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const fetchTeams = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_TEAMS}?league=${activeLeague}`);
       if (!res.ok) {
@@ -123,11 +131,14 @@ const GamesPage = ({ language = 'es' }) => {
     } catch (err) {
       console.error('No se pudo conectar con el backend para obtener equipos:', err.message);
       setTeams([]);
+    } finally {
+      setLoading(false);
     }
   }, [activeLeague]);
 
   // Cambia fetchGames para manejar errores de red y mostrar un mensaje claro en consola
   const fetchGames = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
       if (!res.ok) {
@@ -140,6 +151,8 @@ const GamesPage = ({ language = 'es' }) => {
     } catch (err) {
       console.error('No se pudo conectar con el backend para obtener partidos:', err.message);
       setGames([]);
+    } finally {
+      setLoading(false);
     }
   }, [activeLeague]);
 
@@ -831,6 +844,10 @@ const GamesPage = ({ language = 'es' }) => {
   const [pendingCitadosGame, setPendingCitadosGame] = useState(null);
   const [pendingCitados, setPendingCitados] = useState([]);
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   if (userRole === 'admin' || userRole === 'content-editor' || userRole === 'match-manager') {
     return (
       <div className="container" style={{ margin: 0 }}>
@@ -1176,16 +1193,19 @@ const GamesPage = ({ language = 'es' }) => {
                     <div className="col-12 mb-2">
                       <label className="form-label">{language === 'en' ? 'Called Players' : 'Citados'}</label>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {[...roster1, ...roster2].map(player => (
-                          <label key={player} style={{ marginRight: 12 }}>
-                            <input
-                              type="checkbox"
-                              checked={selectedCitados.includes(player)}
-                              onChange={() => handleCitadoToggle(player)}
-                            />{' '}
-                            {player}
-                          </label>
-                        ))}
+                        {[...roster1, ...roster2].map(player => {
+                          const playerName = typeof player === 'string' ? player : player.name;
+                          return (
+                            <label key={playerName} style={{ marginRight: 12 }}>
+                              <input
+                                type="checkbox"
+                                checked={selectedCitados.includes(playerName)}
+                                onChange={() => handleCitadoToggle(playerName)}
+                              />{' '}
+                              {playerName}
+                            </label>
+                          );
+                        })}
                         {roster1.length === 0 && roster2.length === 0 && (
                           <span style={{ color: '#888' }}>
                             {language === 'en'
@@ -1255,22 +1275,25 @@ const GamesPage = ({ language = 'es' }) => {
                     Array.isArray(teams.find(t => t.name === pendingCitadosGame.team1)?.roster)
                       ? teams.find(t => t.name === pendingCitadosGame.team1).roster
                       : []
-                  ).map(player => (
-                    <label key={player} style={{ display: 'block', marginBottom: 4, textAlign: 'left' }}>
-                      <input
-                        type="checkbox"
-                        checked={pendingCitados.includes(player)}
-                        onChange={() => {
-                          setPendingCitados(prev =>
-                            prev.includes(player)
-                              ? prev.filter(p => p !== player)
-                              : [...prev, player]
-                          );
-                        }}
-                      />{' '}
-                      {player}
-                    </label>
-                  ))}
+                  ).map(player => {
+                    const playerName = typeof player === 'string' ? player : player.name;
+                    return (
+                      <label key={playerName} style={{ display: 'block', marginBottom: 4, textAlign: 'left' }}>
+                        <input
+                          type="checkbox"
+                          checked={pendingCitados.includes(playerName)}
+                          onChange={() => {
+                            setPendingCitados(prev =>
+                              prev.includes(playerName)
+                                ? prev.filter(p => p !== playerName)
+                                : [...prev, playerName]
+                            );
+                          }}
+                        />{' '}
+                        {playerName}
+                      </label>
+                    );
+                  })}
                 </div>
                 {/* Lado derecho: roster del equipo 2 */}
                 <div style={{ minWidth: 120 }}>
@@ -1279,22 +1302,25 @@ const GamesPage = ({ language = 'es' }) => {
                     Array.isArray(teams.find(t => t.name === pendingCitadosGame.team2)?.roster)
                       ? teams.find(t => t.name === pendingCitadosGame.team2).roster
                       : []
-                  ).map(player => (
-                    <label key={player} style={{ display: 'block', marginBottom: 4, textAlign: 'right' }}>
-                      <input
-                        type="checkbox"
-                        checked={pendingCitados.includes(player)}
-                        onChange={() => {
-                          setPendingCitados(prev =>
-                            prev.includes(player)
-                              ? prev.filter(p => p !== player)
-                              : [...prev, player]
-                          );
-                        }}
-                      />{' '}
-                      {player}
-                    </label>
-                  ))}
+                  ).map(player => {
+                    const playerName = typeof player === 'string' ? player : player.name;
+                    return (
+                      <label key={playerName} style={{ display: 'block', marginBottom: 4, textAlign: 'right' }}>
+                        <input
+                          type="checkbox"
+                          checked={pendingCitados.includes(playerName)}
+                          onChange={() => {
+                            setPendingCitados(prev =>
+                              prev.includes(playerName)
+                                ? prev.filter(p => p !== playerName)
+                                : [...prev, playerName]
+                            );
+                          }}
+                        />{' '}
+                        {playerName}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
               <div style={{ textAlign: 'center' }}>

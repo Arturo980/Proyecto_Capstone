@@ -210,10 +210,6 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Sombra para destacar */
 }
 
-body {
-  padding-top: 56px; /* Ajustar el contenido para que no quede debajo de la navbar */
-}
-
 .nav-link.no-underline {
   text-decoration: none !important;
 }

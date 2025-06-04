@@ -3,12 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/MediaPage.css';
 import avatarGenerico from '../assets/images/avatar-generico.jpg';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const TeamDetailPage = ({ language }) => {
   const { teamId } = useParams();
   const [team, setTeam] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const fetchTeam = async () => {
       const res = await fetch(`${API_BASE_URL}/api/teams?teamId=${teamId}`);
       const data = await res.json();
@@ -18,9 +21,14 @@ const TeamDetailPage = ({ language }) => {
       } else {
         setTeam(null);
       }
+      setLoading(false);
     };
     fetchTeam();
   }, [teamId]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   if (!team) {
     return (

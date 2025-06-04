@@ -1,9 +1,11 @@
 .login-container {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: center; /* Centrado vertical */
+    min-height: 100vh; /* Permite scroll si es necesario */
     background: linear-gradient(135deg, #6a11cb, #2575fc);
+    /* Quitar padding-top para centrar completamente */
+    box-sizing: border-box;
 }
 
 .login-box {
@@ -14,6 +16,7 @@
     text-align: center;
     width: 100%;
     max-width: 400px;
+    /* margin-top: 0;  Ya no es necesario */
 }
 
 .input-group {

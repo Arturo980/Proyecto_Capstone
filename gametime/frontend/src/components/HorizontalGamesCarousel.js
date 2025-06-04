@@ -265,7 +265,7 @@ const HorizontalGamesCarousel = () => {
           </div>
         ) : games.length === 0 ? (
           <div style={{ color: "#fff", padding: 16 }}>
-            No hay partidos para esta liga.
+            No hay partidos programados.
           </div>
         ) : (
           games.map((game, idx) => {

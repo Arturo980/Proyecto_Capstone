@@ -90,23 +90,14 @@ const StandingsTable = ({
     <div className="standingsWrapper" style={{ overflowX: 'visible', width: '100%', paddingBottom: 0 }}>
       {/* Selector de liga arriba de la tabla */}
       {leagues.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontWeight: 'bold', marginRight: -8 }}>
+        <div className="standings-league-select-wrapper">
+          <label style={{ fontWeight: 'bold', marginRight: 8 }}>
             {/* Puedes poner aquí un texto si lo deseas, por ejemplo: 'Liga:' */}
           </label>
           <select
+            className="standings-league-select"
             value={activeLeague}
             onChange={e => setActiveLeague(e.target.value)}
-            style={{
-              minWidth: 180,
-              padding: 4,
-              border: 'none',
-              outline: 'none',
-              background: 'transparent',
-              fontWeight: 'bold',
-              fontSize: 18,
-              cursor: 'pointer'
-            }}
           >
             <option value="" disabled>
               Selecciona una liga
@@ -136,12 +127,13 @@ const StandingsTable = ({
         >
           <thead>
             <tr className="standings-header-row">
-              <th style={{ background: '#1e293b', color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: 1, border: 'none' }}></th>
-              <th style={{ width: '14%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>J</th>
-              <th style={{ width: '14%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>G</th>
-              <th style={{ width: '14%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>P</th>
-              <th style={{ width: '14%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>+/-</th>
-              <th style={{ width: '14%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>Pts</th>
+              <th style={{ width: 50, background: '#1e293b', color: '#fff', border: 'none' }}></th>
+              <th style={{ minWidth: 80, background: '#1e293b', color: '#fff', border: 'none', textAlign: 'left' }}></th>
+              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>J</th>
+              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>G</th>
+              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>P</th>
+              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>+/-</th>
+              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>Pts</th>
             </tr>
           </thead>
           <tbody>
@@ -153,18 +145,32 @@ const StandingsTable = ({
                       src={teamLogoMap[team.team]}
                       alt={teamAbbrMap[team.team] || team.team}
                       style={{
-                        height: 28,
-                        width: 28,
+                        height: 45,
+                        width: 45,
                         objectFit: 'contain',
-                        marginRight: 8,
-                        verticalAlign: 'middle',
-                        background: 'transparent', // Fondo transparente
+                        background: 'transparent',
                         borderRadius: 8,
                         border: '2px solid #e2e8f0'
                       }}
                     />
                   )}
-                  <span style={{ verticalAlign: 'middle' }}>{teamAbbrMap[team.team] || team.team}</span>
+                </td>
+                <td
+                  style={{
+                    textAlign: 'left',
+                    fontWeight: 'bold',
+                    fontSize: '1.1em',
+                    verticalAlign: 'middle',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: 'var(--abbr-max-width, 180px)',
+                    minWidth: 0,
+                  }}
+                >
+                  <span className="standings-abbr-text">
+                    {teamAbbrMap[team.team] || team.team}
+                  </span>
                 </td>
                 <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.played}</td>
                 <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.won}</td>

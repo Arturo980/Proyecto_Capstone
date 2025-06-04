@@ -18,6 +18,8 @@ import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 import { API_BASE_URL } from './assets/Configuration/config';
 import TeamDetailPage from './pages/TeamDetailPage'; // NUEVO, crea este archivo
+import LoadingSpinner from './components/LoadingSpinner';
+import logoEmpresa from './assets/images/GameTime.png'; // Cambia por tu logo real
 
 function App() {
   const [language, setLanguage] = useState('es'); // Cambia 'en' por 'es'
@@ -54,6 +56,17 @@ function App() {
   const API_GAMES = `${API_BASE_URL}/api/games`;
   const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
 
+  // Elimina showSplash, showContent, splashDots
+  // Agrega un estado para saber si la app está cargando datos iniciales
+  const [appLoading, setAppLoading] = useState(true);
+  const [showLogoSplash, setShowLogoSplash] = useState(true);
+
+  // Splash de logo: mostrar solo el logo por 1.2s
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLogoSplash(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Cargar ligas al montar
   useEffect(() => {
     const fetchLeagues = async () => {
@@ -66,6 +79,8 @@ function App() {
       } catch {
         setLeagues([]);
         setActiveLeague(''); // <-- Asegura que nunca sea null
+      } finally {
+        setAppLoading(false); // Oculta el splash cuando termina la carga inicial
       }
     };
     fetchLeagues();
@@ -150,61 +165,84 @@ function App() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Mostrar splash solo la primera vez que se entra a la app (no en F5 ni navegación interna)
-  const [showSplash, setShowSplash] = useState(() => {
-    // Solo muestra el splash si no existe la marca en sessionStorage
-    return !sessionStorage.getItem('splashShown');
-  });
-  const [showContent, setShowContent] = useState(false);
-  const [splashDots, setSplashDots] = useState('');
+  // Splash: primero logo, luego spinner si sigue cargando
+  if (showLogoSplash) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 9999,
+          background: '#181a1b',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <img
+          src={logoEmpresa}
+          alt="Logo Empresa"
+          style={{ width: 220, maxWidth: '70vw', marginBottom: 0 }}
+        />
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (!showSplash) return;
-    let dotCount = 0;
-    const interval = setInterval(() => {
-      dotCount = (dotCount + 1) % 4;
-      setSplashDots('.'.repeat(dotCount));
-    }, 400);
-    return () => clearInterval(interval);
-  }, [showSplash]);
-
-  // Controla la transición: primero inicia el fade out del splash, luego muestra el contenido
-  useEffect(() => {
-    if (!showSplash) return;
-    const splashVisibleTimer = setTimeout(() => {
-      setShowSplash(false);
-      sessionStorage.setItem('splashShown', '1'); // Marca como mostrado
-      setTimeout(() => setShowContent(true), 500);
-    }, 3000);
-    return () => clearTimeout(splashVisibleTimer);
-  }, [showSplash]);
-
-  // Si el splash ya fue mostrado, muestra el contenido inmediatamente
-  useEffect(() => {
-    if (!showSplash) setShowContent(true);
-  }, [showSplash]);
+  // Renderiza el splash con logo y spinner mientras appLoading es true
+  if (appLoading) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 9999,
+          background: '#181a1b',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <img
+          src={logoEmpresa}
+          alt="Logo Empresa"
+          style={{ width: 180, maxWidth: '60vw', marginBottom: 32 }}
+        />
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   // El splash y el contenido principal se renderizan juntos, el splash está por encima
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <div id="root" className={showContent ? 'splash-content-show' : 'splash-content-hide'}>
+      <div id="root" className="splash-content-show">
         <Router>
           <Routes>
             {/* Página de Login */}
             <Route
               path="/login"
-              element={<Login setIsLoggedIn={setIsLoggedIn} />}
+              element={
+                <div>
+                  <Login setIsLoggedIn={setIsLoggedIn} />
+                </div>
+              }
             />
             {/* Página de Registro */}
             <Route
               path="/register"
-              element={<Register />}
+              element={
+                <div>
+                  <Register />
+                </div>
+              }
             />
             {/* Rutas principales */}
             <Route
               path="*"
               element={
-                <div id="root" style={{ overflowX: 'hidden' }}>
+                <div id="root" style={{ overflowX: 'hidden' }} className="main-content-padding">
                   {/* Navbar */}
                   <Navbar
                     className={isNavbarHidden ? 'hidden' : ''}
@@ -220,50 +258,48 @@ function App() {
                     language={language}
                   />
 
-                  {/* Contenido principal */}
-                  <div className="main-content">
-                    <Routes>
-                      {/* Página Home */}
-                      <Route
-                        path="/"
-                        element={
-                          <div className="container">
-                            <div className="row mt-5">
-                              <div className="col-md-8">
-                                <ControlledCarousel language={language} />
-                              </div>
-                              <div className="col-md-4">
-                                <h3>{texts[language].standings_title}</h3>
-                                <StandingsTable
-                                  language={language}
-                                  leagues={leagues}
-                                  activeLeague={activeLeague}
-                                  setActiveLeague={setActiveLeague}
-                                  teams={teams}
-                                  games={games}
-                                  leagueConfig={leagueConfig}
-                                />
-                              </div>
-                            </div>
+                  {/* Rutas internas */}
+                  <Routes>
+                    {/* Página Home: layout especial */}
+                    <Route
+                      path="/"
+                      element={
+                        <div className="main-content-responsive">
+                          <div className="carousel-section">
+                            <ControlledCarousel language={language} />
                           </div>
-                        }
-                      />
-                      {/* Página de Equipos */}
-                      <Route path="/teams" element={<TeamsPage language={language} userRole={userRole} />} />
-                      {/* NUEVO: Página de detalle de equipo */}
-                      <Route path="/teams/:teamId" element={<TeamDetailPage language={language} />} />
-                      {/* Página de Estadísticas */}
-                      <Route path="/stats" element={<StatsPage language={language} />} />
-                      {/* Página de Partidos */}
-                      <Route path="/games" element={<GamesPage language={language} />} />
-                      {/* Página de Media */}
-                      <Route path="/media" element={<MediaPage language={language} />} />
-                      {/* Página de Solicitudes de Admin */}
-                      <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
-                      {/* Página de Auditoría/Admin */}
-                      <Route path="/admin/auditoria" element={<AdminAuditPage language={language} />} />
-                    </Routes>
-                  </div>
+                          <div className="standings-section">
+                            <div className="standings-header">
+                              <h3
+                                className="standings-title-text"
+                                style={{ marginBottom: 0 }}
+                              >
+                                {texts[language].standings_title}
+                              </h3>
+                              <div className="standings-underline"></div>
+                            </div>
+                            <StandingsTable
+                              language={language}
+                              leagues={leagues}
+                              activeLeague={activeLeague}
+                              setActiveLeague={setActiveLeague}
+                              teams={teams}
+                              games={games}
+                              leagueConfig={leagueConfig}
+                            />
+                          </div>
+                        </div>
+                      }
+                    />
+                    {/* Otras páginas: agrega marginTop y marginBottom */}
+                    <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
+                    <Route path="/teams/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} /></div>} />
+                    <Route path="/stats" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><StatsPage language={language} /></div>} />
+                    <Route path="/games" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><GamesPage language={language} /></div>} />
+                    <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />
+                    <Route path="/admin/solicitudes" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><AdminSolicitudes /></div>} />
+                    <Route path="/admin/auditoria" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><AdminAuditPage language={language} /></div>} />
+                  </Routes>
 
                   {/* Footer */}
                   <Footer language={language} />
@@ -273,16 +309,6 @@ function App() {
           </Routes>
         </Router>
       </div>
-      {showSplash && (
-        <div className={`splash-loading${!showSplash ? ' splash-hide' : ''}`} style={{
-          position: 'fixed',
-          top: 0, left: 0, width: '100vw', height: '100vh',
-          zIndex: 9999,
-          pointerEvents: 'all'
-        }}>
-          Gametime{splashDots}
-        </div>
-      )}
     </div>
   );
 }
