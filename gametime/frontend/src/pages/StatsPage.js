@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 import texts from '../translations/texts';
 import '../styles/StatsPage.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Modal, Button, Form } from 'react-bootstrap'; // Asegúrate de tener react-bootstrap instalado
 
 // Cambia la definición de STAT_CATEGORIES para usar totales en vez de "por set"
 const STAT_CATEGORIES = [
@@ -101,40 +102,31 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   // Solo admin y content-editor pueden editar
   const isEditor = userRole === 'admin' || userRole === 'content-editor';
 
-  const [playerStats, setPlayerStats] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [editedStats, setEditedStats] = useState([]);
-  const [newStat, setNewStat] = useState({
-    playerName: '',
-    team: '',
-    acesPerSet: 0,
-    assistsPerSet: 0,
-    attacksPerSet: 0,
-    blocksPerSet: 0,
-    digsPerSet: 0,
-    hittingPercentage: 0,
-    killsPerSet: 0,
-    pointsPerSet: 0,
-  });
   const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [leagues, setLeagues] = useState([]);
-  const [games, setGames] = useState([]); // <-- Agrega esta línea
   const [localActiveLeague, setLocalActiveLeague] = useState(() => {
     // Guardar y recuperar la liga activa desde sessionStorage
     return sessionStorage.getItem('statsActiveLeague') || null;
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [addingCategory, setAddingCategory] = useState(null);
-  const [newRow, setNewRow] = useState({});
-
-  // Nuevo: estado para mostrar el modal y la categoría activa
+  const [games, setGames] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalCategory, setModalCategory] = useState(null);
-
-  // Nuevo: estado para partido y jugador seleccionado en el modal
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [addStatsTeam, setAddStatsTeam] = useState(null);
+  const [newStats, setNewStats] = useState({
+    setsPlayed: '',
+    blocks: '',
+    assists: '',
+    aces: '',
+    attacks: '',
+    digs: '',
+    hittingErrors: '',
+    kills: '',
+    points: ''
+  });
 
   const leagueId = activeLeague || localActiveLeague;
 
@@ -178,29 +170,9 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
       } catch {
         setTeams([]);
       }
-    };
-    fetchTeams().finally(() => setLoading(false));
-  }, [leagueId]);
-
-  useEffect(() => {
-    setLoading(true);
-    const fetchStats = async () => {
-      try {
-        const url = leagueId
-          ? `${API_BASE_URL}/api/player-stats?league=${leagueId}`
-          : `${API_BASE_URL}/api/player-stats`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const stats = Array.isArray(data) ? data : [];
-        setPlayerStats(stats);
-        setEditedStats(stats);
-      } catch {
-        setPlayerStats([]);
-        setEditedStats([]);
-      }
       setLoading(false);
     };
-    fetchStats().finally(() => setLoading(false));
+    fetchTeams();
   }, [leagueId]);
 
   useEffect(() => {
@@ -214,86 +186,42 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
       } catch {
         setGames([]);
       }
+      setLoading(false);
     };
-    fetchGames().finally(() => setLoading(false));
+    fetchGames();
   }, [leagueId]);
 
-  // Nueva: manejar cambio en inputs de la fila de agregar
-  const handleNewRowChange = (catKey, field, value) => {
-    setNewRow(prev => ({
-      ...prev,
-      [catKey]: {
-        ...prev[catKey],
-        [field]: value
-      }
-    }));
-  };
+  // Procesa los jugadores de todos los equipos
+  const allPlayers = teams.flatMap(team =>
+    (team.roster || []).map(player => {
+      const stats = player.stats || {};
+      return {
+        playerName: player.name,
+        team: team.name,
+        blocks: Number(stats.blocksPerSet ?? 0),
+        assists: Number(stats.assistsPerSet ?? 0),
+        aces: Number(stats.acesPerSet ?? 0),
+        attacks: Number(stats.attacksPerSet ?? 0),
+        digs: Number(stats.digsPerSet ?? 0),
+        hittingErrors: Number(stats.hittingErrorsPerSet ?? 0), // Si tienes este campo
+        kills: Number(stats.killsPerSet ?? 0),
+        points: Number(stats.pointsPerSet ?? 0),
+      };
+    })
+  );
 
-  // Nueva función para abrir el modal
-  const openAddModal = (cat) => {
-    setModalCategory(cat);
-    setShowAddModal(true);
-    setNewRow(prev => ({
-      ...prev,
-      [cat.key]: getInitialNewRow(cat)
-    }));
-  };
-
-  // Nueva función para cerrar el modal
-  const closeAddModal = () => {
-    setShowAddModal(false);
-    setModalCategory(null);
-  };
-
-  // Modifica handleAddRow para cerrar el modal
-  const handleAddRow = async (cat) => {
-    const row = { ...newRow[cat.key] };
-    // Asegura los campos requeridos
-    row.playerName = row.playerName || '';
-    row.team = row.team || '';
-    row.league = leagueId; // debe ser el _id de la liga como string
-
-    // Asegura que todos los campos numéricos sean números
-    [
-      'blocks', 'assists', 'aces', 'attacks', 'digs', 'hittingErrors', 'kills', 'points', 'setsPlayed'
-    ].forEach(k => { row[k] = Number(row[k]) || 0; });
-
-    try {
-      await fetch(`${API_BASE_URL}/api/player-stats`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(row),
-      });
-      // Refresca las estadísticas desde el backend para mantener consistencia
-      const url = leagueId
-        ? `${API_BASE_URL}/api/player-stats?league=${leagueId}`
-        : `${API_BASE_URL}/api/player-stats`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const stats = Array.isArray(data) ? data : [];
-      setPlayerStats(stats);
-      setEditedStats(stats);
-    } catch (err) {
-      // Opcional: mostrar error al usuario
-      alert('No se pudo guardar la estadística en el servidor');
-    }
-
-    setShowAddModal(false);
-    setModalCategory(null);
-    setNewRow(prev => ({ ...prev, [cat.key]: getInitialNewRow(cat) }));
-  };
-
-  const filteredStats = (statsArray) => {
-    // Filtra SOLO las estadísticas de la liga activa
-    const filtered = statsArray.filter(p =>
-      (!leagueId || (p.league && (p.league._id === leagueId || p.league === leagueId))) &&
-      (
-        !searchQuery ||
-        p.playerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.team?.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filtra por búsqueda y liga, y solo muestra jugadores con valor > 0 en la estadística correspondiente
+  const filteredStats = (catKey) => {
+    return allPlayers
+      .filter(p =>
+        (!searchQuery ||
+          p.playerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.team?.toLowerCase().includes(searchQuery.toLowerCase())
+        ) &&
+        typeof p[catKey] === 'number' &&
+        p[catKey] > 0 // Solo muestra si tiene valor mayor a 0 en la estadística
       )
-    );
-    return filtered;
+      .sort((a, b) => b[catKey] - a[catKey]);
   };
 
   const groupedCategories = [];
@@ -307,82 +235,209 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
     switch (key) {
       case 'playerName': return t?.player_name || 'Jugador';
       case 'team': return t?.team || 'Equipo';
-      case 'blocks': return t?.blocks || 'Bloqueos';
-      case 'assists': return t?.assists || 'Asistencias';
-      case 'aces': return t?.aces || 'Aces';
-      case 'attacks': return t?.attacks || 'Ataques';
-      case 'digs': return t?.digs || 'Defensas';
-      case 'hittingErrors': return t?.hitting_errors || 'Errores de golpeo';
-      case 'kills': return t?.kills || 'Remates';
-      case 'points': return t?.points || 'Puntos';
-      // ...otros casos si agregas más estadísticas...
+      case 'blocks': return (t?.blocks_per_set || 'Bloqueos por set');
+      case 'assists': return (t?.assists_per_set || 'Asistencias por set');
+      case 'aces': return (t?.aces_per_set || 'Aces por set');
+      case 'attacks': return (t?.attacks_per_set || 'Ataques por set');
+      case 'digs': return (t?.digs_per_set || 'Defensas por set');
+      case 'hittingErrors': return (t?.hitting_errors || 'Errores de golpeo') + ' / set';
+      case 'kills': return (t?.kills_per_set || 'Remates por set');
+      case 'points': return (t?.points_per_set || 'Puntos por set');
       default: return key;
     }
   };
 
-  // Obtener lista de partidos finalizados
+  // Modal para agregar jugador
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [addPlayerTeam, setAddPlayerTeam] = useState(null);
+  const [newPlayer, setNewPlayer] = useState({
+    name: '',
+    stats: {
+      acesPerSet: 0,
+      assistsPerSet: 0,
+      attacksPerSet: 0,
+      blocksPerSet: 0,
+      digsPerSet: 0,
+      hittingPercentage: 0,
+      killsPerSet: 0,
+      pointsPerSet: 0
+    }
+  });
+
+  // Handler para abrir modal
+  const handleOpenAddPlayer = (team) => {
+    setAddPlayerTeam(team);
+    setNewPlayer({
+      name: '',
+      stats: {
+        acesPerSet: 0,
+        assistsPerSet: 0,
+        attacksPerSet: 0,
+        blocksPerSet: 0,
+        digsPerSet: 0,
+        hittingPercentage: 0,
+        killsPerSet: 0,
+        pointsPerSet: 0
+      }
+    });
+    setShowAddPlayerModal(true);
+  };
+
+  // Handler para guardar jugador
+  const handleSavePlayer = async () => {
+    if (!addPlayerTeam) return;
+    const updatedRoster = [...(addPlayerTeam.roster || []), newPlayer];
+    try {
+      await fetch(`${API_BASE_URL}/api/teams/${addPlayerTeam._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...addPlayerTeam, roster: updatedRoster })
+      });
+      // Refresca equipos
+      const res = await fetch(`${API_BASE_URL}/api/teams?league=${leagueId}`);
+      const data = await res.json();
+      setTeams(Array.isArray(data.teams) ? data.teams : []);
+      setShowAddPlayerModal(false);
+    } catch {
+      alert('No se pudo agregar el jugador');
+    }
+  };
+
+  // Obtener partidos finalizados
   const finishedGames = games.filter(g => g.partidoFinalizado);
 
-  // Obtener citados del partido seleccionado
+  // Obtener citados de un partido
   const getCitadosList = (game) => {
-    if (!game) return [];
-    // citados es string separado por coma
+    if (!game) return { team1: [], team2: [] };
     const citadosArr = (game.citados || '').split(',').map(s => s.trim()).filter(Boolean);
-    // Buscar en roster de ambos equipos
+
     const team1 = teams.find(t => t.name === game.team1);
     const team2 = teams.find(t => t.name === game.team2);
-    // roster puede ser array de objetos o strings
-    const roster1 = (team1?.roster || []).filter(p => {
-      const playerName = typeof p === 'string' ? p : p.name;
-      return citadosArr.includes(playerName);
-    });
-    const roster2 = (team2?.roster || []).filter(p => {
-      const playerName = typeof p === 'string' ? p : p.name;
-      return citadosArr.includes(playerName);
-    });
-    // Devuelve [{name, team}]
-    return [
-      ...roster1.map(p => ({
-        name: typeof p === 'string' ? p : p.name,
-        team: team1?.name || game.team1
-      })),
-      ...roster2.map(p => ({
-        name: typeof p === 'string' ? p : p.name,
-        team: team2?.name || game.team2
-      }))
-    ];
+
+    // Solo los citados que pertenecen a cada equipo
+    const team1Citados = (team1?.roster || [])
+      .filter(p => citadosArr.includes(p.name))
+      .map(p => ({ ...p, team: team1.name }));
+
+    const team2Citados = (team2?.roster || [])
+      .filter(p => citadosArr.includes(p.name))
+      .map(p => ({ ...p, team: team2.name }));
+
+    return { team1: team1Citados, team2: team2Citados };
   };
 
-  // Cuando seleccionas un jugador, llena los campos playerName y team
-  useEffect(() => {
-    if (modalCategory && selectedPlayer) {
-      setNewRow(prev => ({
-        ...prev,
-        [modalCategory.key]: {
-          ...getInitialNewRow(modalCategory),
-          playerName: selectedPlayer.name,
-          team: selectedPlayer.team
-        }
-      }));
+  // Abrir modal para agregar estadística en una categoría
+  const openAddModal = (cat) => {
+    setModalCategory(cat);
+    setShowAddModal(true);
+    setSelectedGame(null);
+    setSelectedPlayer(null);
+    setAddStatsTeam(null);
+    setNewStats({
+      setsPlayed: 0,
+      blocks: 0,
+      assists: 0,
+      aces: 0,
+      attacks: 0,
+      digs: 0,
+      hittingErrors: 0,
+      kills: 0,
+      points: 0
+    });
+  };
+
+  // Guardar estadísticas en el roster del equipo
+  const handleSaveStats = async () => {
+    if (!selectedPlayer || !addStatsTeam) return;
+    // Busca si el jugador ya existe en el roster
+    const roster = addStatsTeam.roster || [];
+    const idx = roster.findIndex(p => p.name === selectedPlayer.name);
+    if (idx < 0) {
+      alert(language === 'en'
+        ? 'Player must exist in the team roster.'
+        : 'El jugador debe existir en el roster del equipo.');
+      return;
     }
-  }, [selectedPlayer, modalCategory]);
-
-  // Agrega esta función antes de cualquier uso de getInitialNewRow
-  const getInitialNewRow = (cat) => {
-    const row = {};
-    cat.columns.forEach(col => {
-      row[col.key] = col.key === 'playerName' || col.key === 'team' ? '' : 0;
+    let player = { ...roster[idx] };
+    // Suma o reemplaza los stats (si vacío, usa 0)
+    Object.keys(newStats).forEach(key => {
+      const value = newStats[key] === '' ? 0 : Number(newStats[key]);
+      if (key === 'setsPlayed') {
+        player.stats.setsPlayed = value;
+      } else {
+        player.stats[key] = value;
+      }
     });
-    // Agrega campo para sets jugados
-    row.setsPlayed = 0;
-    return row;
+    // Calcula promedios por set
+    const sets = player.stats.setsPlayed || 1;
+    player.stats.acesPerSet = (player.stats.aces || 0) / sets;
+    player.stats.assistsPerSet = (player.stats.assists || 0) / sets;
+    player.stats.attacksPerSet = (player.stats.attacks || 0) / sets;
+    player.stats.blocksPerSet = (player.stats.blocks || 0) / sets;
+    player.stats.digsPerSet = (player.stats.digs || 0) / sets;
+    player.stats.killsPerSet = (player.stats.kills || 0) / sets;
+    player.stats.pointsPerSet = (player.stats.points || 0) / sets;
+
+    const newRoster = [...roster];
+    newRoster[idx] = player;
+    try {
+      await fetch(`${API_BASE_URL}/api/teams/${addStatsTeam._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...addStatsTeam, roster: newRoster })
+      });
+      // Refresca equipos
+      const res = await fetch(`${API_BASE_URL}/api/teams?league=${leagueId}`);
+      const data = await res.json();
+      setTeams(Array.isArray(data.teams) ? data.teams : []);
+      setShowAddModal(false);
+    } catch {
+      alert('No se pudo guardar la estadística');
+    }
   };
 
-  // Al mostrar la tabla, calcula los valores "por set" automáticamente
-  const getPerSetValue = (stat, key) => {
-    if (!stat.setsPlayed || stat.setsPlayed === 0) return 0;
-    return (stat[key] / stat.setsPlayed).toFixed(2);
-  };
+  // Cambia: precargar datos existentes al seleccionar jugador
+  useEffect(() => {
+    if (selectedPlayer && addStatsTeam) {
+      // Busca el jugador en el roster
+      const roster = addStatsTeam.roster || [];
+      const idx = roster.findIndex(p => p.name === selectedPlayer.name);
+      if (idx >= 0) {
+        const stats = roster[idx].stats || {};
+        setNewStats({
+          setsPlayed: stats.setsPlayed !== undefined ? String(stats.setsPlayed) : '',
+          blocks: stats.blocks !== undefined ? String(stats.blocks) : '',
+          assists: stats.assists !== undefined ? String(stats.assists) : '',
+          aces: stats.aces !== undefined ? String(stats.aces) : '',
+          attacks: stats.attacks !== undefined ? String(stats.attacks) : '',
+          digs: stats.digs !== undefined ? String(stats.digs) : '',
+          hittingErrors: stats.hittingErrors !== undefined ? String(stats.hittingErrors) : '',
+          kills: stats.kills !== undefined ? String(stats.kills) : '',
+          points: stats.points !== undefined ? String(stats.points) : '',
+        });
+      } else {
+        setNewStats({
+          setsPlayed: '',
+          blocks: '',
+          assists: '',
+          aces: '',
+          attacks: '',
+          digs: '',
+          hittingErrors: '',
+          kills: '',
+          points: ''
+        });
+      }
+    }
+  }, [selectedPlayer, addStatsTeam]);
+
+  // Cuando seleccionas jugador, determina el equipo (sin modificar newStats aquí)
+  useEffect(() => {
+    if (selectedPlayer && selectedGame) {
+      const team = teams.find(t => t.name === selectedPlayer.team);
+      setAddStatsTeam(team || null);
+    }
+  }, [selectedPlayer, selectedGame, teams]);
 
   return (
     <div className="stats-container">
@@ -394,7 +449,6 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
           </h2>
           <div className="stats-league-selector">
             <label className="me-2 fw-bold">{texts[language]?.league_label || 'Liga:'}</label>
-            {/* Cambia el select por un onChange que NO use e.preventDefault() */}
             <select
               className="form-select w-auto"
               value={leagueId || ""}
@@ -416,266 +470,263 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
               ))}
             </select>
           </div>
-          {loading ? (
-            <div className="alert alert-info">
-              {texts[language]?.loading_stats || 'Cargando estadísticas...'}
+          <div className="stats-search">
+            <input
+              type="text"
+              className="form-control"
+              placeholder={language === 'en' ? 'Search player or team...' : 'Buscar jugador o equipo...'}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+          {/* Botón único para agregar información de partido/jugador */}
+          {isEditor && (
+            <div className="mb-3 d-flex justify-content-start">
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => openAddModal(null)}
+              >
+                {language === 'en' ? 'Add statistics' : 'Agregar estadísticas'}
+              </Button>
             </div>
-          ) : (
-            <div>
-              {groupedCategories.map((catPair, rowIdx) => (
-                <div className="row mb-4" key={rowIdx}>
-                  {catPair.map((cat, i) => {
-                    const stats = filteredStats(playerStats)
-                      .filter(p => typeof p[cat.key] === 'number')
-                      .sort((a, b) => b[cat.key] - a[cat.key]);
-                    return (
-                      <div className="col-md-6 mb-4" key={cat.key}>
-                        <div className="card stats-table-card">
-                          <div className="card-header stats-table-header d-flex justify-content-between align-items-center">
-                            <h4 className="mb-0 fs-5">{getLabel(cat.key)}</h4>
-                            {isEditor && (
-                              <button
-                                className="btn btn-sm btn-primary" // <-- siempre azul
-                                onClick={() => openAddModal(cat)}
-                              >
-                                {language === 'en' ? 'Add' : 'Agregar'}
-                              </button>
-                            )}
-                          </div>
-                          <div className="card-body p-0">
-                            <div className="table-responsive">
-                              <table className="table stats-table align-middle mb-0">
-                                <thead>
+          )}
+          <div>
+            {groupedCategories.map((catPair, rowIdx) => (
+              <div className="row mb-4" key={rowIdx}>
+                {catPair.map((cat, i) => {
+                  const stats = filteredStats(cat.key);
+                  return (
+                    <div className="col-md-6 mb-4" key={cat.key}>
+                      <div className="card stats-table-card">
+                        <div className="card-header stats-table-header d-flex justify-content-between align-items-center">
+                          <h4 className="mb-0 fs-5">{getLabel(cat.key)}</h4>
+                          {/* Elimina el botón "Agregar" de cada tabla */}
+                        </div>
+                        <div className="card-body p-0">
+                          <div className="table-responsive">
+                            <table className="table stats-table align-middle mb-0">
+                              <thead>
+                                <tr>
+                                  <th className="text-center" style={{ width: 50 }}>#</th>
+                                  {cat.columns.map(col => (
+                                    <th key={col.key} className="text-center">{getLabel(col.key)}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {stats.length === 0 ? (
                                   <tr>
-                                    <th className="text-center" style={{ width: 50 }}>#</th>
-                                    {cat.columns.map(col => (
-                                      <th key={col.key} className="text-center">{getLabel(col.key)}</th>
-                                    ))}
+                                    <td colSpan={cat.columns.length + 1} className="text-center text-muted">
+                                      {texts[language]?.no_stats_data || 'No hay datos de estadísticas disponibles.'}
+                                    </td>
                                   </tr>
-                                </thead>
-                                <tbody>
-                                  {/* Elimina la fila inline de agregar */}
-                                  {/* Fin fila agregar */}
-                                  {stats.length === 0 ? (
-                                    <tr>
-                                      <td colSpan={cat.columns.length + 1} className="text-center text-muted">
-                                        {texts[language]?.no_stats_data || 'No hay datos de estadísticas disponibles.'}
+                                ) : (
+                                  stats.map((p, idx) => (
+                                    <tr key={idx}>
+                                      <td className="fw-bold text-center">
+                                        <span className="badge bg-primary fs-6">{idx + 1}</span>
                                       </td>
-                                    </tr>
-                                  ) : (
-                                    stats.map((p, idx) => (
-                                      <tr key={idx}>
-                                        <td className="fw-bold text-center">
-                                          <span className="badge bg-primary fs-6">{idx + 1}</span>
+                                      {cat.columns.map(col => (
+                                        <td key={col.key} className="text-center">
+                                          <span className="fw-semibold">{p[col.key]}</span>
                                         </td>
-                                        {cat.columns.map(col => (
-                                          <td key={col.key} className="text-center">
-                                            {/* Solo muestra el total, NO el valor por set */}
-                                            <span className="fw-semibold">{p[col.key]}</span>
-                                          </td>
-                                        ))}
-                                      </tr>
-                                    ))
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
+                                      ))}
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
           {/* Modal para agregar estadística */}
-          {showAddModal && modalCategory && (
-            <div className="modal-overlay" style={{
-              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-              background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <div className="modal-content" style={{
-                background: '#fff', borderRadius: 8, padding: 24, minWidth: 320, maxWidth: 600, width: '100%', position: 'relative'
-              }}>
-                <button
-                  className="btn btn-secondary close-button"
-                  style={{ position: 'absolute', top: 10, right: 10 }}
-                  onClick={() => {
-                    closeAddModal();
-                    setSelectedGame(null);
+          <Modal
+            show={showAddModal}
+            onHide={() => setShowAddModal(false)}
+            dialogClassName="wide-modal"
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>
+                {language === 'en' ? 'Add Statistic' : 'Agregar Estadística'}
+                {modalCategory ? ` - ${getLabel(modalCategory.key)}` : ''}
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              {/* Paso 1: Seleccionar partido finalizado */}
+              <Form.Group className="mb-3">
+                <Form.Label>{language === 'en' ? 'Select Finished Game' : 'Selecciona un partido finalizado'}</Form.Label>
+                <Form.Select
+                  value={selectedGame ? selectedGame._id : ''}
+                  onChange={e => {
+                    const game = finishedGames.find(g => g._id === e.target.value);
+                    setSelectedGame(game || null);
                     setSelectedPlayer(null);
                   }}
                 >
-                  &times;
-                </button>
-                <h4 style={{ marginBottom: 20 }}>
-                  {language === 'en' ? 'Add Statistic' : 'Agregar Estadística'} - {getLabel(modalCategory.key)}
-                </h4>
-                {/* Paso 1: Seleccionar partido finalizado */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">{language === 'en' ? 'Select Finished Game' : 'Selecciona un partido finalizado'}</label>
-                  <select
-                    className="form-select"
-                    value={selectedGame ? selectedGame._id : ''}
-                    onChange={e => {
-                      const game = finishedGames.find(g => g._id === e.target.value);
-                      setSelectedGame(game || null);
-                      setSelectedPlayer(null);
-                    }}
-                  >
-                    <option value="">
-                      {language === 'en'
-                        ? 'Select a finished game'
-                        : 'Selecciona un partido finalizado'}
+                  <option value="">
+                    {language === 'en'
+                      ? 'Select a finished game'
+                      : 'Selecciona un partido finalizado'}
+                  </option>
+                  {finishedGames.map(g => (
+                    <option key={g._id} value={g._id}>
+                      {g.team1} vs {g.team2} - {g.date}
                     </option>
-                    {finishedGames.map(g => (
-                      <option key={g._id} value={g._id}>
-                        {g.team1} vs {g.team2} - {g.date}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {/* Paso 2: Seleccionar jugador citado */}
-                {selectedGame && (
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">{language === 'en' ? 'Select Player' : 'Selecciona un jugador'}</label>
-                    <div className="row">
-                      {/* Mostrar jugadores citados separados por equipo, igual que en GamesPage */}
-                      <div className="col-6">
-                        <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'left' }}>
-                          {selectedGame.team1}
-                        </div>
-                        {getCitadosList(selectedGame)
-                          .filter(player => player.team === selectedGame.team1)
-                          .map((player, idx) => (
-                            <button
-                              type="button"
-                              className={`btn btn-outline-${selectedPlayer && selectedPlayer.name === player.name && selectedPlayer.team === player.team ? 'primary' : 'secondary'} w-100 mb-2`}
-                              style={{ textAlign: 'left' }}
-                              key={player.name + player.team}
-                              onClick={() => setSelectedPlayer(player)}
-                            >
-                              <span className="fw-bold">{player.name}</span>
-                              <span className="ms-2 text-muted" style={{ fontSize: 13 }}>
-                                ({player.team})
-                              </span>
-                            </button>
-                          ))}
-                        {getCitadosList(selectedGame).filter(player => player.team === selectedGame.team1).length === 0 && (
-                          <div className="text-muted" style={{ fontSize: 13 }}>
-                            {language === 'en'
-                              ? 'No called players for this team.'
-                              : 'No hay citados para este equipo.'}
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              {/* Paso 2: Seleccionar jugador citado */}
+              {selectedGame && (
+                <div className="mb-3">
+                  <Form.Label className="fw-bold">{language === 'en' ? 'Select Player' : 'Selecciona un jugador'}</Form.Label>
+                  <div className="row">
+                    {(() => {
+                      const citados = getCitadosList(selectedGame);
+                      return (
+                        <>
+                          <div className="col-12 col-md-6 mb-2">
+                            <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'left' }}>
+                              {selectedGame.team1}
+                            </div>
+                            <div className="d-flex flex-wrap gap-2">
+                              {citados.team1.length === 0 && (
+                                <div className="text-muted" style={{ fontSize: 13 }}>
+                                  {language === 'en'
+                                    ? 'No called players for this team.'
+                                    : 'No hay citados para este equipo.'}
+                                </div>
+                              )}
+                              {citados.team1.map((player, idx) => (
+                                <Button
+                                  type="button"
+                                  variant={selectedPlayer && selectedPlayer.name === player.name && selectedPlayer.team === player.team ? 'primary' : 'outline-secondary'}
+                                  className="mb-2 flex-grow-1"
+                                  style={{ minWidth: 120, textAlign: 'left', whiteSpace: 'normal' }}
+                                  key={player.name + player.team}
+                                  onClick={() => setSelectedPlayer(player)}
+                                >
+                                  <span className="fw-bold">{player.name}</span>
+                                  <span className="ms-2 text-muted" style={{ fontSize: 13 }}>
+                                    ({player.team})
+                                  </span>
+                                </Button>
+                              ))}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="col-6">
-                        <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'right' }}>
-                          {selectedGame.team2}
-                        </div>
-                        {getCitadosList(selectedGame)
-                          .filter(player => player.team === selectedGame.team2)
-                          .map((player, idx) => (
-                            <button
-                              type="button"
-                              className={`btn btn-outline-${selectedPlayer && selectedPlayer.name === player.name && selectedPlayer.team === player.team ? 'primary' : 'secondary'} w-100 mb-2`}
-                              style={{ textAlign: 'right' }}
-                              key={player.name + player.team}
-                              onClick={() => setSelectedPlayer(player)}
-                            >
-                              <span className="fw-bold">{player.name}</span>
-                              <span className="ms-2 text-muted" style={{ fontSize: 13 }}>
-                                ({player.team})
-                              </span>
-                            </button>
-                          ))}
-                        {getCitadosList(selectedGame).filter(player => player.team === selectedGame.team2).length === 0 && (
-                          <div className="text-muted" style={{ fontSize: 13, textAlign: 'right' }}>
-                            {language === 'en'
-                              ? 'No called players for this team.'
-                              : 'No hay citados para este equipo.'}
+                          <div className="col-12 col-md-6 mb-2">
+                            <div style={{ fontWeight: 'bold', marginBottom: 6, textAlign: 'right' }}>
+                              {selectedGame.team2}
+                            </div>
+                            <div className="d-flex flex-wrap gap-2 justify-content-md-end">
+                              {citados.team2.length === 0 && (
+                                <div className="text-muted" style={{ fontSize: 13 }}>
+                                  {language === 'en'
+                                    ? 'No called players for this team.'
+                                    : 'No hay citados para este equipo.'}
+                                </div>
+                              )}
+                              {citados.team2.map((player, idx) => (
+                                <Button
+                                  type="button"
+                                  variant={selectedPlayer && selectedPlayer.name === player.name && selectedPlayer.team === player.team ? 'primary' : 'outline-secondary'}
+                                  className="mb-2 flex-grow-1"
+                                  style={{ minWidth: 120, textAlign: 'right', whiteSpace: 'normal' }}
+                                  key={player.name + player.team}
+                                  onClick={() => setSelectedPlayer(player)}
+                                >
+                                  <span className="fw-bold">{player.name}</span>
+                                  <span className="ms-2 text-muted" style={{ fontSize: 13 }}>
+                                    ({player.team})
+                                  </span>
+                                </Button>
+                              ))}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </>
+                      );
+                    })()}
                   </div>
-                )}
-                {/* Paso 3: Formulario de estadísticas */}
-                {selectedPlayer && (
-                  <form
-                    onSubmit={e => {
-                      e.preventDefault();
-                      handleAddRow(modalCategory);
-                      setSelectedGame(null);
-                      setSelectedPlayer(null);
-                    }}
-                  >
-                    <div className="row g-2">
-                      {modalCategory.columns.map(col => (
-                        <div className="col-12" key={col.key}>
-                          <label className="form-label">{getLabel(col.key)}</label>
-                          {col.key === 'playerName' || col.key === 'team' ? (
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={newRow[modalCategory.key]?.[col.key] || ''}
-                              readOnly
-                            />
-                          ) : (
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={newRow[modalCategory.key]?.[col.key] || 0}
-                              onChange={e =>
-                                handleNewRowChange(modalCategory.key, col.key, Number(e.target.value))
-                              }
-                              step="1"
-                              min="0"
-                              placeholder={getLabel(col.key)}
-                              required
-                            />
-                          )}
-                        </div>
-                      ))}
-                      {/* Campo para sets jugados */}
-                      <div className="col-12">
-                        <label className="form-label">{language === 'en' ? 'Sets played' : 'Sets jugados'}</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={newRow[modalCategory.key]?.setsPlayed || 0}
-                          onChange={e =>
-                            handleNewRowChange(modalCategory.key, 'setsPlayed', Number(e.target.value))
+                </div>
+              )}
+              {/* Paso 3: Formulario de estadísticas */}
+              {selectedPlayer && (
+                <Form>
+                  <Form.Group className="mb-2">
+                    <Form.Label>
+                      {language === 'en' ? 'Sets played (required)' : 'Sets jugados (obligatorio)'}
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={newStats.setsPlayed}
+                      onChange={e => setNewStats({ ...newStats, setsPlayed: e.target.value.replace(/\D/g, '') })}
+                      min={1}
+                      required
+                      autoComplete="off"
+                      placeholder={language === 'en' ? 'Enter sets played' : 'Ingrese sets jugados'}
+                    />
+                  </Form.Group>
+                  {/* Campos de estadísticas SIN "por set" en el label */}
+                  {['blocks', 'assists', 'aces', 'attacks', 'digs', 'hittingErrors', 'kills', 'points'].map(statKey => (
+                    <Form.Group className="mb-2" key={statKey}>
+                      <Form.Label>
+                        {(() => {
+                          // Solo el nombre base, sin "por set"
+                          const t = texts[language] || texts['es'];
+                          switch (statKey) {
+                            case 'blocks': return t?.blocks || 'Bloqueos';
+                            case 'assists': return t?.assists || 'Asistencias';
+                            case 'aces': return t?.aces || 'Aces';
+                            case 'attacks': return t?.attacks || 'Ataques';
+                            case 'digs': return t?.digs || 'Defensas';
+                            case 'hittingErrors': return t?.hitting_errors || 'Errores de golpeo';
+                            case 'kills': return t?.kills || 'Remates';
+                            case 'points': return t?.points || 'Puntos';
+                            default: return statKey;
                           }
-                          step="1"
-                          min="1"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-3 d-flex justify-content-end">
-                      <button
-                        className="btn btn-success me-2"
-                        type="submit"
-                      >
-                        {language === 'en' ? 'Save' : 'Guardar'}
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        type="button"
-                        onClick={() => {
-                          setSelectedPlayer(null);
-                        }}
-                      >
-                        {language === 'en' ? 'Back' : 'Volver'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          )}
+                        })()}
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={newStats[statKey]}
+                        onChange={e =>
+                          setNewStats({
+                            ...newStats,
+                            [statKey]: e.target.value.replace(/\D/g, '')
+                          })
+                        }
+                        min={0}
+                        autoComplete="off"
+                        placeholder={language === 'en' ? 'Enter value' : 'Ingrese valor'}
+                      />
+                    </Form.Group>
+                  ))}
+                </Form>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+                {language === 'en' ? 'Cancel' : 'Cancelar'}
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleSaveStats}
+                disabled={!selectedPlayer || !selectedGame || !newStats.setsPlayed || Number(newStats.setsPlayed) < 1}
+              >
+                {language === 'en' ? 'Save' : 'Guardar'}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </>
       )}
     </div>
@@ -683,7 +734,3 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
 };
 
 export default StatsPage;
-
-// NOTA IMPORTANTE:
-// Tu backend tiene dos formas de almacenar estadísticas:
-// 1. En la colección playerstats (para estadísticas históricas y por partido).

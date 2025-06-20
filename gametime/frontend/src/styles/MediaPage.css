@@ -8,7 +8,7 @@
   height: 200px;
   object-fit: cover;
   background: #eee;
-  cursor: pointer; /* Esto muestra la mano, no la lupa */
+  cursor: pointer !important; /* Fuerza pointer, nunca zoom-in */
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -16,7 +16,7 @@
 .media-page img.img-fluid:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  cursor: pointer; /* Asegura que siga siendo pointer */
+  cursor: pointer !important; /* Fuerza pointer, nunca zoom-in */
 }
 
 .match-section img {
@@ -60,7 +60,13 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  cursor: default; /* Cambia de zoom-out a default para evitar la lupa */
+  cursor: default !important; /* Fuerza cursor default en todo el overlay */
+}
+
+/* Asegura que la imagen dentro del modal nunca muestre lupa ni pointer */
+.modal-overlay img,
+.modal-overlay img:hover {
+  cursor: default !important;
 }
 
 @keyframes modal-scale {
@@ -93,6 +99,7 @@
   max-height: 80vh;
   background-color: var(--card-background-color); /* Ajusta el fondo según el tema */
   padding: 8px; /* Espacio para que el fondo se vea alrededor de la imagen */
+  cursor: default !important; /* Fuerza a que no salga la lupa */
 }
 
 .close-button {

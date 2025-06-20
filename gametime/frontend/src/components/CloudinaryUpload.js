@@ -1,6 +1,53 @@
 import React, { useState, useRef } from 'react';
 import { CLOUDINARY_PRESET_NAME, CLOUDINARY_CLOUD_NAME } from '../assets/Configuration/config';
 
+// Función para comprimir imágenes usando canvas
+async function compressImage(file, maxSizeMB = 9, maxWidth = 1920, maxHeight = 1920, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        // Redimensionar si es necesario
+        if (width > maxWidth) {
+          height = Math.round((maxWidth / width) * height);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((maxHeight / height) * width);
+          height = maxHeight;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        // Comprimir a JPEG
+        canvas.toBlob(
+          blob => {
+            if (!blob) return reject(new Error('Compression failed'));
+            // Si sigue siendo muy grande, reducir calidad
+            if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.3) {
+              // Llamada recursiva con menor calidad
+              compressImage(file, maxSizeMB, maxWidth, maxHeight, quality - 0.1).then(resolve).catch(reject);
+            } else {
+              resolve(blob);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const CloudinaryUpload = ({ onUpload, multiple = false }) => {
   const [image, setImage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,10 +64,12 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
     if (multiple) {
       const urls = [];
       for (let i = 0; i < files.length; i++) {
-        const data = new FormData();
-        data.append('file', files[i]);
-        data.append('upload_preset', CLOUDINARY_PRESET_NAME);
         try {
+          // Comprimir imagen antes de subir
+          const compressed = await compressImage(files[i]);
+          const data = new FormData();
+          data.append('file', compressed);
+          data.append('upload_preset', CLOUDINARY_PRESET_NAME);
           const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: data
@@ -39,10 +88,12 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
       setLoading(false);
       if (onUpload) onUpload(urls);
     } else {
-      const data = new FormData();
-      data.append('file', files[0]);
-      data.append('upload_preset', CLOUDINARY_PRESET_NAME);
       try {
+        // Comprimir imagen antes de subir
+        const compressed = await compressImage(files[0]);
+        const data = new FormData();
+        data.append('file', compressed);
+        data.append('upload_preset', CLOUDINARY_PRESET_NAME);
         const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
           method: 'POST',
           body: data
@@ -50,7 +101,7 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
         const file = await response.json();
         if (file.secure_url) {
           setImage(file.secure_url);
-          if (onUpload) onUpload(file.secure_url); // Notifica al padre la URL para guardar en la base de datos
+          if (onUpload) onUpload(file.secure_url);
         } else {
           setError(file.error?.message || 'Upload failed');
         }
