@@ -867,9 +867,13 @@ app.get('/api/news', async (req, res) => {
 });
 // Obtener noticia por ID
 app.get('/api/news/:id', async (req, res) => {
-  const noticia = await Noticia.findById(req.params.id);
-  if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
-  res.json(noticia);
+  try {
+    const noticia = await Noticia.findById(req.params.id);
+    if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
+    res.json(noticia);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudo obtener la noticia', details: err.message });
+  }
 });
 // Eliminar noticia por ID
 app.delete('/api/news/:id', async (req, res) => {
@@ -891,7 +895,14 @@ app.put('/api/news/:id', async (req, res) => {
     if (req.body.mainImage === '' || req.body.mainImage === undefined) {
       return res.status(400).json({ error: 'La imagen principal es obligatoria' });
     }
-    const update = req.body;
+    // Solo permite actualizar los campos válidos
+    const update = {
+      title: req.body.title,
+      summary: req.body.summary,
+      content: req.body.content,
+      mainImage: req.body.mainImage,
+      images: req.body.images
+    };
     const noticia = await Noticia.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
     res.json(noticia);

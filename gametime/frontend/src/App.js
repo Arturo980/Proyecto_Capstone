@@ -17,12 +17,12 @@ import AdminAuditPage from './pages/AdminAuditPage';
 import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 import { API_BASE_URL } from './assets/Configuration/config';
-import TeamDetailPage from './pages/TeamDetailPage'; // NUEVO, crea este archivo
+import TeamDetailPage from './pages/TeamDetailPage'; 
 import LoadingSpinner from './components/LoadingSpinner';
-import logoEmpresa from './assets/images/GameTime.png'; // Cambia por tu logo real
+import logoEmpresa from './assets/images/GameTime.png'; 
 import NewsEditorPage from './pages/NewsEditorPage';
 import NewsDetailPage from './pages/NewsDetailPage';
-import NewsPage from './pages/NewsPage'; // AGREGA ESTA LÍNEA
+import NewsPage from './pages/NewsPage'; 
 
 function App() {
   const [language, setLanguage] = useState('es'); // Cambia 'en' por 'es'

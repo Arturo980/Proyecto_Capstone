@@ -80,7 +80,7 @@ const NewsPage = ({ language }) => {
                     />
                   )}
                   <h5 style={{ marginBottom: 6 }}>{noticia.title}</h5>
-                  <div style={{ color: '#888', fontSize: 14, marginBottom: 8 }}>{noticia.summary}</div>
+                  {/* El resumen solo debe mostrarse en el carrusel, así que lo quitamos aquí */}
                   {canAddNews && (
                     <button
                       className="btn btn-outline-primary btn-sm"
@@ -116,8 +116,10 @@ const NewsPage = ({ language }) => {
                   />
                 )}
                 <h3 style={{ marginBottom: 8 }}>{selectedNews.title}</h3>
-                <div style={{ color: '#888', fontSize: 16, marginBottom: 12 }}>{selectedNews.summary}</div>
-                <div style={{ fontSize: 17, marginBottom: 12, whiteSpace: 'pre-line' }}>{selectedNews.content}</div>
+                {/* El resumen se elimina de la previsualización */}
+                <div style={{ fontSize: 17, marginBottom: 12, whiteSpace: 'pre-line' }}>
+                  <div dangerouslySetInnerHTML={{ __html: selectedNews.content }} />
+                </div>
                 {selectedNews.images && selectedNews.images.length > 0 && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ fontWeight: 'bold', marginBottom: 8 }}>{language === 'en' ? 'Gallery:' : 'Galería:'}</div>
