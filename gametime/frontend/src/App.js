@@ -20,6 +20,9 @@ import { API_BASE_URL } from './assets/Configuration/config';
 import TeamDetailPage from './pages/TeamDetailPage'; // NUEVO, crea este archivo
 import LoadingSpinner from './components/LoadingSpinner';
 import logoEmpresa from './assets/images/GameTime.png'; // Cambia por tu logo real
+import NewsEditorPage from './pages/NewsEditorPage';
+import NewsDetailPage from './pages/NewsDetailPage';
+import NewsPage from './pages/NewsPage'; // AGREGA ESTA LÍNEA
 
 function App() {
   const [language, setLanguage] = useState('es'); // Cambia 'en' por 'es'
@@ -291,6 +294,12 @@ function App() {
                         </div>
                       }
                     />
+                    {/* Página de noticias */}
+                    <Route path="/news" element={<NewsPage language={language} />} />
+                    {/* Página para agregar noticia (solo editores) */}
+                    <Route path="/news/add" element={<NewsEditorPage language={language} />} />
+                    {/* Página de detalle de noticia */}
+                    <Route path="/news/:id" element={<NewsDetailPage language={language} />} />
                     {/* Otras páginas: agrega marginTop y marginBottom */}
                     <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
                     <Route path="/teams/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} /></div>} />

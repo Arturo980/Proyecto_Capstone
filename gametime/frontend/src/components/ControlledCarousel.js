@@ -1,53 +1,55 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Carousel from 'react-bootstrap/Carousel';
+import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/ControlledCarousel.css';
-import eightBitImage from '../assets/images/8bit.png';
-import treeImage from '../assets/images/arbollindo.png';
-import astronautImage from '../assets/images/astronauta.png';
-import texts from '../translations/texts';
 
 function ControlledCarousel({ language }) {
+  const [news, setNews] = useState([]);
   const [index, setIndex] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/news`)
+      .then(res => res.json())
+      .then(data => setNews(Array.isArray(data) ? data : []));
+  }, []);
 
   const handleSelect = (selectedIndex) => {
     setIndex(selectedIndex);
   };
 
+  if (!news.length) {
+    // Si no hay noticias, muestra el carrusel estático antiguo
+    return (
+      <Carousel activeIndex={index} onSelect={handleSelect}>
+        <Carousel.Item>
+          <div style={{height: 300, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <h3>No hay noticias disponibles</h3>
+          </div>
+        </Carousel.Item>
+      </Carousel>
+    );
+  }
+
   return (
     <Carousel activeIndex={index} onSelect={handleSelect}>
-      <Carousel.Item>
-        <img
-          className="d-block w-100 carousel-image"
-          src={eightBitImage}
-          alt={texts[language].carousel_news_1 || texts['es'].carousel_news_1}
-        />
-        <Carousel.Caption>
-          <h3>{texts[language].carousel_news_1 || texts['es'].carousel_news_1}</h3>
-          <p>{texts[language].carousel_description_1 || texts['es'].carousel_description_1}</p>
-        </Carousel.Caption>
-      </Carousel.Item>
-      <Carousel.Item>
-        <img
-          className="d-block w-100 carousel-image"
-          src={treeImage}
-          alt={texts[language].carousel_news_2 || texts['es'].carousel_news_2}
-        />
-        <Carousel.Caption>
-          <h3>{texts[language].carousel_news_2 || texts['es'].carousel_news_2}</h3>
-          <p>{texts[language].carousel_description_2 || texts['es'].carousel_description_2}</p>
-        </Carousel.Caption>
-      </Carousel.Item>
-      <Carousel.Item>
-        <img
-          className="d-block w-100 carousel-image"
-          src={astronautImage}
-          alt={texts[language].carousel_news_3 || texts['es'].carousel_news_3}
-        />
-        <Carousel.Caption>
-          <h3>{texts[language].carousel_news_3 || texts['es'].carousel_news_3}</h3>
-          <p>{texts[language].carousel_description_3 || texts['es'].carousel_description_3}</p>
-        </Carousel.Caption>
-      </Carousel.Item>
+      {news.map(noticia => (
+        <Carousel.Item key={noticia._id} onClick={() => navigate(`/news/${noticia._id}`)} style={{ cursor: 'pointer' }}>
+          {noticia.mainImage && (
+            <img
+              className="d-block w-100 carousel-image"
+              src={noticia.mainImage}
+              alt={noticia.title}
+              style={{ maxHeight: 400, objectFit: 'cover' }}
+            />
+          )}
+          <Carousel.Caption>
+            <h3>{noticia.title}</h3>
+            <p>{noticia.summary}</p>
+          </Carousel.Caption>
+        </Carousel.Item>
+      ))}
     </Carousel>
   );
 }

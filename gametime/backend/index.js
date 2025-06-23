@@ -138,6 +138,16 @@ const MatchImage = mongoose.model('MatchImage', {
   alt: { type: String, default: '' }
 });
 
+// Modelo de Noticia
+const Noticia = mongoose.model('Noticia', {
+  title: { type: String, required: true },
+  summary: { type: String, required: true },
+  content: { type: String, required: true },
+  mainImage: { type: String, required: true }, // Imagen principal obligatoria
+  images: [String], // Otras imágenes opcionales
+  createdAt: { type: Date, default: Date.now }
+});
+
 // Socket.IO marcador en vivo
 io.on('connection', (socket) => {
   // Recibe score_update y lo reenvía a todos (menos al emisor)
@@ -707,15 +717,6 @@ app.put('/api/leagues/:id', async (req, res) => {
   }
 });
 
-// Ruta catch-all para evitar respuestas HTML
-app.use((req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
-});
-
-server.listen(5000, '0.0.0.0', () => {
-  console.log('Servidor corriendo en http://0.0.0.0:5000');
-});
-
 app.get('/api/games/week', async (req, res) => {
   try {
     const { league } = req.query;
@@ -843,4 +844,67 @@ app.delete('/api/player-stats/:id', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'No se pudo eliminar la estadística', details: err.message });
   }
+});
+
+// --- API de Noticias ---
+// Crear noticia
+app.post('/api/news', async (req, res) => {
+  try {
+    // Validar que mainImage esté presente
+    if (!req.body.mainImage) {
+      return res.status(400).json({ error: 'La imagen principal es obligatoria' });
+    }
+    const noticia = await Noticia.create(req.body);
+    res.status(201).json(noticia);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudo crear la noticia', details: err.message });
+  }
+});
+// Obtener todas las noticias
+app.get('/api/news', async (req, res) => {
+  const noticias = await Noticia.find().sort({ createdAt: -1 });
+  res.json(noticias);
+});
+// Obtener noticia por ID
+app.get('/api/news/:id', async (req, res) => {
+  const noticia = await Noticia.findById(req.params.id);
+  if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
+  res.json(noticia);
+});
+// Eliminar noticia por ID
+app.delete('/api/news/:id', async (req, res) => {
+  try {
+    const deleted = await Noticia.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Noticia no encontrada' });
+    }
+    res.json({ message: 'Noticia eliminada' });
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo eliminar la noticia', details: err.message });
+  }
+});
+// Actualizar noticia por ID
+app.put('/api/news/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Validar que mainImage esté presente si se actualiza
+    if (req.body.mainImage === '' || req.body.mainImage === undefined) {
+      return res.status(400).json({ error: 'La imagen principal es obligatoria' });
+    }
+    const update = req.body;
+    const noticia = await Noticia.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+    if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
+    res.json(noticia);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudo actualizar la noticia', details: err.message });
+  }
+});
+
+// Ruta catch-all para evitar respuestas HTML
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+server.listen(5000, '0.0.0.0', () => {
+  console.log('Servidor corriendo en http://0.0.0.0:5000');
 });
