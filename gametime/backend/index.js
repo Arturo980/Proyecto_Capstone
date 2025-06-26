@@ -18,14 +18,19 @@ cloudinary.config({
 });
 
 const app = express();
-app.use(cors()); // permite conexión desde React
+// Configuración de CORS más específica
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT']
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT'],
+    credentials: true
   }
 });
 
@@ -916,6 +921,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-server.listen(5000, '0.0.0.0', () => {
-  console.log('Servidor corriendo en http://0.0.0.0:5000');
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor corriendo en http://0.0.0.0:${PORT}`);
 });
