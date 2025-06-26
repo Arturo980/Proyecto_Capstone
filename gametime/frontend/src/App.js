@@ -75,11 +75,15 @@ function App() {
     const fetchLeagues = async () => {
       try {
         const res = await fetch(API_LEAGUES);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
         setLeagues(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length > 0) setActiveLeague(data[0]._id);
         else setActiveLeague(''); // <-- Asegura que nunca sea null
-      } catch {
+      } catch (error) {
+        console.warn('Failed to fetch leagues:', error.message);
         setLeagues([]);
         setActiveLeague(''); // <-- Asegura que nunca sea null
       } finally {
@@ -99,14 +103,26 @@ function App() {
     }
     // Equipos
     fetch(`${API_BASE_URL}/api/teams?league=${activeLeague}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then(data => setTeams(data.teams || []))
-      .catch(() => setTeams([]));
+      .catch(error => {
+        console.warn('Failed to fetch teams:', error.message);
+        setTeams([]);
+      });
     // Partidos
     fetch(`${API_BASE_URL}/api/games?league=${activeLeague}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then(data => setGames(data.games || []))
-      .catch(() => setGames([]));
+      .catch(error => {
+        console.warn('Failed to fetch games:', error.message);
+        setGames([]);
+      });
     // Configuración de liga
     const liga = leagues.find(l => l._id === activeLeague);
     setLeagueConfig(liga || {});
@@ -118,6 +134,9 @@ function App() {
     const fetchGames = async () => {
       try {
         const res = await fetch(`${API_GAMES}?league=${activeLeague}`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
         // Calcular inicio y fin de la semana actual (lunes a domingo)
         const now = new Date();
@@ -140,7 +159,8 @@ function App() {
           return da - db;
         });
         setCarouselGames(filtered);
-      } catch {
+      } catch (error) {
+        console.warn('Failed to fetch carousel games:', error.message);
         setCarouselGames([]);
       }
     };
