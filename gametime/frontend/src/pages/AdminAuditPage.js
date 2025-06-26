@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 // Cambia el endpoint para que apunte a /api/audit-log
 const API_AUDIT_LOG = `${API_BASE_URL}/api/audit-log`;
 const API_RESTORE = `${API_BASE_URL}/restore`;
+const API_PERMANENT_DELETE = `${API_BASE_URL}/permanent`;
 
 const entityLabels = {
   team: 'Equipo',
@@ -15,6 +16,7 @@ const entityLabels = {
 const AdminAuditPage = ({ language }) => {
   const [logs, setLogs] = useState([]);
   const [restoring, setRestoring] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [restoredIds, setRestoredIds] = useState(new Set());
   const [error, setError] = useState(null);
 
@@ -42,7 +44,7 @@ const AdminAuditPage = ({ language }) => {
     } catch (err) {
       setLogs([]);
       setError(
-        "No se pudo cargar la auditoría. " +
+        "No se pudo cargar la papelera. " +
         "Verifica que el endpoint '/api/audit-log' exista en el backend. " +
         "Detalle: " + err.message
       );
@@ -51,21 +53,70 @@ const AdminAuditPage = ({ language }) => {
 
   const handleRestore = async (entity, id) => {
     setRestoring(id);
-    setRestoredIds(prev => new Set(prev).add(`${entity}:${id}`));
-    await fetch(`${API_RESTORE}/${entity}/${id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
+    try {
+      const res = await fetch(`${API_RESTORE}/${entity}/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
+        }
+      });
+      
+      if (res.ok) {
+        setRestoredIds(prev => new Set(prev).add(`${entity}:${id}`));
+        await fetchLogs(); // Recargar para actualizar la lista
       }
-    });
+    } catch (err) {
+      console.error('Error al restaurar:', err);
+    }
     setRestoring(null);
-    // fetchLogs(); // Opcional
+  };
+
+  const handlePermanentDelete = async (entity, id) => {
+    if (!window.confirm(
+      language === 'en' 
+        ? 'Are you sure you want to permanently delete this item? This action cannot be undone.'
+        : '¿Estás seguro de eliminar permanentemente este elemento? Esta acción no se puede deshacer.'
+    )) {
+      return;
+    }
+
+    setDeleting(id);
+    try {
+      const res = await fetch(`${API_PERMANENT_DELETE}/${entity}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
+        }
+      });
+      
+      if (res.ok) {
+        await fetchLogs(); // Recargar para actualizar la lista
+      }
+    } catch (err) {
+      console.error('Error al eliminar permanentemente:', err);
+    }
+    setDeleting(null);
+  };
+
+  const getDaysRemaining = (scheduledDeletion) => {
+    if (!scheduledDeletion) return 'N/A';
+    const now = new Date();
+    const scheduled = new Date(scheduledDeletion);
+    const diffTime = scheduled - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   return (
     <div className="container mt-5">
-      <h2>Auditoría y Restauración</h2>
+      <h2>{language === 'en' ? 'Trash / Recycle Bin' : 'Papelera de Reciclaje'}</h2>
+      <p className="text-muted">
+        {language === 'en' 
+          ? 'Items deleted from the system are stored here for 15 days before permanent deletion.'
+          : 'Los elementos eliminados del sistema se almacenan aquí por 15 días antes de la eliminación definitiva.'}
+      </p>
       {error && (
         <div className="alert alert-danger" role="alert" style={{ maxWidth: 600 }}>
           {error}
@@ -75,42 +126,91 @@ const AdminAuditPage = ({ language }) => {
         <table className="table table-bordered table-hover align-middle">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Acción</th>
-              <th>Entidad</th>
-              <th>Usuario</th>
-              <th>Datos</th>
-              <th>Restaurar</th>
+              <th>{language === 'en' ? 'Deleted Date' : 'Fecha de Eliminación'}</th>
+              <th>{language === 'en' ? 'Entity Type' : 'Tipo de Entidad'}</th>
+              <th>{language === 'en' ? 'User' : 'Usuario'}</th>
+              <th>{language === 'en' ? 'Days Remaining' : 'Días Restantes'}</th>
+              <th>{language === 'en' ? 'Data' : 'Datos'}</th>
+              <th>{language === 'en' ? 'Actions' : 'Acciones'}</th>
             </tr>
           </thead>
           <tbody>
-            {logs.map(log => (
-              <tr key={log._id}>
-                <td>{new Date(log.timestamp).toLocaleString()}</td>
-                <td>{log.action}</td>
-                <td>{entityLabels[log.entity] || log.entity}</td>
-                <td>{log.user}</td>
-                <td>
-                  <pre style={{ maxWidth: 300, maxHeight: 120, overflow: 'auto', fontSize: 12 }}>
-                    {JSON.stringify(log.data, null, 2)}
-                  </pre>
-                </td>
-                <td>
-                  {!restoredIds.has(`${log.entity}:${log.entityId}`) && (
-                    <button
-                      className="btn btn-success btn-sm"
-                      disabled={restoring === log.entityId}
-                      onClick={() => handleRestore(log.entity, log.entityId)}
-                    >
-                      Restaurar
-                    </button>
-                  )}
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-muted">
+                  {language === 'en' ? 'No items in trash' : 'No hay elementos en la papelera'}
                 </td>
               </tr>
-            ))}
+            ) : (
+              logs.map(log => {
+                const daysRemaining = getDaysRemaining(log.scheduledDeletion);
+                const isExpiringSoon = daysRemaining <= 3;
+                
+                return (
+                  <tr key={log._id} className={isExpiringSoon ? 'table-warning' : ''}>
+                    <td>{new Date(log.deletedAt || log.timestamp).toLocaleString()}</td>
+                    <td>{entityLabels[log.entity] || log.entity}</td>
+                    <td>{log.user}</td>
+                    <td>
+                      <span className={isExpiringSoon ? 'text-danger fw-bold' : ''}>
+                        {daysRemaining} {language === 'en' ? 'days' : 'días'}
+                        {isExpiringSoon && (
+                          <small className="d-block text-danger">
+                            {language === 'en' ? 'Expires soon!' : '¡Expira pronto!'}
+                          </small>
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <details>
+                        <summary style={{ cursor: 'pointer' }}>
+                          {language === 'en' ? 'View data' : 'Ver datos'}
+                        </summary>
+                        <pre style={{ maxWidth: 300, maxHeight: 120, overflow: 'auto', fontSize: 12, marginTop: 8 }}>
+                          {JSON.stringify(log.data, null, 2)}
+                        </pre>
+                      </details>
+                    </td>
+                    <td>
+                      <div className="d-flex gap-2 flex-wrap">
+                        {!restoredIds.has(`${log.entity}:${log.entityId}`) && (
+                          <button
+                            className="btn btn-success btn-sm"
+                            disabled={restoring === log.entityId}
+                            onClick={() => handleRestore(log.entity, log.entityId)}
+                          >
+                            {restoring === log.entityId 
+                              ? (language === 'en' ? 'Restoring...' : 'Restaurando...') 
+                              : (language === 'en' ? 'Restore' : 'Restaurar')}
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-danger btn-sm"
+                          disabled={deleting === log.entityId}
+                          onClick={() => handlePermanentDelete(log.entity, log.entityId)}
+                        >
+                          {deleting === log.entityId 
+                            ? (language === 'en' ? 'Deleting...' : 'Eliminando...') 
+                            : (language === 'en' ? 'Delete Forever' : 'Eliminar Definitivamente')}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
+      {logs.length > 0 && (
+        <div className="mt-3">
+          <small className="text-muted">
+            {language === 'en' 
+              ? 'Items highlighted in yellow will be automatically deleted in 3 days or less.'
+              : 'Los elementos resaltados en amarillo se eliminarán automáticamente en 3 días o menos.'}
+          </small>
+        </div>
+      )}
     </div>
   );
 };

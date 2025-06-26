@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { CLOUDINARY_PRESET_NAME, CLOUDINARY_CLOUD_NAME } from '../assets/Configuration/config';
 
-const CloudinaryUpload = ({ onUpload, multiple = false }) => {
+const CloudinaryUpload = ({ onUpload, multiple = false, showPreview = true }) => {
   const [image, setImage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -78,7 +78,7 @@ const CloudinaryUpload = ({ onUpload, multiple = false }) => {
       {loading ? (
         <h3>Loading...</h3>
       ) : (
-        image && <img src={image} alt="imagen subida" style={{ maxWidth: 200, marginTop: 10 }} />
+        showPreview && image && <img src={image} alt="imagen subida" style={{ maxWidth: 200, marginTop: 10 }} />
       )}
       {error && (
         <div style={{ color: 'red', marginTop: 10 }}>

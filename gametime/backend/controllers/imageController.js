@@ -70,22 +70,30 @@ const getMatchImages = async (req, res) => {
 // Ruta para eliminar una imagen por su ID
 const deleteMatchImage = async (req, res) => {
   try {
-    const deleted = await MatchImage.findByIdAndDelete(req.params.imageId);
-    if (!deleted) {
+    const image = await MatchImage.findById(req.params.imageId);
+    if (!image) {
       return res.status(404).json({ error: 'Imagen no encontrada' });
     }
     
+    // Enviar a papelera
+    const now = new Date();
     await AuditLog.create({
       action: 'delete',
       entity: 'image',
-      entityId: deleted._id.toString(),
-      data: deleted.toObject(),
-      user: getUserEmailFromRequest(req)
+      entityId: image._id.toString(),
+      data: image.toObject(),
+      user: getUserEmailFromRequest(req),
+      isInTrash: true,
+      scheduledDeletion: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 días
+      deletedAt: now
     });
     
+    // Eliminar de la base de datos después de registrar en papelera
+    await MatchImage.findByIdAndDelete(req.params.imageId);
+    
     // Eliminar el archivo físico del disco si existe
-    if (deleted.url && deleted.url.startsWith('/uploads/')) {
-      const filePath = path.join(__dirname, '..', deleted.url);
+    if (image.url && image.url.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '..', image.url);
       fs.unlink(filePath, (err) => {
         if (err && err.code !== 'ENOENT') {
           console.error('Error al eliminar archivo físico:', err);
@@ -94,9 +102,9 @@ const deleteMatchImage = async (req, res) => {
     }
     
     // Si la imagen es de Cloudinary, eliminarla también de Cloudinary
-    if (deleted.url && deleted.url.startsWith('http') && deleted.url.includes('cloudinary.com')) {
+    if (image.url && image.url.startsWith('http') && image.url.includes('cloudinary.com')) {
       try {
-        const matches = deleted.url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+        const matches = image.url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
         if (matches && matches[1]) {
           const publicId = matches[1];
           await cloudinary.uploader.destroy(publicId, { invalidate: true });
@@ -106,7 +114,7 @@ const deleteMatchImage = async (req, res) => {
       }
     }
     
-    res.json({ message: 'Imagen eliminada' });
+    res.json({ message: 'Imagen enviada a papelera' });
   } catch (err) {
     res.status(500).json({ error: 'No se pudo eliminar la imagen', details: err.message });
   }

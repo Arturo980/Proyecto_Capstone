@@ -1,5 +1,6 @@
 const { Equipo, AuditLog } = require('../models');
 const { getUserEmailFromRequest } = require('../utils/auth');
+const { sendToTrash } = require('./auditController');
 
 // GET /api/teams?league=ID - Lista equipos de una liga
 const getTeams = async (req, res) => {
@@ -40,21 +41,16 @@ const updateTeam = async (req, res) => {
   }
 };
 
-// DELETE /api/teams/:id - Eliminar equipo
+// DELETE /api/teams/:id - Eliminar equipo (enviar a papelera)
 const deleteTeam = async (req, res) => {
   try {
     const equipo = await Equipo.findByIdAndDelete(req.params.id);
     if (!equipo) return res.status(404).json({ error: 'Equipo no encontrado' });
     
-    await AuditLog.create({
-      action: 'delete',
-      entity: 'team',
-      entityId: equipo._id.toString(),
-      data: equipo.toObject(),
-      user: getUserEmailFromRequest(req)
-    });
+    // Enviar a papelera en lugar de crear AuditLog directamente
+    await sendToTrash('team', equipo._id.toString(), equipo.toObject(), getUserEmailFromRequest(req));
     
-    res.json({ message: 'Equipo eliminado' });
+    res.json({ message: 'Equipo enviado a papelera. Se eliminará permanentemente en 15 días.' });
   } catch (err) {
     res.status(400).json({ error: 'No se pudo eliminar el equipo', details: err.message });
   }

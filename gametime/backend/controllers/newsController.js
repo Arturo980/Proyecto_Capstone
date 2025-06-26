@@ -1,4 +1,5 @@
-const { Noticia } = require('../models');
+const { Noticia, AuditLog } = require('../models');
+const { getUserEmailFromRequest } = require('../utils/auth');
 
 // Crear noticia
 const createNews = async (req, res) => {
@@ -31,14 +32,30 @@ const getNewsById = async (req, res) => {
   }
 };
 
-// Eliminar noticia por ID
+// Eliminar noticia por ID (usando sistema de papelera)
 const deleteNews = async (req, res) => {
   try {
-    const deleted = await Noticia.findByIdAndDelete(req.params.id);
-    if (!deleted) {
+    const noticia = await Noticia.findById(req.params.id);
+    if (!noticia) {
       return res.status(404).json({ error: 'Noticia no encontrada' });
     }
-    res.json({ message: 'Noticia eliminada' });
+    
+    // Enviar a papelera
+    const now = new Date();
+    await AuditLog.create({
+      action: 'delete',
+      entity: 'news',
+      entityId: noticia._id.toString(),
+      data: noticia.toObject(),
+      user: getUserEmailFromRequest(req),
+      isInTrash: true,
+      scheduledDeletion: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 días
+      deletedAt: now
+    });
+    
+    // Eliminar después de registrar en papelera
+    await Noticia.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Noticia enviada a papelera' });
   } catch (err) {
     res.status(500).json({ error: 'No se pudo eliminar la noticia', details: err.message });
   }

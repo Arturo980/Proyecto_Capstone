@@ -55,24 +55,30 @@ const updateLeague = async (req, res) => {
   }
 };
 
-// Eliminar liga y sus equipos asociados
+// Eliminar liga y sus equipos asociados (usando sistema de papelera)
 const deleteLeague = async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ error: 'Liga no encontrada (ID inválido)' });
     }
-    const liga = await Liga.findByIdAndDelete(id);
+    const liga = await Liga.findById(id);
     if (!liga) return res.status(404).json({ error: 'Liga no encontrada' });
     
+    // Enviar liga a papelera
+    const now = new Date();
     await AuditLog.create({
       action: 'delete',
       entity: 'league',
       entityId: liga._id.toString(),
       data: liga.toObject(),
-      user: getUserEmailFromRequest(req)
+      user: getUserEmailFromRequest(req),
+      isInTrash: true,
+      scheduledDeletion: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 días
+      deletedAt: now
     });
     
+    // Enviar equipos asociados a papelera
     const equipos = await Equipo.find({ league: id });
     for (const equipo of equipos) {
       await AuditLog.create({
@@ -80,16 +86,23 @@ const deleteLeague = async (req, res) => {
         entity: 'team',
         entityId: equipo._id.toString(),
         data: equipo.toObject(),
-        user: getUserEmailFromRequest(req)
+        user: getUserEmailFromRequest(req),
+        isInTrash: true,
+        scheduledDeletion: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000),
+        deletedAt: now
       });
-      await equipo.deleteOne();
     }
-    res.json({ message: 'Liga y equipos asociados eliminados' });
+    
+    // Eliminar liga después de registrar en papelera
+    await Liga.findByIdAndDelete(id);
+    await Equipo.deleteMany({ league: id });
+    
+    res.json({ message: 'Liga y equipos asociados enviados a papelera' });
   } catch (err) {
     if (err.name === 'CastError' || err.message?.includes('ObjectId')) {
       return res.status(404).json({ error: 'Liga no encontrada' });
     }
-    res.status(200).json({ message: 'Liga eliminada (con error interno, pero eliminada)' });
+    res.status(500).json({ error: 'No se pudo eliminar la liga', details: err.message });
   }
 };
 

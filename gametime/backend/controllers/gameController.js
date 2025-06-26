@@ -1,6 +1,7 @@
 const { Partido, Equipo, Liga, AuditLog } = require('../models');
 const mongoose = require('mongoose');
 const { getUserEmailFromRequest } = require('../utils/auth');
+const { sendToTrash } = require('./auditController');
 
 // GET /api/games?league=ID
 const getGames = async (req, res) => {
@@ -126,7 +127,7 @@ const updateGame = async (req, res) => {
   }
 };
 
-// DELETE /api/games/:id
+// DELETE /api/games/:id - Eliminar partido (enviar a papelera)
 const deleteGame = async (req, res) => {
   try {
     const partido = await Partido.findByIdAndDelete(req.params.id);
@@ -136,15 +137,10 @@ const deleteGame = async (req, res) => {
       req.io.emit('game_deleted', { _id: partido._id });
     }
     
-    await AuditLog.create({
-      action: 'delete',
-      entity: 'game',
-      entityId: partido._id.toString(),
-      data: partido.toObject(),
-      user: getUserEmailFromRequest(req)
-    });
+    // Enviar a papelera en lugar de crear AuditLog directamente
+    await sendToTrash('game', partido._id.toString(), partido.toObject(), getUserEmailFromRequest(req));
     
-    res.json({ message: 'Partido eliminado' });
+    res.json({ message: 'Partido enviado a papelera. Se eliminará permanentemente en 15 días.' });
   } catch (err) {
     res.status(400).json({ error: 'No se pudo eliminar el partido', details: err.message });
   }

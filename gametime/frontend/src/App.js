@@ -318,6 +318,8 @@ function App() {
                     <Route path="/news" element={<NewsPage language={language} />} />
                     {/* Página para agregar noticia (solo editores) */}
                     <Route path="/news/add" element={<NewsEditorPage language={language} />} />
+                    {/* Página para editar noticia (solo editores) */}
+                    <Route path="/news/:id/edit" element={<NewsEditorPage language={language} />} />
                     {/* Página de detalle de noticia */}
                     <Route path="/news/:id" element={<NewsDetailPage language={language} />} />
                     {/* Otras páginas: agrega marginTop y marginBottom */}

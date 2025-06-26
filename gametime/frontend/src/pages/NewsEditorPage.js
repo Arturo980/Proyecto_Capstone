@@ -30,18 +30,31 @@ const NewsEditorPage = ({ language }) => {
     if (isEdit) {
       setLoading(true);
       fetch(`${API_BASE_URL}/api/news/${id}`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(data => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
           setTitle(data.title || '');
           setContent(data.content || '');
           setMainImage(data.mainImage || '');
           setImages(Array.isArray(data.images) ? data.images : []);
         })
-        .catch(() => setError(language === 'en' ? 'Error loading news.' : 'Error al cargar la noticia.'))
+        .catch((err) => {
+          console.error('Error loading news:', err);
+          setError(language === 'en' ? 'Error loading news.' : 'Error al cargar la noticia.');
+        })
         .finally(() => {
           setLoading(false);
           setInitialLoad(false);
         });
+    } else {
+      setInitialLoad(false);
     }
   }, [isEdit, id, language]);
 
@@ -49,6 +62,10 @@ const NewsEditorPage = ({ language }) => {
 
   const handleMainImageUpload = (url) => {
     setMainImage(url);
+  };
+
+  const handleRemoveMainImage = () => {
+    setMainImage('');
   };
 
   const handleImagesUpload = (urls) => {
@@ -135,6 +152,15 @@ const NewsEditorPage = ({ language }) => {
       }}>
         {/* Formulario de noticia */}
         <div style={{ flex: '1 1 350px', minWidth: 320, maxWidth: 500 }}>
+          <div style={{ marginBottom: 16 }}>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => navigate('/news')}
+              style={{ marginBottom: 8 }}
+            >
+              ← {language === 'en' ? 'Back to News' : 'Volver a Noticias'}
+            </button>
+          </div>
           <h2>
             {isEdit
               ? (language === 'en' ? 'Edit News' : 'Editar Noticia')
@@ -158,16 +184,34 @@ const NewsEditorPage = ({ language }) => {
             </div>
             <div className="mb-2">
               <label className="form-label">{language === 'en' ? 'Main Image (required)' : 'Imagen Principal (obligatoria)'}</label>
-              <CloudinaryUpload onUpload={handleMainImageUpload} multiple={false} />
+              <CloudinaryUpload onUpload={handleMainImageUpload} multiple={false} showPreview={false} />
               {mainImage && (
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
                   <img src={mainImage} alt="main" style={{ maxWidth: 200 }} />
+                  <button
+                    type="button"
+                    onClick={handleRemoveMainImage}
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      right: 2,
+                      background: '#e53935',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 22,
+                      height: 22,
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                    title={language === 'en' ? 'Remove main image' : 'Eliminar imagen principal'}
+                  >×</button>
                 </div>
               )}
             </div>
             <div className="mb-2">
               <label className="form-label">{language === 'en' ? 'Additional Images (optional)' : 'Imágenes adicionales (opcional)'}</label>
-              <CloudinaryUpload onUpload={handleImagesUpload} multiple={true} />
+              <CloudinaryUpload onUpload={handleImagesUpload} multiple={true} showPreview={true} />
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                 {images.map((img, idx) => (
                   <div key={idx} style={{ position: 'relative', display: 'inline-block' }}>
@@ -195,15 +239,25 @@ const NewsEditorPage = ({ language }) => {
               </div>
             </div>
             {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-            <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading
-                ? (language === 'en'
-                  ? (isEdit ? 'Saving...' : 'Publishing...')
-                  : (isEdit ? 'Guardando...' : 'Publicando...'))
-                : (language === 'en'
-                  ? (isEdit ? 'Save' : 'Publish')
-                  : (isEdit ? 'Guardar' : 'Publicar'))}
-            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-primary" type="submit" disabled={loading}>
+                {loading
+                  ? (language === 'en'
+                    ? (isEdit ? 'Saving...' : 'Publishing...')
+                    : (isEdit ? 'Guardando...' : 'Publicando...'))
+                  : (language === 'en'
+                    ? (isEdit ? 'Save' : 'Publish')
+                    : (isEdit ? 'Guardar' : 'Publicar'))}
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                type="button" 
+                onClick={() => navigate('/news')}
+                disabled={loading}
+              >
+                {language === 'en' ? 'Cancel' : 'Cancelar'}
+              </button>
+            </div>
           </form>
         </div>
         {/* Previsualización */}
