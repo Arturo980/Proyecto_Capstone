@@ -32,14 +32,6 @@ const app = express();
 app.use(cors()); // permite conexión desde React
 app.use(express.json());
 
-const server = http.createServer(app);
-const io = socketio(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT']
-  }
-});
-
 // Esquema de Usuario actualizado con campo 'esAdmin'
 const Usuario = mongoose.model('Usuario', {
   nombre: { type: String, required: true },
@@ -153,14 +145,10 @@ const Noticia = mongoose.model('Noticia', {
   createdAt: { type: Date, default: Date.now }
 });
 
-// Socket.IO marcador en vivo
-io.on('connection', (socket) => {
-  // Recibe score_update y lo reenvía a todos (menos al emisor)
-  socket.on('score_update', ({ gameId, score1, score2 }) => {
-    // Broadcast a todos menos al emisor
-    socket.broadcast.emit('score_update', { gameId, score1, score2 });
-  });
-});
+// Conectar a MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('📊 MongoDB connected successfully'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // --- API de Ligas ---
 // Crear liga (verifica unicidad y guarda configuración)
@@ -930,9 +918,17 @@ function getUserEmailFromRequest(req) {
   return req.headers['user-email'] || 'usuario-anonimo';
 }
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 MongoDB URI configured: ${process.env.MONGO_URI ? 'Yes' : 'No'}`);
   console.log(`☁️ Cloudinary configured: ${process.env.CLOUDINARY_CLOUD_NAME ? 'Yes' : 'No'}`);
+});
+
+// Configurar Socket.IO después de que el servidor esté corriendo
+const io = socketio(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT']
+  }
 });
