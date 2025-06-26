@@ -110,6 +110,7 @@ function LiveScoreModal({
   }
 
   // Lógica para determinar si el partido debe darse por terminado
+  // eslint-disable-next-line no-unused-vars
   function isMatchFinished(setsHistory, leagueConfig) {
     let sets1 = 0, sets2 = 0;
     setsHistory.forEach(s => {

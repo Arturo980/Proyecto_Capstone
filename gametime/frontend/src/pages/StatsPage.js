@@ -81,9 +81,10 @@ const STAT_CATEGORIES = [
   }
 ];
 
-const tableColors = [
-  "primary", "success", "warning", "danger", "info", "secondary", "dark", "light"
-];
+// Unused variable - commented out
+// const tableColors = [
+//   "primary", "success", "warning", "danger", "info", "secondary", "dark", "light"
+// ];
 
 const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   // Obtener el rol del usuario desde localStorage (igual que GamesPage)
@@ -248,6 +249,7 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   };
 
   // Modal para agregar jugador
+  // eslint-disable-next-line no-unused-vars
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
   const [addPlayerTeam, setAddPlayerTeam] = useState(null);
   const [newPlayer, setNewPlayer] = useState({
@@ -265,6 +267,7 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   });
 
   // Handler para abrir modal
+  // eslint-disable-next-line no-unused-vars
   const handleOpenAddPlayer = (team) => {
     setAddPlayerTeam(team);
     setNewPlayer({
@@ -284,6 +287,7 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   };
 
   // Handler para guardar jugador
+  // eslint-disable-next-line no-unused-vars
   const handleSavePlayer = async () => {
     if (!addPlayerTeam) return;
     const updatedRoster = [...(addPlayerTeam.roster || []), newPlayer];

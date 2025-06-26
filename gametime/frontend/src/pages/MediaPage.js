@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
@@ -33,7 +33,9 @@ const NEW_LEAGUE_OPTION = '__new_league__';
 
 const TeamsPage = ({ language, userRole }) => {
   // Mueve todos los useState arriba, antes de cualquier uso
+  // eslint-disable-next-line no-unused-vars
   const [selectedTeam, setSelectedTeam] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [leagueName, setLeagueName] = useState('');
   const [teamCount, setTeamCount] = useState(0);
   const [teams, setTeams] = useState([]);
@@ -95,15 +97,7 @@ const TeamsPage = ({ language, userRole }) => {
     }
   };
 
-  // Solo busca equipos si hay una liga seleccionada
-  useEffect(() => {
-    if (activeLeague) {
-      setLoading(true); // <-- muestra spinner al cargar equipos
-      fetchTeamsAndLeague(activeLeague).finally(() => setLoading(false));
-    }
-  }, [activeLeague]);
-
-  const fetchTeamsAndLeague = async (leagueId) => {
+  const fetchTeamsAndLeague = useCallback(async (leagueId) => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}?league=${leagueId}`);
@@ -114,6 +108,7 @@ const TeamsPage = ({ language, userRole }) => {
       );
       setTeams(sortedTeams);
       // Busca el nombre de la liga seleccionada
+      // eslint-disable-next-line no-unused-vars
       const leagueObj = leagues.find(l => l._id === leagueId);
       // Elimina setLeagueName aquí, solo muestra el nombre
       // setLeagueName(leagueObj ? leagueObj.name : '');
@@ -121,7 +116,15 @@ const TeamsPage = ({ language, userRole }) => {
       setTeams([]);
     }
     setLoading(false);
-  };
+  }, [leagues]);
+
+  // Solo busca equipos si hay una liga seleccionada
+  useEffect(() => {
+    if (activeLeague) {
+      setLoading(true); // <-- muestra spinner al cargar equipos
+      fetchTeamsAndLeague(activeLeague).finally(() => setLoading(false));
+    }
+  }, [activeLeague, fetchTeamsAndLeague]);
 
   // Actualizar cantidad de equipos
   useEffect(() => {
@@ -132,6 +135,7 @@ const TeamsPage = ({ language, userRole }) => {
   // ...elimina useEffect sobre leagueName...
 
   // NUEVO: Manejo de logo file
+  // eslint-disable-next-line no-unused-vars
   const handleLogoFileChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -245,6 +249,7 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // Eliminar liga
+  // eslint-disable-next-line no-unused-vars
   const handleDeleteLeagueOld = async (leagueId) => {
     if (!window.confirm(language === 'en'
       ? 'Are you sure you want to delete this league and all its teams?'
@@ -334,6 +339,7 @@ const TeamsPage = ({ language, userRole }) => {
     if (deleteTeamIdx !== null) {
       const teamId = teams[deleteTeamIdx]._id;
       setLoading(true);
+      // eslint-disable-next-line no-unused-vars
       const res = await fetch(`${API_URL}/${teamId}`, { method: 'DELETE' });
       // Elimina el equipo del estado local sin afectar otras secciones ni recargar la liga
       setTeams(prev => prev.filter((_, i) => i !== deleteTeamIdx));
@@ -426,6 +432,7 @@ const TeamsPage = ({ language, userRole }) => {
   });
 
   // NUEVO: Abrir modal de stats de jugador
+  // eslint-disable-next-line no-unused-vars
   const openEditPlayerStats = (player, idx) => {
     setEditingPlayerStats({ player, idx });
     setPlayerStatsForm(player.stats || {
@@ -441,6 +448,7 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // NUEVO: Guardar stats de jugador en el roster local y opcionalmente en backend
+  // eslint-disable-next-line no-unused-vars
   const handleSavePlayerStats = async () => {
     if (editingPlayerStats) {
       setTeamForm(prev => {

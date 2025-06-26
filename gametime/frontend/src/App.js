@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Import Link eliminado
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/Global.css'; // Importar el CSS global
@@ -91,7 +91,7 @@ function App() {
       }
     };
     fetchLeagues();
-  }, []);
+  }, [API_LEAGUES]);
 
   // NUEVO: Cargar equipos y partidos de la liga activa
   useEffect(() => {
@@ -165,7 +165,7 @@ function App() {
       }
     };
     fetchGames();
-  }, [activeLeague]);
+  }, [activeLeague, API_GAMES]);
 
   useEffect(() => {
     // Asegura que el tema claro esté aplicado por defecto

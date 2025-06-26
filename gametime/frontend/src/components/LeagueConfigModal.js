@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 
 function LeagueConfigModal({ league, onSave, onDelete, onClose, loading, language, editConfig, handleEditConfigChange }) {
-  const [editSetsToWin, setEditSetsToWin] = React.useState(league?.setsToWin ?? 3);
-  const [editLastSetPoints, setEditLastSetPoints] = React.useState(league?.lastSetPoints ?? 15);
+  // Remove unused state variables
+  // const [editSetsToWin, setEditSetsToWin] = React.useState(league?.setsToWin ?? 3);
+  // const [editLastSetPoints, setEditLastSetPoints] = React.useState(league?.lastSetPoints ?? 15);
 
-  React.useEffect(() => {
-    setEditSetsToWin(league?.setsToWin ?? 3);
-    setEditLastSetPoints(league?.lastSetPoints ?? 15);
-  }, [league]);
+  // React.useEffect(() => {
+  //   setEditSetsToWin(league?.setsToWin ?? 3);
+  //   setEditLastSetPoints(league?.lastSetPoints ?? 15);
+  // }, [league]);
 
   // Sincroniza el nombre si editConfig.name está vacío
   useEffect(() => {

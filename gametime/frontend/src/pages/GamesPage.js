@@ -266,6 +266,7 @@ const GamesPage = ({ language = 'es' }) => {
   };
 
   // Maneja abrir modal de marcador
+  // eslint-disable-next-line no-unused-vars
   const handleEditScoreGame = (game) => {
     setEditScoreGame(game);
     setForm({
@@ -432,6 +433,7 @@ const GamesPage = ({ language = 'es' }) => {
   const handleShowGame = (game) => {
     setSelectedGame(game);
   };
+  // eslint-disable-next-line no-unused-vars
   const handleCloseGameModal = () => {
     setSelectedGame(null);
   };
@@ -647,6 +649,7 @@ const GamesPage = ({ language = 'es' }) => {
   }, [socket]);
 
   // NUEVO: Handlers para botones +1/-1 (asegúrate de que esté antes del render)
+  // eslint-disable-next-line no-unused-vars
   const handleScoreChange = (team, delta) => {
     if (!liveScoreGame) return;
     const newScore1 = team === 1 ? Math.max(0, (liveScoreGame.score1 || 0) + delta) : liveScoreGame.score1;
@@ -672,6 +675,7 @@ const GamesPage = ({ language = 'es' }) => {
   }
 
   // Sumar/restar puntos del set actual y emitir por socket
+  // eslint-disable-next-line no-unused-vars
   const handleSetScoreChange = (team, delta) => {
     setCurrentSetScore(prev => {
       let s1 = prev.score1, s2 = prev.score2;
@@ -719,6 +723,7 @@ const GamesPage = ({ language = 'es' }) => {
   };
 
   // Finalizar set manualmente y emitir historial por socket
+  // eslint-disable-next-line no-unused-vars
   const handleFinishSet = async () => {
     const setIndex = liveSets.length;
     const { score1, score2 } = currentSetScore;
