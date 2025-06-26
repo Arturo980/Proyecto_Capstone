@@ -1,4 +1,15 @@
 require('dotenv').config(); // Importar dotenv para cargar variables de entorno
+
+// Validar variables de entorno críticas
+const requiredEnvVars = ['MONGO_URI'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Variables de entorno faltantes:', missingEnvVars.join(', '));
+  console.error('🔧 Asegúrate de que estas variables estén configuradas en tu archivo .env o en Render');
+  process.exit(1);
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -29,11 +40,52 @@ const io = socketio(server, {
   }
 });
 
-// Conexión a MongoDB usando variables de entorno
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+// Conexión a MongoDB usando variables de entorno con manejo de errores mejorado
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 30000, // 30 segundos timeout
+      socketTimeoutMS: 45000, // 45 segundos timeout
+      maxPoolSize: 10, // Máximo 10 conexiones en el pool
+      minPoolSize: 2,  // Mínimo 2 conexiones en el pool
+      maxIdleTimeMS: 30000, // Cerrar conexiones después de 30 segundos de inactividad
+      retryWrites: true,
+      w: 'majority'
+    });
+    console.log('✅ Conectado exitosamente a MongoDB Atlas');
+  } catch (error) {
+    console.error('❌ Error al conectar a MongoDB:', error.message);
+    console.error('Detalles del error:', error);
+    
+    // Intentar reconectar después de 5 segundos
+    setTimeout(connectToMongoDB, 5000);
+  }
+};
+
+// Manejar eventos de conexión
+mongoose.connection.on('connected', () => {
+  console.log('🔗 Mongoose conectado a MongoDB');
 });
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ Error de conexión MongoDB:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('🔌 Mongoose desconectado de MongoDB');
+  console.log('🔄 Intentando reconectar...');
+  setTimeout(connectToMongoDB, 5000);
+});
+
+// Manejar el cierre graceful
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('🛑 Conexión MongoDB cerrada debido a terminación de aplicación');
+  process.exit(0);
+});
+
+// Iniciar la conexión
+connectToMongoDB();
 
 // Esquema de Usuario actualizado con campo 'esAdmin'
 const Usuario = mongoose.model('Usuario', {
@@ -917,6 +969,17 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// Función auxiliar para obtener email del usuario (placeholder para auditoría)
+function getUserEmailFromRequest(req) {
+  // Aquí podrías implementar la lógica para obtener el email del usuario autenticado
+  // Por ahora retorna un placeholder
+  return req.headers['user-email'] || 'usuario-anonimo';
+}
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 MongoDB URI configured: ${process.env.MONGO_URI ? 'Yes' : 'No'}`);
+  console.log(`☁️ Cloudinary configured: ${process.env.CLOUDINARY_CLOUD_NAME ? 'Yes' : 'No'}`);
 });
