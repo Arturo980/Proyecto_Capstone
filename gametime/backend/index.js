@@ -18,19 +18,14 @@ cloudinary.config({
 });
 
 const app = express();
-// Configuración de CORS más específica
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(cors()); // permite conexión desde React
 app.use(express.json());
 
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT'],
-    credentials: true
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT']
   }
 });
 
