@@ -208,7 +208,7 @@ const MediaPage = ({ language }) => {
                       src={
                         image.url.startsWith('http')
                           ? image.url
-                          : `http://localhost:3001${image.url}`
+                          : `${API_BASE_URL}${image.url}`
                       }
                       alt=""
                       className="img-fluid rounded mb-3"
@@ -258,7 +258,7 @@ const MediaPage = ({ language }) => {
                       src={
                         modalImage.url.startsWith('http')
                           ? modalImage.url
-                          : `http://localhost:3001${modalImage.url}`
+                          : `${API_BASE_URL}${modalImage.url}`
                       }
                       alt=""
                       style={{

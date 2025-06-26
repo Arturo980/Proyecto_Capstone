@@ -5,8 +5,6 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Importar scripts de Boots
 import App from './App';
 import './styles/GamePage.css';
 
-window.API_BASE_URL = 'http://192.168.1.104:5000';
-
 // Agrega el link de Material Symbols para el ícono de calendario
 const materialSymbolsLink = document.createElement('link');
 materialSymbolsLink.rel = 'stylesheet';

@@ -151,7 +151,7 @@ const TeamsPage = ({ language, userRole }) => {
           // Guarda la URL absoluta si es relativa
           const url = data.url.startsWith('http')
             ? data.url
-            : `http://localhost:3001${data.url}`;
+            : `${API_BASE_URL}${data.url}`;
           setTeamForm((prev) => ({ ...prev, logo: url }));
         }
       } catch (err) {
