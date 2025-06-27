@@ -11,13 +11,11 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 import { useNavigate } from 'react-router-dom'; // NUEVO
 import LoadingSpinner from '../components/LoadingSpinner';
 
-// Cambia defaultTeam.roster a array de objetos
+// Cambia defaultTeam para solo incluir los campos necesarios
 const defaultTeam = {
   name: '',
   abbr: '',
-  logo: '',
-  roster: [], // [{ name: 'Jugador', stats: {...} }]
-  staff: [],
+  logo: ''
 };
 
 const defaultLeagueConfig = {
@@ -44,8 +42,6 @@ const TeamsPage = ({ language, userRole }) => {
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
   const [teamForm, setTeamForm] = useState(defaultTeam);
-  const [rosterInput, setRosterInput] = useState('');
-  const [staffInput, setStaffInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [logoType, setLogoType] = useState('url'); // 'url' o 'file'
   const [logoFile, setLogoFile] = useState(null);
@@ -285,51 +281,13 @@ const TeamsPage = ({ language, userRole }) => {
       logoToSave = getLogoPreview();
     }
 
-    // Asegura que el roster sea array de objetos { name, rut, age, image, stats }
-    const roster = Array.isArray(teamForm.roster)
-      ? teamForm.roster.map(p =>
-          typeof p === 'string'
-            ? { 
-                name: p, 
-                rut: '',
-                age: 0,
-                image: '', 
-                stats: { 
-                  acesPerSet: 0, 
-                  assistsPerSet: 0, 
-                  attacksPerSet: 0, 
-                  blocksPerSet: 0, 
-                  digsPerSet: 0, 
-                  hittingPercentage: 0, 
-                  killsPerSet: 0, 
-                  pointsPerSet: 0 
-                } 
-              }
-            : { 
-                ...p, 
-                rut: p.rut || '',
-                age: p.age || 0,
-                image: p.image || '', 
-                stats: p.stats || { 
-                  acesPerSet: 0, 
-                  assistsPerSet: 0, 
-                  attacksPerSet: 0, 
-                  blocksPerSet: 0, 
-                  digsPerSet: 0, 
-                  hittingPercentage: 0, 
-                  killsPerSet: 0, 
-                  pointsPerSet: 0 
-                } 
-              }
-        )
-      : [];
-
     const payload = {
-      ...teamForm,
+      name: teamForm.name,
+      abbr: teamForm.abbr || '',
       logo: logoToSave,
       league: activeLeague,
-      roster,
-      staff: Array.isArray(teamForm.staff) ? teamForm.staff : []
+      roster: [], // Inicializar con array vacío
+      staff: []   // Inicializar con array vacío
     };
 
     if (editingTeam && editingTeam !== 'new') {
@@ -456,8 +414,6 @@ const TeamsPage = ({ language, userRole }) => {
   const openAddTeam = () => {
     setEditingTeam('new');
     setTeamForm(defaultTeam);
-    setRosterInput('');
-    setStaffInput('');
     setLogoType('url');
     setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -468,46 +424,13 @@ const TeamsPage = ({ language, userRole }) => {
     setTeamForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Cambia handleAddRoster y handleAddStaff para aceptar varios nombres separados por coma o salto de línea
-  const handleAddRoster = () => {
-    if (rosterInput.trim()) {
-      // Permite separar por coma o salto de línea
-      const names = rosterInput
-        .split(/[\n,]+/)
-        .map(n => n.trim())
-        .filter(Boolean);
-      setTeamForm((prev) => ({
-        ...prev,
-        roster: [
-          ...prev.roster,
-          ...names.map(name => ({ 
-            name, 
-            rut: '',
-            age: 0,
-            image: '', 
-            stats: { 
-              acesPerSet: 0, 
-              assistsPerSet: 0, 
-              attacksPerSet: 0, 
-              blocksPerSet: 0, 
-              digsPerSet: 0, 
-              hittingPercentage: 0, 
-              killsPerSet: 0, 
-              pointsPerSet: 0 
-            } 
-          }))
-        ],
-      }));
-      setRosterInput('');
+  // NUEVO: callback para guardar la URL de Cloudinary en el formulario
+  const handleCloudinaryUpload = (url) => {
+    if (url) {
+      setTeamForm((prev) => ({ ...prev, logo: url }));
     }
   };
 
-  const handleRemoveRoster = (idx) => {
-    setTeamForm((prev) => ({
-      ...prev,
-      roster: prev.roster.filter((_, i) => i !== idx),
-    }));
-  };
   // Manejar cambio de liga (mostrar config si eligen "nueva liga")
   const handleLeagueSelect = (e) => {
     const value = e.target.value;
@@ -589,36 +512,6 @@ const TeamsPage = ({ language, userRole }) => {
       alert('Error al guardar la configuración de la liga');
     }
     setLoading(false);
-  };
-
-  // NUEVO: callback para guardar la URL de Cloudinary en el formulario
-  const handleCloudinaryUpload = (url) => {
-    if (url) {
-      setTeamForm((prev) => ({ ...prev, logo: url }));
-    }
-  };
-
-  // Agrega staff(s) al equipo (similar a handleAddRoster)
-  const handleAddStaff = () => {
-    if (staffInput.trim()) {
-      const names = staffInput
-        .split(/[\n,]+/)
-        .map(n => n.trim())
-        .filter(Boolean);
-      setTeamForm((prev) => ({
-        ...prev,
-        staff: [...prev.staff, ...names],
-      }));
-      setStaffInput('');
-    }
-  };
-
-  // Elimina un miembro del staff por índice
-  const handleRemoveStaff = (idx) => {
-    setTeamForm((prev) => ({
-      ...prev,
-      staff: prev.staff.filter((_, i) => i !== idx),
-    }));
   };
 
   const handleCloseModal = () => {
@@ -969,106 +862,6 @@ const TeamsPage = ({ language, userRole }) => {
                       </div>
                     )}
                   </div>
-
-                  <label className="form-label">{language === 'en' ? 'Roster' : 'Plantilla'}</label>
-                  <div className="mb-2 d-flex">
-                    <textarea
-                      className="form-control me-2"
-                      value={rosterInput}
-                      onChange={e => setRosterInput(e.target.value)}
-                      placeholder={
-                        language === 'en'
-                          ? 'Add player(s) quickly, separated by comma or new line'
-                          : 'Agregar jugador(es) rápidamente, separados por coma o salto de línea'
-                      }
-                      rows={1}
-                      style={{ resize: 'vertical', minHeight: 38, maxHeight: 120 }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddRoster();
-                        }
-                      }}
-                    />
-                    <button className="btn btn-success" type="button" onClick={handleAddRoster}>
-                      +
-                    </button>
-                  </div>
-                  <ul className="list-group">
-                    {teamForm.roster.map((playerObj, idx) => (
-                      <li key={idx} className="list-group-item player-list-item d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center">
-                          {playerObj.image ? (
-                            <img 
-                              src={playerObj.image} 
-                              alt={playerObj.name}
-                              className="player-avatar-small me-3"
-                            />
-                          ) : (
-                            <div 
-                              className="player-avatar-small me-3 d-flex align-items-center justify-content-center"
-                              style={{ 
-                                backgroundColor: 'var(--card-background-color, #f8f9fa)',
-                                color: 'var(--text-color, #6c757d)',
-                                fontSize: '12px'
-                              }}
-                            >
-                              {playerObj.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span>{playerObj.name}</span>
-                        </div>
-                        <div>
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            type="button"
-                            onClick={() => handleRemoveRoster(idx)}
-                          >
-                            {language === 'en' ? 'Remove' : 'Eliminar'}
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <label className="form-label">{language === 'en' ? 'Staff' : 'Cuerpo Técnico'}</label>
-                  <div className="mb-2 d-flex">
-                    <textarea
-                      className="form-control me-2"
-                      value={staffInput}
-                      onChange={e => setStaffInput(e.target.value)}
-                      placeholder={
-                        language === 'en'
-                          ? 'Add staff member(s), separated by comma or new line'
-                          : 'Agregar staff, separados por coma o salto de línea'
-                      }
-                      rows={1}
-                      style={{ resize: 'vertical', minHeight: 38, maxHeight: 120 }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddStaff();
-                        }
-                      }}
-                    />
-                    <button className="btn btn-success" type="button" onClick={handleAddStaff}>
-                      +
-                    </button>
-                  </div>
-                  <ul>
-                    {teamForm.staff.map((member, idx) => (
-                      <li key={idx} className="d-flex align-items-center">
-                        {member}
-                        <button
-                          className="btn btn-link text-danger ms-2 p-0"
-                          type="button"
-                          onClick={() => handleRemoveStaff(idx)}
-                        >
-                          &times;
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
 
                   <button className="btn btn-primary mt-3" type="submit" disabled={loading}>
                     {language === 'en' ? 'Save' : 'Guardar'}

@@ -357,7 +357,7 @@ function App() {
                     <Route path="/news/:id" element={<NewsDetailPage language={language} />} />
                     {/* Otras páginas: agrega marginTop y marginBottom */}
                     <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
-                    <Route path="/teams/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} /></div>} />
+                    <Route path="/teams/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} userRole={userRole} /></div>} />
                     <Route path="/stats" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><StatsPage language={language} /></div>} />
                     <Route path="/games" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><GamesPage language={language} /></div>} />
                     <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />
