@@ -2,6 +2,38 @@ const { Liga, Equipo, AuditLog } = require('../models');
 const mongoose = require('mongoose');
 const { getUserEmailFromRequest } = require('../utils/auth');
 
+// Función para generar código único basado en el nombre
+const generateUniqueCode = async (name) => {
+  // Crear código base eliminando espacios, acentos y caracteres especiales
+  let baseCode = name
+    .toUpperCase()
+    .replace(/[ÁÀÄÂ]/g, 'A')
+    .replace(/[ÉÈËÊ]/g, 'E')
+    .replace(/[ÍÌÏÎ]/g, 'I')
+    .replace(/[ÓÒÖÔ]/g, 'O')
+    .replace(/[ÚÙÜÛ]/g, 'U')
+    .replace(/Ñ/g, 'N')
+    .replace(/[^A-Z0-9]/g, '') // Solo letras y números
+    .substring(0, 8); // Máximo 8 caracteres
+
+  // Si es muy corto, usar las primeras letras de cada palabra
+  if (baseCode.length < 3) {
+    const words = name.split(/\s+/);
+    baseCode = words.map(word => word.charAt(0).toUpperCase()).join('').substring(0, 6);
+  }
+
+  // Verificar si ya existe
+  let code = baseCode;
+  let counter = 1;
+  
+  while (await Liga.findOne({ code })) {
+    code = `${baseCode}${counter}`;
+    counter++;
+  }
+  
+  return code;
+};
+
 // Crear liga (verifica unicidad y guarda configuración)
 const createLeague = async (req, res) => {
   try {
@@ -13,6 +45,7 @@ const createLeague = async (req, res) => {
     // Guarda también setsToWin y lastSetPoints si vienen en el body
     const liga = new Liga({
       name: req.body.name,
+      code: await generateUniqueCode(req.body.name), // Generar código único
       setsToWin: req.body.setsToWin ?? 3,
       lastSetPoints: req.body.lastSetPoints ?? 15,
       pointsWin: req.body.pointsWin ?? 3,
@@ -27,8 +60,25 @@ const createLeague = async (req, res) => {
 
 // Listar ligas
 const getLeagues = async (req, res) => {
-  const ligas = await Liga.find();
-  res.json(ligas);
+  try {
+    const ligas = await Liga.find();
+    
+    // Migrar ligas que no tengan código único
+    let needsUpdate = false;
+    for (const liga of ligas) {
+      if (!liga.code) {
+        liga.code = await generateUniqueCode(liga.name);
+        await liga.save();
+        needsUpdate = true;
+      }
+    }
+    
+    // Si se actualizaron ligas, volver a consultar
+    const finalLigas = needsUpdate ? await Liga.find() : ligas;
+    res.json(finalLigas);
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo obtener las ligas', details: err.message });
+  }
 };
 
 // Actualizar liga

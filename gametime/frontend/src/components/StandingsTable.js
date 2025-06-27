@@ -17,14 +17,17 @@ const StandingsTable = ({
   // Función para manejar el cambio de liga y actualizar la URL
   const handleLeagueChange = (leagueId) => {
     setActiveLeague(leagueId);
-    // Actualizar la URL para reflejar la liga seleccionada
+    // Actualizar la URL para reflejar la liga seleccionada usando el código de la liga
+    const selectedLeague = leagues.find(l => l._id === leagueId);
+    const leagueCode = selectedLeague ? selectedLeague.code : leagueId;
+    
     // Verificamos si estamos en la página principal (/) para decidir si navegar
     if (leagueId && window.location.pathname === '/') {
-      // En la página principal, navegamos a /teams/leagueId
-      navigate(`/teams/${leagueId}`);
+      // En la página principal, navegamos a /teams/leagueCode
+      navigate(`/teams/${leagueCode}`);
     } else if (leagueId && window.location.pathname.startsWith('/teams')) {
       // En la página de equipos, navegamos para actualizar el parámetro
-      navigate(`/teams/${leagueId}`, { replace: true });
+      navigate(`/teams/${leagueCode}`, { replace: true });
     }
   };
 

@@ -9,7 +9,7 @@ import EmptyState from '../components/EmptyState';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 
 const TeamDetailPage = ({ language, userRole }) => {
-  const { leagueId, teamId } = useParams();
+  const { leagueParam, teamParam } = useParams();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -43,25 +43,85 @@ const TeamDetailPage = ({ language, userRole }) => {
         setLoading(true);
         
         console.log('=== INICIANDO BÚSQUEDA DE EQUIPO ===');
-        console.log('TeamId:', teamId);
-        console.log('LeagueId:', leagueId);
+        console.log('TeamParam:', teamParam);
+        console.log('LeagueParam:', leagueParam);
         console.log('URL completa:', window.location.href);
         
-        // Buscar equipo específico por ID usando query parameter
-        const url = `${API_BASE_URL}/api/teams?teamId=${teamId}`;
-        console.log('URL de consulta:', url);
-        
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        console.log('=== RESPUESTA DEL BACKEND ===');
-        console.log('Status:', res.status);
-        console.log('Data completa:', JSON.stringify(data, null, 2));
-        
+        const decodedTeamParam = decodeURIComponent(teamParam);
+        const decodedLeagueParam = decodeURIComponent(leagueParam);
         let foundTeam = null;
-        if (Array.isArray(data.teams) && data.teams.length > 0) {
-          foundTeam = data.teams[0];
-          console.log('=== EQUIPO ENCONTRADO ===');
+        let actualLeagueId = leagueParam;
+        
+        // Primero verificar si leagueParam es un ID válido, si no, buscar por código o nombre
+        const isValidLeagueId = /^[0-9a-fA-F]{24}$/.test(leagueParam);
+        if (!isValidLeagueId) {
+          // Buscar liga por código o por nombre para obtener el ID
+          const leagueRes = await fetch(`${API_BASE_URL}/api/leagues`);
+          const leagueData = await leagueRes.json();
+          
+          // Primero buscar por código (preferido)
+          let foundLeague = leagueData.find(l => l.code === decodedLeagueParam.toUpperCase());
+          
+          // Si no se encuentra por código, buscar por nombre (compatibilidad hacia atrás)
+          if (!foundLeague) {
+            foundLeague = leagueData.find(l => l.name === decodedLeagueParam);
+          }
+          
+          if (foundLeague) {
+            actualLeagueId = foundLeague._id;
+            console.log('Liga encontrada:', foundLeague.name, 'con código:', foundLeague.code);
+          } else {
+            console.log('Liga no encontrada con parámetro:', decodedLeagueParam);
+          }
+        }
+        
+        // Ahora verificar si teamParam es un ID válido de MongoDB (24 caracteres hexadecimales)
+        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(teamParam);
+        
+        if (isValidObjectId) {
+          console.log('Buscando por ID...');
+          // Buscar por ID específico
+          const url = `${API_BASE_URL}/api/teams?teamId=${teamParam}`;
+          console.log('URL de consulta por ID:', url);
+          
+          const res = await fetch(url);
+          const data = await res.json();
+          
+          if (Array.isArray(data.teams) && data.teams.length > 0) {
+            foundTeam = data.teams[0];
+          }
+        } else {
+          console.log('Buscando por abreviación/nombre...');
+          // Buscar por abreviación o nombre
+          // Primero buscar por abreviación
+          let url = `${API_BASE_URL}/api/teams?league=${actualLeagueId}&abbr=${decodedTeamParam}`;
+          console.log('URL de consulta por abbr:', url);
+          
+          let res = await fetch(url);
+          let data = await res.json();
+          
+          if (Array.isArray(data.teams) && data.teams.length > 0) {
+            foundTeam = data.teams[0];
+          } else {
+            // Si no encuentra por abbr, buscar todos los equipos de la liga y filtrar por nombre
+            console.log('No encontrado por abbr, buscando por nombre...');
+            url = `${API_BASE_URL}/api/teams?league=${actualLeagueId}`;
+            console.log('URL de consulta por liga:', url);
+            
+            res = await fetch(url);
+            data = await res.json();
+            
+            if (Array.isArray(data.teams) && data.teams.length > 0) {
+              foundTeam = data.teams.find(team => 
+                team.name === decodedTeamParam || 
+                team.name === teamParam
+              );
+            }
+          }
+        }
+        
+        console.log('=== RESPUESTA FINAL ===');
+        if (foundTeam) {
           console.log('ID del equipo:', foundTeam._id);
           console.log('Nombre:', foundTeam.name);
           console.log('Abreviación:', foundTeam.abbr);
@@ -69,7 +129,6 @@ const TeamDetailPage = ({ language, userRole }) => {
           console.log('Cantidad de jugadores:', foundTeam.roster ? foundTeam.roster.length : 0);
         } else {
           console.log('=== NO SE ENCONTRÓ EQUIPO ===');
-          console.log('Teams array:', data.teams);
         }
         
         setTeam(foundTeam || null);
@@ -80,14 +139,14 @@ const TeamDetailPage = ({ language, userRole }) => {
       setLoading(false);
     };
 
-    if (leagueId && teamId) {
+    if (leagueParam && teamParam) {
       fetchTeam();
     } else {
       console.log('=== PARÁMETROS FALTANTES ===');
-      console.log('LeagueId:', leagueId);
-      console.log('TeamId:', teamId);
+      console.log('LeagueParam:', leagueParam);
+      console.log('TeamParam:', teamParam);
     }
-  }, [leagueId, teamId]);
+  }, [leagueParam, teamParam]);
 
   // Funciones para el modal de edición
   const openEditModal = () => {

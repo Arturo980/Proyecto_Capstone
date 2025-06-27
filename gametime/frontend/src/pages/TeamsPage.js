@@ -54,13 +54,11 @@ const TeamsPage = ({ language, userRole }) => {
   const [confirmData, setConfirmData] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  const { leagueId } = useParams(); // NUEVO: obtener el parámetro de liga de la URL
+  const { leagueParam } = useParams(); // NUEVO: obtener el parámetro de liga de la URL (puede ser ID o nombre)
 
   // Usa sessionStorage para recordar la última liga seleccionada, pero prioriza la URL
   const [activeLeague, setActiveLeague] = useState(() => {
-    // Priorizar el parámetro de URL si existe
-    if (leagueId) return leagueId;
-    // Si no hay parámetro, usar sessionStorage
+    // Priorizar el parámetro de URL si existe (se resolverá cuando se carguen las ligas)
     return sessionStorage.getItem('teamsActiveLeague') || '';
   });
 
@@ -73,10 +71,20 @@ const TeamsPage = ({ language, userRole }) => {
 
   // NUEVO: Sincronizar cuando cambia el parámetro de URL
   useEffect(() => {
-    if (leagueId && leagueId !== activeLeague) {
-      setActiveLeague(leagueId);
+    if (leagueParam && leagues.length > 0) {
+      // Buscar liga por ID o por nombre
+      const decodedLeagueParam = decodeURIComponent(leagueParam);
+      let foundLeague = leagues.find(l => l._id === leagueParam);
+      
+      if (!foundLeague) {
+        foundLeague = leagues.find(l => l.name === decodedLeagueParam);
+      }
+      
+      if (foundLeague && foundLeague._id !== activeLeague) {
+        setActiveLeague(foundLeague._id);
+      }
     }
-  }, [leagueId, activeLeague]);
+  }, [leagueParam, leagues, activeLeague]);
 
   // Cargar ligas al montar (asegúrate de llamar fetchLeagues en useEffect)
   useEffect(() => {
@@ -96,9 +104,28 @@ const TeamsPage = ({ language, userRole }) => {
 
     // Priorizar parámetro de URL > sessionStorage > primera liga
     let targetLeague = '';
-    if (leagueId && data.some(l => l._id === leagueId)) {
-      targetLeague = leagueId;
-    } else {
+    if (leagueParam && data.length > 0) {
+      const decodedLeagueParam = decodeURIComponent(leagueParam);
+      // Buscar por ID, código o nombre
+      let foundLeague = data.find(l => l._id === leagueParam);
+      
+      if (!foundLeague) {
+        // Buscar por código (preferido)
+        foundLeague = data.find(l => l.code === decodedLeagueParam.toUpperCase());
+      }
+      
+      if (!foundLeague) {
+        // Buscar por nombre (compatibilidad hacia atrás)
+        foundLeague = data.find(l => l.name === decodedLeagueParam);
+      }
+      
+      if (foundLeague) {
+        targetLeague = foundLeague._id;
+        console.log('Liga encontrada en TeamsPage:', foundLeague.name, 'con código:', foundLeague.code);
+      }
+    }
+    
+    if (!targetLeague) {
       const storedLeague = sessionStorage.getItem('teamsActiveLeague');
       if (storedLeague && data.some(l => l._id === storedLeague)) {
         targetLeague = storedLeague;
@@ -110,9 +137,11 @@ const TeamsPage = ({ language, userRole }) => {
     if (targetLeague) {
       setActiveLeague(targetLeague);
       sessionStorage.setItem('teamsActiveLeague', targetLeague);
-      // Si no estamos en la URL correcta, actualizarla
-      if (targetLeague !== leagueId) {
-        navigate(`/teams/${targetLeague}`, { replace: true });
+      // Si no estamos en la URL correcta, actualizarla usando el código de la liga
+      const targetLeagueObj = data.find(l => l._id === targetLeague);
+      const leagueCode = targetLeagueObj ? targetLeagueObj.code : targetLeague;
+      if (targetLeague !== activeLeague || leagueParam !== leagueCode) {
+        navigate(`/teams/${leagueCode}`, { replace: true });
       }
     } else {
       setActiveLeague('');
@@ -230,8 +259,8 @@ const TeamsPage = ({ language, userRole }) => {
       setLeagueName('');
       setLeagues(prev => [...prev, newLeague]);
       setActiveLeague(newLeague._id);
-      // Actualizar la URL para reflejar la nueva liga
-      navigate(`/teams/${newLeague._id}`, { replace: true });
+      // Actualizar la URL para reflejar la nueva liga usando el código
+      navigate(`/teams/${newLeague.code}`, { replace: true });
     } else {
       const data = await res.json();
       alert(data.error || (language === 'en'
@@ -260,9 +289,10 @@ const TeamsPage = ({ language, userRole }) => {
           const newActiveLeague = remaining.length > 0 ? remaining[0]._id : '';
           setActiveLeague(newActiveLeague);
           setTeams([]);
-          // Actualizar la URL
+          // Actualizar la URL usando el código de la liga
           if (newActiveLeague) {
-            navigate(`/teams/${newActiveLeague}`, { replace: true });
+            const newLeague = remaining[0];
+            navigate(`/teams/${newLeague.code}`, { replace: true });
           } else {
             navigate('/teams', { replace: true });
           }
@@ -384,16 +414,23 @@ const TeamsPage = ({ language, userRole }) => {
     }
   };
 
-  // Cambia handleShowTeam para navegar con la estructura correcta de URL usando ID
+  // Cambia handleShowTeam para navegar con la estructura correcta de URL usando abreviación
   const handleShowTeam = (team) => {
     if (activeLeague) {
-      // Usar el ID del equipo para garantizar unicidad
+      // Usar abreviación si existe, si no usar el nombre del equipo
+      const teamIdentifier = team.abbr || team.name;
+      // Encontrar el código de la liga
+      const currentLeague = leagues.find(l => l._id === activeLeague);
+      const leagueCode = currentLeague ? currentLeague.code : activeLeague;
+      
       console.log('Navegando a equipo:', { 
         teamName: team.name, 
-        teamId: team._id,
-        url: `/teams/${activeLeague}/${team._id}`
+        teamAbbr: team.abbr,
+        teamIdentifier,
+        leagueCode: currentLeague?.code,
+        url: `/teams/${leagueCode}/${encodeURIComponent(teamIdentifier)}`
       });
-      navigate(`/teams/${activeLeague}/${team._id}`);
+      navigate(`/teams/${leagueCode}/${encodeURIComponent(teamIdentifier)}`);
     } else {
       console.warn('No se puede navegar: falta activeLeague', { activeLeague });
     }
@@ -473,15 +510,17 @@ const TeamsPage = ({ language, userRole }) => {
 
   // Función para manejar el cambio de liga y actualizar la URL
   const handleLeagueSelect = (e) => {
-    const selectedLeague = e.target.value;
-    if (selectedLeague === NEW_LEAGUE_OPTION) {
+    const selectedLeagueId = e.target.value;
+    if (selectedLeagueId === NEW_LEAGUE_OPTION) {
       setShowCreateLeague(true);
       return;
     }
-    setActiveLeague(selectedLeague);
-    // Actualizar la URL para reflejar la liga seleccionada
+    setActiveLeague(selectedLeagueId);
+    // Actualizar la URL para reflejar la liga seleccionada usando el código
+    const selectedLeague = leagues.find(l => l._id === selectedLeagueId);
     if (selectedLeague) {
-      navigate(`/teams/${selectedLeague}`, { replace: true });
+      const leagueCode = selectedLeague.code;
+      navigate(`/teams/${leagueCode}`, { replace: true });
     } else {
       navigate('/teams', { replace: true });
     }

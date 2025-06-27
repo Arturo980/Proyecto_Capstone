@@ -1,4 +1,4 @@
-const { Equipo, AuditLog } = require('../models');
+const { Equipo, Liga, AuditLog } = require('../models');
 const { getUserEmailFromRequest } = require('../utils/auth');
 const { sendToTrash } = require('./auditController');
 
@@ -13,9 +13,30 @@ const getTeams = async (req, res) => {
       filter._id = teamId;
     }
     
-    // Si se proporciona league
+    // Si se proporciona league, puede ser ID o código de liga
     if (league) {
-      filter.league = league;
+      // Verificar si es un ObjectId válido
+      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(league);
+      
+      if (isValidObjectId) {
+        // Es un ID válido, usar directamente
+        filter.league = league;
+      } else {
+        // No es un ID, buscar liga por código
+        const foundLeague = await Liga.findOne({ code: league.toUpperCase() });
+        if (foundLeague) {
+          filter.league = foundLeague._id;
+        } else {
+          // Si no se encuentra por código, intentar por nombre (compatibilidad hacia atrás)
+          const foundLeagueByName = await Liga.findOne({ name: league });
+          if (foundLeagueByName) {
+            filter.league = foundLeagueByName._id;
+          } else {
+            // Liga no encontrada
+            return res.json({ teams: [] });
+          }
+        }
+      }
     }
     
     // Si se proporciona abbr
