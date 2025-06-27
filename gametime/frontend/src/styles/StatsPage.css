@@ -27,7 +27,7 @@
 }
 
 .stats-table-header {
-  background: #314563;
+  background: #142f69 !important;
   color: #fff;
   border-radius: 12px 12px 0 0;
   padding: 14px 20px;
@@ -107,4 +107,189 @@
 .wide-modal .modal-dialog {
   max-width: 700px !important;
   width: 95vw;
+}
+
+/* ========================================
+   ESTILOS PARA MODO OSCURO
+   ======================================== */
+
+/* Estilos para el buscador en modo oscuro */
+.theme-dark .stats-search .form-control {
+  background-color: #333333 !important;
+  border: 1px solid #555555 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .stats-search .form-control:focus {
+  background-color: #333333 !important;
+  border-color: #4fc3f7 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(79, 195, 247, 0.25) !important;
+}
+
+.theme-dark .stats-search .form-control::placeholder {
+  color: #aaaaaa !important;
+}
+
+/* Estilos para selector de liga en modo oscuro */
+.theme-dark .stats-league-selector .form-select {
+  background-color: #333333 !important;
+  border: 1px solid #555555 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .stats-league-selector .form-select:focus {
+  background-color: #333333 !important;
+  border-color: #4fc3f7 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(79, 195, 247, 0.25) !important;
+}
+
+/* Estilos para tarjetas de tabla en modo oscuro */
+.theme-dark .stats-table-card {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #444444 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Estilos para encabezados de tabla en modo oscuro */
+.theme-dark .stats-table-header {
+  background: #142f69 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid #444444 !important;
+}
+
+/* Estilos para tablas en modo oscuro */
+.theme-dark .stats-table {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .stats-table th {
+  background-color: #333333 !important;
+  color: var(--text-color) !important;
+  border-color: #444444 !important;
+}
+
+.theme-dark .stats-table td {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border-color: #444444 !important;
+}
+
+.theme-dark .stats-table tbody tr:nth-child(even) {
+  background-color: #333333 !important;
+}
+
+.theme-dark .stats-table tbody tr:hover {
+  background-color: #404040 !important;
+}
+
+/* Estilos para texto en las tablas en modo oscuro */
+.theme-dark .stats-table td .fw-semibold {
+  color: var(--text-color) !important;
+}
+
+.theme-dark .stats-table td .badge.bg-primary.fs-6 {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+}
+
+/* Estilos para título en modo oscuro */
+.theme-dark .stats-title {
+  color: var(--text-color) !important;
+}
+
+/* Estilos para elementos de formulario en modo oscuro */
+.theme-dark .form-label {
+  color: var(--text-color) !important;
+}
+
+.theme-dark .form-control {
+  background-color: #333333 !important;
+  border: 1px solid #555555 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .form-control:focus {
+  background-color: #333333 !important;
+  border-color: #4fc3f7 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(79, 195, 247, 0.25) !important;
+}
+
+.theme-dark .form-select {
+  background-color: #333333 !important;
+  border: 1px solid #555555 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .form-select:focus {
+  background-color: #333333 !important;
+  border-color: #4fc3f7 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(79, 195, 247, 0.25) !important;
+}
+
+/* Estilos para botones en modo oscuro */
+.theme-dark .btn-primary {
+  background-color: #4fc3f7 !important;
+  border-color: #4fc3f7 !important;
+  color: #000000 !important;
+}
+
+.theme-dark .btn-primary:hover {
+  background-color: #29b6f6 !important;
+  border-color: #29b6f6 !important;
+  color: #000000 !important;
+}
+
+.theme-dark .btn-outline-primary {
+  color: #4fc3f7 !important;
+  border-color: #4fc3f7 !important;
+}
+
+.theme-dark .btn-outline-primary:hover {
+  background-color: #4fc3f7 !important;
+  border-color: #4fc3f7 !important;
+  color: #000000 !important;
+}
+
+/* Estilos para modales en modo oscuro */
+.theme-dark .modal-content {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #444444 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .modal-header {
+  background-color: #333333 !important;
+  border-bottom: 1px solid #444444 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .modal-body {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .modal-footer {
+  background-color: #333333 !important;
+  border-top: 1px solid #444444 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .btn-close {
+  filter: invert(1) !important;
+}
+
+/* ========================================
+   ESTILOS GENERALES PARA ESTADÍSTICAS
+   ======================================== */
+
+/* Estilos para encabezados h4 en la página de estadísticas */
+.stats-container h4 {
+  color: #ffffff !important;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }

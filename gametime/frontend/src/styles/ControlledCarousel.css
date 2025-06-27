@@ -42,7 +42,7 @@
 
 .carousel-caption h3,
 .carousel-caption p {
-  color: white;
+  color: white !important;
   margin: 0;
   text-align: left;
 }

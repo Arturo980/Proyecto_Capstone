@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const AdminSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -60,16 +61,7 @@ const AdminSolicitudes = () => {
       <div className="container card" style={{ maxWidth: 700, margin: '40px auto', padding: 24, borderRadius: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
       <h2>Solicitudes de Registro</h2>
       {loading ? (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px',
-          fontSize: '1.1rem'
-        }}>
-          <div className="spinner-border text-primary me-3" role="status"></div>
-          Cargando solicitudes...
-        </div>
+        <LoadingSpinner />
       ) : solicitudes.length === 0 ? (
         <EmptyState 
           icon="✅"

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import EmptyState from '../components/EmptyState';
 import ConfirmModal from '../components/ConfirmModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // Cambia el endpoint para que apunte a /api/audit-log
 const API_AUDIT_LOG = `${API_BASE_URL}/api/audit-log`;
@@ -18,6 +19,7 @@ const entityLabels = {
 
 const AdminAuditPage = ({ language }) => {
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [restoredIds, setRestoredIds] = useState(new Set());
@@ -30,6 +32,7 @@ const AdminAuditPage = ({ language }) => {
   }, []);
 
   const fetchLogs = async () => {
+    setLoading(true);
     setError(null);
     try {
       const res = await fetch(API_AUDIT_LOG);
@@ -53,6 +56,8 @@ const AdminAuditPage = ({ language }) => {
         "Verifica que el endpoint '/api/audit-log' exista en el backend. " +
         "Detalle: " + err.message
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,7 +144,9 @@ const AdminAuditPage = ({ language }) => {
           {error}
         </div>
       )}
-      {logs.length === 0 && !error ? (
+      {loading ? (
+        <LoadingSpinner />
+      ) : logs.length === 0 && !error ? (
         <EmptyState
           icon="🗑️"
           title={language === 'en' ? 'Trash is Empty' : 'Papelera Vacía'}

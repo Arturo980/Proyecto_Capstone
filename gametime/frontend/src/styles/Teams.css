@@ -222,3 +222,185 @@
 .roster-item:hover {
   background-color: #f8f9fa;
 }
+
+/* ========================================
+   ESTILOS PARA MODO OSCURO
+   ======================================== */
+
+/* Modo oscuro para modales de gestión de jugadores */
+.theme-dark .players-management-content {
+  background-color: #2a2a2a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+.theme-dark .players-management-header {
+  border-bottom: 2px solid #404040 !important;
+  background: linear-gradient(135deg, #1a73e8, #0d47a1) !important;
+}
+
+.theme-dark .players-management-body {
+  background-color: #1e1e1e !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .players-management-footer {
+  background-color: #2a2a2a !important;
+  border-top: 2px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .players-management-body .border.rounded {
+  background-color: #2a2a2a !important;
+  border: 1px solid #404040 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .players-management-body .table {
+  background-color: #2a2a2a !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .players-management-body .table th {
+  background-color: #333333 !important;
+  color: var(--text-color) !important;
+  border-color: #404040 !important;
+}
+
+.theme-dark .players-management-body .table td {
+  background-color: #2a2a2a !important;
+  color: var(--text-color) !important;
+  border-color: #404040 !important;
+}
+
+/* Modo oscuro para tarjetas de equipos */
+.theme-dark .team-card {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .team-card:hover {
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-dark .team-logo-img {
+  background-color: #333333 !important;
+}
+
+/* Modo oscuro para información de jugadores */
+.theme-dark .player-image-container {
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-dark .player-name {
+  color: var(--text-color) !important;
+}
+
+.theme-dark .player-info {
+  color: #cccccc !important;
+}
+
+/* Modo oscuro para formularios de equipos */
+.theme-dark .team-form-section {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .roster-list {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #404040 !important;
+}
+
+.theme-dark .roster-item {
+  background-color: var(--card-background-color) !important;
+  border-bottom: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .roster-item:hover {
+  background-color: #333333 !important;
+}
+
+/* Estilos para inputs y formularios en modo oscuro */
+.theme-dark .form-control {
+  background-color: #333333 !important;
+  border: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .form-control:focus {
+  background-color: #333333 !important;
+  border-color: #1a73e8 !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25) !important;
+}
+
+.theme-dark .form-select {
+  background-color: #333333 !important;
+  border: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .form-label {
+  color: var(--text-color) !important;
+}
+
+/* Botones en modo oscuro */
+.theme-dark .btn-outline-primary {
+  color: #4fc3f7 !important;
+  border-color: #4fc3f7 !important;
+}
+
+.theme-dark .btn-outline-primary:hover {
+  background-color: #4fc3f7 !important;
+  border-color: #4fc3f7 !important;
+  color: #000 !important;
+}
+
+.theme-dark .btn-outline-danger {
+  color: #f44336 !important;
+  border-color: #f44336 !important;
+}
+
+.theme-dark .btn-outline-danger:hover {
+  background-color: #f44336 !important;
+  border-color: #f44336 !important;
+  color: #fff !important;
+}
+
+/* Texto general en modo oscuro */
+.theme-dark .text-muted {
+  color: #cccccc !important;
+}
+
+.theme-dark .text-primary {
+  color: #4fc3f7 !important;
+}
+
+/* Cards de Bootstrap en modo oscuro */
+.theme-dark .card {
+  background-color: var(--card-background-color) !important;
+  border: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .card-header {
+  background-color: #333333 !important;
+  border-bottom: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .card-body {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.theme-dark .card-footer {
+  background-color: #333333 !important;
+  border-top: 1px solid #404040 !important;
+  color: var(--text-color) !important;
+}

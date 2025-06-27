@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import NotificationModal from '../components/NotificationModal';
 import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
 import texts from '../translations/texts';
 import '../styles/NewsPage.css';
 
@@ -111,17 +112,7 @@ const NewsPage = ({ language }) => {
         )}
       </div>
       {loading ? (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '60px',
-          fontSize: '1.1rem',
-          color: '#666'
-        }}>
-          <div className="spinner-border text-primary me-3" role="status"></div>
-          {texts[language].loading}
-        </div>
+        <LoadingSpinner />
       ) : news.length === 0 ? (
         <EmptyState 
           icon="📰"
