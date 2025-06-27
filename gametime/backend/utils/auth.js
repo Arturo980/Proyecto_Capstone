@@ -2,7 +2,7 @@
 function getUserEmailFromRequest(req) {
   // Aquí podrías implementar la lógica para obtener el email del usuario autenticado
   // Por ahora retorna un placeholder
-  return req.headers['user-email'] || 'usuario-anonimo';
+  return req.headers['user-email'] || req.headers['x-user-email'] || 'usuario-anonimo';
 }
 
 module.exports = { getUserEmailFromRequest };

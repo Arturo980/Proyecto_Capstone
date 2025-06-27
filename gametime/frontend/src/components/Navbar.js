@@ -155,14 +155,12 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
                 {texts[language].navbar_media}
               </Link>
             </li>
-            {/* Mostrar botón de noticias a editores y admin */}
-            {user && (user.tipoCuenta === 'content-editor' || user.esAdmin) && (
-              <li className="nav-item">
-                <Link className="nav-link no-underline" to="/news">
-                  {texts[language]?.navbar_news || 'Noticias'}
-                </Link>
-              </li>
-            )}
+            {/* Mostrar noticias a todos los usuarios */}
+            <li className="nav-item">
+              <Link className="nav-link no-underline" to="/news">
+                {texts[language]?.navbar_news || 'Noticias'}
+              </Link>
+            </li>
             {/* Solo mostrar al admin */}
             {user && user.esAdmin && (
               <>

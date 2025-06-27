@@ -1,0 +1,137 @@
+/* NewsPage.css - Estilos para la página de noticias con soporte para modo oscuro */
+
+/* Modo claro (por defecto) */
+.news-container {
+  background-color: #ffffff;
+  color: #2d3748;
+  min-height: 100vh;
+}
+
+.news-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.news-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.news-card.selected {
+  border: 2px solid #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+}
+
+.news-preview {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.news-title {
+  color: #2d3748;
+}
+
+.news-content {
+  color: #4a5568;
+}
+
+.news-placeholder {
+  color: #a0aec0;
+}
+
+/* Modo oscuro */
+body.theme-dark .news-container {
+  background-color: #1b1b1b;
+  color: #f7fafc;
+}
+
+body.theme-dark .news-card {
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  color: #f7fafc;
+}
+
+body.theme-dark .news-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .news-card.selected {
+  border: 2px solid #63b3ed;
+  box-shadow: 0 0 8px rgba(99, 179, 237, 0.3);
+}
+
+body.theme-dark .news-preview {
+  background-color: #2d3748;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-dark .news-title {
+  color: #f7fafc;
+}
+
+body.theme-dark .news-content {
+  color: #e2e8f0;
+}
+
+body.theme-dark .news-placeholder {
+  color: #718096;
+}
+
+/* Estilos para botones en modo oscuro */
+body.theme-dark .btn-outline-primary {
+  border-color: #63b3ed;
+  color: #63b3ed;
+}
+
+body.theme-dark .btn-outline-primary:hover {
+  background-color: #63b3ed;
+  color: #1a202c;
+}
+
+body.theme-dark .btn-outline-danger {
+  border-color: #fc8181;
+  color: #fc8181;
+}
+
+body.theme-dark .btn-outline-danger:hover {
+  background-color: #fc8181;
+  color: #1a202c;
+}
+
+/* Estilos para el contenido HTML renderizado */
+body.theme-dark .news-content h1,
+body.theme-dark .news-content h2,
+body.theme-dark .news-content h3,
+body.theme-dark .news-content h4,
+body.theme-dark .news-content h5,
+body.theme-dark .news-content h6 {
+  color: #f7fafc;
+}
+
+body.theme-dark .news-content p,
+body.theme-dark .news-content div,
+body.theme-dark .news-content span {
+  color: #e2e8f0;
+}
+
+body.theme-dark .news-content strong,
+body.theme-dark .news-content b {
+  color: #f7fafc;
+}
+
+body.theme-dark .news-content a {
+  color: #63b3ed;
+}
+
+body.theme-dark .news-content a:hover {
+  color: #90cdf4;
+}
+
+/* Animaciones suaves */
+.news-card,
+.news-preview,
+.btn {
+  transition: all 0.2s ease;
+}

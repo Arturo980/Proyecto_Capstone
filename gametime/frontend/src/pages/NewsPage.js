@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
+import NotificationModal from '../components/NotificationModal';
+import texts from '../translations/texts';
+import '../styles/NewsPage.css';
 
 const NewsPage = ({ language }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [newsToDelete, setNewsToDelete] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ title: '', message: '', type: 'info' });
   const navigate = useNavigate();
 
-  // Detecta si el usuario es editor o admin
+  // Detecta si el usuario puede editar/eliminar noticias (solo admin y content-editor)
   const user = (() => {
     try {
       return JSON.parse(localStorage.getItem('user')) || null;
@@ -16,7 +24,7 @@ const NewsPage = ({ language }) => {
       return null;
     }
   })();
-  const canAddNews = user && (user.tipoCuenta === 'content-editor' || user.esAdmin);
+  const canEditNews = user && (user.tipoCuenta === 'content-editor' || user.esAdmin);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/news`)
@@ -36,23 +44,74 @@ const NewsPage = ({ language }) => {
     setSelectedNews(noticia);
   };
 
+  const handleDeleteNews = async (newsId, newsTitle) => {
+    setNewsToDelete({ id: newsId, title: newsTitle });
+    setShowConfirmModal(true);
+  };
+
+  const confirmDeleteNews = async () => {
+    if (!newsToDelete) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/news/${newsToDelete.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        // Actualizar la lista de noticias
+        setNews(prev => prev.filter(n => n._id !== newsToDelete.id));
+        // Si la noticia eliminada era la seleccionada, seleccionar otra
+        if (selectedNews && selectedNews._id === newsToDelete.id) {
+          const remainingNews = news.filter(n => n._id !== newsToDelete.id);
+          setSelectedNews(remainingNews.length > 0 ? remainingNews[0] : null);
+        }
+        
+        // Mostrar notificación de éxito
+        setNotification({
+          title: texts[language].success,
+          message: texts[language].news_deleted_successfully,
+          type: 'success'
+        });
+        setShowNotification(true);
+      } else {
+        const data = await res.json();
+        setNotification({
+          title: texts[language].error,
+          message: data.error || texts[language].error_deleting_news,
+          type: 'error'
+        });
+        setShowNotification(true);
+      }
+    } catch (err) {
+      setNotification({
+        title: texts[language].error,
+        message: texts[language].error_deleting_news,
+        type: 'error'
+      });
+      setShowNotification(true);
+    }
+    
+    setShowConfirmModal(false);
+    setNewsToDelete(null);
+  };
+
   return (
-    <div className="container" style={{ maxWidth: 1200, marginTop: 32 }}>
+    <div className="container news-container" style={{ maxWidth: 1200, marginTop: 32 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2>{language === 'en' ? 'News' : 'Noticias'}</h2>
-        {canAddNews && (
+        <h2>{texts[language].news}</h2>
+        {canEditNews && (
           <button
             className="btn btn-success"
             onClick={() => navigate('/news/add')}
           >
-            {language === 'en' ? 'Add News' : 'Agregar Noticia'}
+            {texts[language].add_news}
           </button>
         )}
       </div>
       {loading ? (
-        <div>{language === 'en' ? 'Loading...' : 'Cargando...'}</div>
+        <div>{texts[language].loading}</div>
       ) : news.length === 0 ? (
-        <div>{language === 'en' ? 'No news available.' : 'No hay noticias.'}</div>
+        <div>{texts[language].no_news_available}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'row', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {/* Lista de noticias */}
@@ -61,14 +120,11 @@ const NewsPage = ({ language }) => {
               {news.map(noticia => (
                 <div
                   key={noticia._id}
+                  className={`news-card ${selectedNews && selectedNews._id === noticia._id ? 'selected' : ''}`}
                   style={{
                     width: 270,
-                    border: selectedNews && selectedNews._id === noticia._id ? '2px solid #007bff' : '1px solid #ccc',
-                    borderRadius: 8,
                     padding: 12,
-                    background: '#fff',
-                    cursor: 'pointer',
-                    boxShadow: selectedNews && selectedNews._id === noticia._id ? '0 0 8px #007bff33' : 'none'
+                    cursor: 'pointer'
                   }}
                   onClick={() => handleSelectNews(noticia)}
                 >
@@ -79,15 +135,26 @@ const NewsPage = ({ language }) => {
                       style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 6, marginBottom: 8 }}
                     />
                   )}
-                  <h5 style={{ marginBottom: 6 }}>{noticia.title}</h5>
+                  <h5 className="news-title" style={{ marginBottom: 6 }}>{noticia.title}</h5>
                   {/* El resumen solo debe mostrarse en el carrusel, así que lo quitamos aquí */}
-                  {canAddNews && (
-                    <button
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={e => { e.stopPropagation(); navigate(`/news/${noticia._id}/edit`); }}
-                    >
-                      {language === 'en' ? 'Edit' : 'Editar'}
-                    </button>
+                  {canEditNews && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={e => { e.stopPropagation(); navigate(`/news/${noticia._id}/edit`); }}
+                      >
+                        {texts[language].edit}
+                      </button>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={e => { 
+                          e.stopPropagation(); 
+                          handleDeleteNews(noticia._id, noticia.title); 
+                        }}
+                      >
+                        {texts[language].delete}
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -95,13 +162,12 @@ const NewsPage = ({ language }) => {
           </div>
           {/* Previsualización de la noticia seleccionada */}
           <div
+            className="news-preview"
             style={{
               flex: '2 1 400px',
               minWidth: 320,
-              background: '#f9f9f9',
               borderRadius: 10,
               padding: 24,
-              boxShadow: '0 2px 8px #0001',
               marginTop: 0,
               maxWidth: 600
             }}
@@ -115,14 +181,14 @@ const NewsPage = ({ language }) => {
                     style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }}
                   />
                 )}
-                <h3 style={{ marginBottom: 8 }}>{selectedNews.title}</h3>
+                <h3 className="news-title" style={{ marginBottom: 8 }}>{selectedNews.title}</h3>
                 {/* El resumen se elimina de la previsualización */}
-                <div style={{ fontSize: 17, marginBottom: 12, whiteSpace: 'pre-line' }}>
+                <div className="news-content" style={{ fontSize: 17, marginBottom: 12, whiteSpace: 'pre-line' }}>
                   <div dangerouslySetInnerHTML={{ __html: selectedNews.content }} />
                 </div>
                 {selectedNews.images && selectedNews.images.length > 0 && (
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: 8 }}>{language === 'en' ? 'Gallery:' : 'Galería:'}</div>
+                    <div style={{ fontWeight: 'bold', marginBottom: 8 }}>{texts[language].gallery}</div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {selectedNews.images.map((img, idx) => (
                         <img
@@ -137,15 +203,41 @@ const NewsPage = ({ language }) => {
                 )}
               </div>
             ) : (
-              <div style={{ color: '#888', fontSize: 16 }}>
-                {language === 'en'
-                  ? 'Select a news item to preview it here.'
-                  : 'Selecciona una noticia para previsualizarla aquí.'}
+              <div className="news-placeholder" style={{ fontSize: 16 }}>
+                {texts[language].select_news_to_preview}
               </div>
             )}
           </div>
         </div>
       )}
+      
+      {/* Modal de confirmación para eliminar */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onHide={() => {
+          setShowConfirmModal(false);
+          setNewsToDelete(null);
+        }}
+        onConfirm={confirmDeleteNews}
+        title={texts[language].delete_news}
+        message={
+          newsToDelete 
+            ? `${texts[language].confirm_delete_news} "${newsToDelete.title}"?`
+            : ''
+        }
+        confirmText={texts[language].delete}
+        cancelText={texts[language].cancel}
+        confirmVariant="danger"
+      />
+
+      {/* Modal de notificación */}
+      <NotificationModal
+        show={showNotification}
+        onHide={() => setShowNotification(false)}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 };

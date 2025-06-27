@@ -1,4 +1,4 @@
-const { AuditLog, Equipo, Liga, Partido, MatchImage } = require('../models');
+const { AuditLog, Equipo, Liga, Partido, MatchImage, Noticia } = require('../models');
 const { getUserEmailFromRequest } = require('../utils/auth');
 
 // Función para limpiar elementos eliminados hace más de 15 días
@@ -79,6 +79,8 @@ const sendToTrash = async (entity, entityId, data, userEmail) => {
 const restoreEntity = async (req, res) => {
   try {
     const { entity, id } = req.params;
+    console.log(`🔄 Intentando restaurar ${entity} con ID: ${id}`);
+    
     const log = await AuditLog.findOne({ 
       entity, 
       entityId: id, 
@@ -87,7 +89,10 @@ const restoreEntity = async (req, res) => {
       isPermanentlyDeleted: false 
     }).sort({ timestamp: -1 });
     
-    if (!log) return res.status(404).json({ error: 'No hay datos para restaurar' });
+    if (!log) {
+      console.log(`❌ No se encontró elemento para restaurar: ${entity}:${id}`);
+      return res.status(404).json({ error: 'No hay datos para restaurar' });
+    }
 
     let restored;
     if (entity === 'team') {
@@ -98,7 +103,10 @@ const restoreEntity = async (req, res) => {
       restored = await Partido.create(log.data);
     } else if (entity === 'image') {
       restored = await MatchImage.create(log.data);
+    } else if (entity === 'news') {
+      restored = await Noticia.create(log.data);
     } else {
+      console.log(`❌ Entidad no soportada: ${entity}`);
       return res.status(400).json({ error: 'Entidad no soportada' });
     }
     
@@ -117,8 +125,10 @@ const restoreEntity = async (req, res) => {
       user: getUserEmailFromRequest(req)
     });
     
+    console.log(`✅ Restaurado exitosamente: ${entity}:${id}`);
     res.json({ message: 'Restaurado exitosamente', restored });
   } catch (error) {
+    console.error(`❌ Error al restaurar ${req.params.entity}:${req.params.id}:`, error);
     res.status(500).json({ error: 'Error al restaurar entidad' });
   }
 };
@@ -127,6 +137,8 @@ const restoreEntity = async (req, res) => {
 const permanentDelete = async (req, res) => {
   try {
     const { entity, id } = req.params;
+    console.log(`🗑️ Intentando eliminar permanentemente ${entity} con ID: ${id}`);
+    
     const log = await AuditLog.findOne({ 
       entity, 
       entityId: id, 
@@ -135,7 +147,10 @@ const permanentDelete = async (req, res) => {
       isPermanentlyDeleted: false 
     }).sort({ timestamp: -1 });
     
-    if (!log) return res.status(404).json({ error: 'No hay datos para eliminar' });
+    if (!log) {
+      console.log(`❌ No se encontró elemento para eliminar: ${entity}:${id}`);
+      return res.status(404).json({ error: 'No hay datos para eliminar' });
+    }
     
     // Marcar como eliminado permanentemente
     await AuditLog.findByIdAndUpdate(log._id, {
@@ -153,8 +168,10 @@ const permanentDelete = async (req, res) => {
       isPermanentlyDeleted: true
     });
     
+    console.log(`✅ Eliminado permanentemente: ${entity}:${id}`);
     res.json({ message: 'Eliminado permanentemente' });
   } catch (error) {
+    console.error(`❌ Error al eliminar permanentemente ${req.params.entity}:${req.params.id}:`, error);
     res.status(500).json({ error: 'Error al eliminar permanentemente' });
   }
 };

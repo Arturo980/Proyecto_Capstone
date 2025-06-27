@@ -3,14 +3,15 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 
 // Cambia el endpoint para que apunte a /api/audit-log
 const API_AUDIT_LOG = `${API_BASE_URL}/api/audit-log`;
-const API_RESTORE = `${API_BASE_URL}/restore`;
-const API_PERMANENT_DELETE = `${API_BASE_URL}/permanent`;
+const API_RESTORE = `${API_BASE_URL}/api/restore`;
+const API_PERMANENT_DELETE = `${API_BASE_URL}/api/permanent`;
 
 const entityLabels = {
   team: 'Equipo',
   league: 'Liga',
   game: 'Partido',
-  image: 'Imagen'
+  image: 'Imagen',
+  news: 'Noticia'
 };
 
 const AdminAuditPage = ({ language }) => {
@@ -58,16 +59,20 @@ const AdminAuditPage = ({ language }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
+          'user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
         }
       });
       
-      if (res.ok) {
-        setRestoredIds(prev => new Set(prev).add(`${entity}:${id}`));
-        await fetchLogs(); // Recargar para actualizar la lista
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(`Error ${res.status}: ${errorData.error || res.statusText}`);
       }
+      
+      setRestoredIds(prev => new Set(prev).add(`${entity}:${id}`));
+      await fetchLogs(); // Recargar para actualizar la lista
     } catch (err) {
       console.error('Error al restaurar:', err);
+      alert(`Error al restaurar: ${err.message}`);
     }
     setRestoring(null);
   };
@@ -87,15 +92,19 @@ const AdminAuditPage = ({ language }) => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
+          'user-email': JSON.parse(localStorage.getItem('user'))?.correo || 'admin'
         }
       });
       
-      if (res.ok) {
-        await fetchLogs(); // Recargar para actualizar la lista
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(`Error ${res.status}: ${errorData.error || res.statusText}`);
       }
+      
+      await fetchLogs(); // Recargar para actualizar la lista
     } catch (err) {
       console.error('Error al eliminar permanentemente:', err);
+      alert(`Error al eliminar permanentemente: ${err.message}`);
     }
     setDeleting(null);
   };
