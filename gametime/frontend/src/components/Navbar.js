@@ -11,7 +11,7 @@ import whiteCircleIcon from '../assets/images/circulo_blanco.png'; // Importar c
 import blackCircleIcon from '../assets/images/circulo_negro.png'; // Importar círculo negro
 import { API_BASE_URL } from '../assets/Configuration/config';
 
-const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
+const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn, isNavbarHidden }) => {
   const [showSettings, setShowSettings] = useState(false); // State for showing settings dropdown
   const [isNavbarOpen, setIsNavbarOpen] = useState(false); // State for navbar collapse
   const [isTriangleDown, setIsTriangleDown] = useState(false); // State for animation
@@ -110,7 +110,7 @@ const Navbar = ({ language, setLanguage, isLoggedIn, setIsLoggedIn }) => {
   }, []);
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark" ref={navbarRef}>
+    <nav className={`navbar navbar-expand-lg navbar-dark bg-dark ${isNavbarHidden ? 'hidden' : ''}`} ref={navbarRef}>
       <div className="container-fluid">
         <span className="navbar-brand">
           <img src={logo} alt="GameTime Logo" className="navbar-logo" />

@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/MediaPage.css';
 import avatarGenerico from '../assets/images/avatar-generico.jpg';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
 
 const TeamDetailPage = ({ language }) => {
   const { teamId } = useParams();
@@ -36,9 +37,16 @@ const TeamDetailPage = ({ language }) => {
         <Link to="/teams" className="btn btn-secondary mb-3">
           {language === 'en' ? 'Back to Teams' : 'Volver a Equipos'}
         </Link>
-        <div className="alert alert-info">
-          {language === 'en' ? 'Team not found.' : 'Equipo no encontrado.'}
-        </div>
+        <EmptyState
+          icon="❌"
+          title={language === 'en' ? 'Team Not Found' : 'Equipo No Encontrado'}
+          description={
+            language === 'en' 
+              ? 'The team you are looking for does not exist or has been removed.' 
+              : 'El equipo que buscas no existe o ha sido eliminado.'
+          }
+          language={language}
+        />
       </div>
     );
   }
@@ -93,8 +101,17 @@ const TeamDetailPage = ({ language }) => {
             ))}
           </div>
         ) : (
-          <div className="alert alert-info">
-            {language === 'en' ? 'No players in roster.' : 'No hay jugadores en la plantilla.'}
+          <div className="col-12">
+            <EmptyState
+              icon="👥"
+              title={language === 'en' ? 'No Players' : 'Sin Jugadores'}
+              description={
+                language === 'en' 
+                  ? 'This team does not have any players in the roster yet.' 
+                  : 'Este equipo aún no tiene jugadores en la plantilla.'
+              }
+              language={language}
+            />
           </div>
         )}
       </div>

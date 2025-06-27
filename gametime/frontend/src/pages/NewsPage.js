@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import NotificationModal from '../components/NotificationModal';
+import EmptyState from '../components/EmptyState';
 import texts from '../translations/texts';
 import '../styles/NewsPage.css';
 
@@ -96,7 +97,8 @@ const NewsPage = ({ language }) => {
   };
 
   return (
-    <div className="container news-container" style={{ maxWidth: 1200, marginTop: 32 }}>
+    <div className="full-page-container">
+      <div className="container news-container" style={{ maxWidth: 1200 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2>{texts[language].news}</h2>
         {canEditNews && (
@@ -109,9 +111,29 @@ const NewsPage = ({ language }) => {
         )}
       </div>
       {loading ? (
-        <div>{texts[language].loading}</div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '60px',
+          fontSize: '1.1rem',
+          color: '#666'
+        }}>
+          <div className="spinner-border text-primary me-3" role="status"></div>
+          {texts[language].loading}
+        </div>
       ) : news.length === 0 ? (
-        <div>{texts[language].no_news_available}</div>
+        <EmptyState 
+          icon="📰"
+          title={language === 'en' ? 'No News Available' : 'No hay noticias disponibles'}
+          description={language === 'en' 
+            ? 'No news articles have been published yet. Check back later for updates.' 
+            : 'Aún no se han publicado noticias. Vuelve más tarde para ver actualizaciones.'
+          }
+          actionText={canEditNews ? (language === 'en' ? 'Create First News' : 'Crear primera noticia') : null}
+          onAction={canEditNews ? () => navigate('/news/new') : null}
+          language={language}
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'row', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {/* Lista de noticias */}
@@ -238,6 +260,7 @@ const NewsPage = ({ language }) => {
         message={notification.message}
         type={notification.type}
       />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../assets/Configuration/config';
+import EmptyState from '../components/EmptyState';
+import ConfirmModal from '../components/ConfirmModal';
 
 // Cambia el endpoint para que apunte a /api/audit-log
 const API_AUDIT_LOG = `${API_BASE_URL}/api/audit-log`;
@@ -20,6 +22,8 @@ const AdminAuditPage = ({ language }) => {
   const [deleting, setDeleting] = useState(null);
   const [restoredIds, setRestoredIds] = useState(new Set());
   const [error, setError] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   useEffect(() => {
     fetchLogs();
@@ -78,14 +82,15 @@ const AdminAuditPage = ({ language }) => {
   };
 
   const handlePermanentDelete = async (entity, id) => {
-    if (!window.confirm(
-      language === 'en' 
-        ? 'Are you sure you want to permanently delete this item? This action cannot be undone.'
-        : '¿Estás seguro de eliminar permanentemente este elemento? Esta acción no se puede deshacer.'
-    )) {
-      return;
-    }
+    const entityLabel = entityLabels[entity] || entity;
+    setItemToDelete({ entity, id, label: entityLabel });
+    setShowConfirmModal(true);
+  };
 
+  const confirmPermanentDelete = async () => {
+    if (!itemToDelete) return;
+
+    const { entity, id } = itemToDelete;
     setDeleting(id);
     try {
       const res = await fetch(`${API_PERMANENT_DELETE}/${entity}/${id}`, {
@@ -107,6 +112,8 @@ const AdminAuditPage = ({ language }) => {
       alert(`Error al eliminar permanentemente: ${err.message}`);
     }
     setDeleting(null);
+    setShowConfirmModal(false);
+    setItemToDelete(null);
   };
 
   const getDaysRemaining = (scheduledDeletion) => {
@@ -119,8 +126,9 @@ const AdminAuditPage = ({ language }) => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2>{language === 'en' ? 'Trash / Recycle Bin' : 'Papelera de Reciclaje'}</h2>
+    <div className="full-page-container">
+      <div className="container">
+        <h2>{language === 'en' ? 'Trash / Recycle Bin' : 'Papelera de Reciclaje'}</h2>
       <p className="text-muted">
         {language === 'en' 
           ? 'Items deleted from the system are stored here for 15 days before permanent deletion.'
@@ -131,27 +139,32 @@ const AdminAuditPage = ({ language }) => {
           {error}
         </div>
       )}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover align-middle">
-          <thead>
-            <tr>
-              <th>{language === 'en' ? 'Deleted Date' : 'Fecha de Eliminación'}</th>
-              <th>{language === 'en' ? 'Entity Type' : 'Tipo de Entidad'}</th>
-              <th>{language === 'en' ? 'User' : 'Usuario'}</th>
-              <th>{language === 'en' ? 'Days Remaining' : 'Días Restantes'}</th>
-              <th>{language === 'en' ? 'Data' : 'Datos'}</th>
-              <th>{language === 'en' ? 'Actions' : 'Acciones'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.length === 0 ? (
+      {logs.length === 0 && !error ? (
+        <EmptyState
+          icon="🗑️"
+          title={language === 'en' ? 'Trash is Empty' : 'Papelera Vacía'}
+          description={
+            language === 'en' 
+              ? 'No deleted items are currently in the trash.' 
+              : 'No hay elementos eliminados en la papelera actualmente.'
+          }
+          language={language}
+        />
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover align-middle">
+            <thead>
               <tr>
-                <td colSpan="6" className="text-center text-muted">
-                  {language === 'en' ? 'No items in trash' : 'No hay elementos en la papelera'}
-                </td>
+                <th>{language === 'en' ? 'Deleted Date' : 'Fecha de Eliminación'}</th>
+                <th>{language === 'en' ? 'Entity Type' : 'Tipo de Entidad'}</th>
+                <th>{language === 'en' ? 'User' : 'Usuario'}</th>
+                <th>{language === 'en' ? 'Days Remaining' : 'Días Restantes'}</th>
+                <th>{language === 'en' ? 'Data' : 'Datos'}</th>
+                <th>{language === 'en' ? 'Actions' : 'Acciones'}</th>
               </tr>
-            ) : (
-              logs.map(log => {
+            </thead>
+            <tbody>
+              {logs.map(log => {
                 const daysRemaining = getDaysRemaining(log.scheduledDeletion);
                 const isExpiringSoon = daysRemaining <= 3;
                 
@@ -206,11 +219,11 @@ const AdminAuditPage = ({ language }) => {
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {logs.length > 0 && (
         <div className="mt-3">
           <small className="text-muted">
@@ -220,6 +233,28 @@ const AdminAuditPage = ({ language }) => {
           </small>
         </div>
       )}
+      
+      {/* Modal de confirmación para eliminar permanentemente */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onHide={() => {
+          setShowConfirmModal(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmPermanentDelete}
+        title={language === 'en' ? 'Permanent Deletion' : 'Eliminación Permanente'}
+        message={
+          itemToDelete 
+            ? (language === 'en' 
+                ? `Are you sure you want to permanently delete this ${itemToDelete.label}? This action cannot be undone.`
+                : `¿Estás seguro de eliminar permanentemente este ${itemToDelete.label}? Esta acción no se puede deshacer.`)
+            : ''
+        }
+        confirmText={language === 'en' ? 'Delete Permanently' : 'Eliminar Definitivamente'}
+        cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
+        confirmVariant="danger"
+      />
+      </div>
     </div>
   );
 };

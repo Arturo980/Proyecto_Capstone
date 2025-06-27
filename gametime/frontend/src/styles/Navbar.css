@@ -1,5 +1,5 @@
 .navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   width: 100%;
   z-index: 1030; /* Asegura que esté por encima de otros elementos */
@@ -8,18 +8,17 @@
   align-items: center;
   padding: 0 20px;
   margin-bottom: 0; /* Eliminar margen inferior */
-  transition: transform 0.3s ease-in-out; /* Animación para mostrar/ocultar */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; /* Animación suave para mostrar/ocultar */
   transform: translateY(0); /* Barra visible por defecto */
+  opacity: 1;
   min-height: 40px; /* Aumenta la altura mínima de la navbar */
   height: 56px;     /* Altura fija para mayor presencia visual */
+  will-change: transform, opacity; /* Optimización para animaciones */
 }
 
 .navbar.hidden {
   transform: translateY(-100%); /* Ocultar la barra moviéndola hacia arriba */
-}
-
-.horizontal-carousel-wrapper:hover ~ .navbar {
-  transform: translateY(0); /* Mostrar la barra cuando el mouse está sobre el carrusel */
+  opacity: 0;
 }
 
 .navbar-logo {

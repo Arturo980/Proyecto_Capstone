@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
+import EmptyState from '../components/EmptyState';
 
 const AdminSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -55,12 +56,27 @@ const AdminSolicitudes = () => {
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: '40px auto', padding: 24, background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px #0001' }}>
+    <div className="full-page-container">
+      <div style={{ maxWidth: 700, margin: '40px auto', padding: 24, background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px #0001' }}>
       <h2>Solicitudes de Registro</h2>
       {loading ? (
-        <p>Cargando...</p>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px',
+          fontSize: '1.1rem',
+          color: '#666'
+        }}>
+          <div className="spinner-border text-primary me-3" role="status"></div>
+          Cargando solicitudes...
+        </div>
       ) : solicitudes.length === 0 ? (
-        <p>No hay solicitudes pendientes.</p>
+        <EmptyState 
+          icon="✅"
+          title="¡Todo al día!"
+          description="No hay solicitudes de registro pendientes en este momento. Todas las solicitudes han sido procesadas."
+        />
       ) : (
         <table className="table table-striped">
           <thead>
@@ -109,6 +125,7 @@ const AdminSolicitudes = () => {
           </tbody>
         </table>
       )}
+      </div>
     </div>
   );
 };

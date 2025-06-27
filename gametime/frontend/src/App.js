@@ -174,13 +174,43 @@ function App() {
     }
   }, []);
 
+  // Manejar scroll para ocultar/mostrar navbar
+  useEffect(() => {
+    let lastY = 0;
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          // Mostrar navbar si estamos en la parte superior de la página
+          if (currentScrollY < 10) {
+            setIsNavbarHidden(false);
+          }
+          // Ocultar navbar al hacer scroll hacia abajo, mostrar al hacer scroll hacia arriba
+          else if (currentScrollY > lastY && currentScrollY > 80) {
+            setIsNavbarHidden(true);
+          } else if (currentScrollY < lastY) {
+            setIsNavbarHidden(false);
+          }
+          
+          lastY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e) => {
       const carousel = document.querySelector('.horizontal-carousel-wrapper');
       if (carousel && carousel.contains(e.target)) {
         setIsNavbarHidden(false); // Mostrar la barra si el mouse está sobre el carrusel
-      } else {
-        setIsNavbarHidden(true); // Ocultar la barra si el mouse no está sobre el carrusel
       }
     };
 
@@ -265,24 +295,27 @@ function App() {
             <Route
               path="*"
               element={
-                <div id="root" style={{ overflowX: 'hidden' }} className="main-content-padding">
+                <div>
                   {/* Navbar */}
                   <Navbar
                     className={isNavbarHidden ? 'hidden' : ''}
+                    isNavbarHidden={isNavbarHidden}
                     language={language}
                     setLanguage={setLanguage}
                     isLoggedIn={isLoggedIn}
                     setIsLoggedIn={setIsLoggedIn}
                   />
 
-                  {/* Horizontal Carousel */}
-                  <HorizontalGamesCarousel
-                    games={carouselGames}
-                    language={language}
-                  />
+                  {/* Contenido principal */}
+                  <div style={{ overflowX: 'hidden' }}>
+                    {/* Horizontal Carousel */}
+                    <HorizontalGamesCarousel
+                      games={carouselGames}
+                      language={language}
+                    />
 
-                  {/* Rutas internas */}
-                  <Routes>
+                    {/* Rutas internas */}
+                    <Routes>
                     {/* Página Home: layout especial */}
                     <Route
                       path="/"
@@ -330,10 +363,11 @@ function App() {
                     <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />
                     <Route path="/admin/solicitudes" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><AdminSolicitudes /></div>} />
                     <Route path="/admin/auditoria" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><AdminAuditPage language={language} /></div>} />
-                  </Routes>
+                    </Routes>
 
-                  {/* Footer */}
-                  <Footer language={language} />
+                    {/* Footer */}
+                    <Footer language={language} />
+                  </div>
                 </div>
               }
             />

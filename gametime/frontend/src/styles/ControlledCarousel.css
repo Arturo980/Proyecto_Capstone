@@ -18,25 +18,60 @@
 }
 
 .carousel-caption {
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.75);
+  padding: 15px 20px;
   border-radius: 9px;
-  width: 100%;
+  width: calc(100% - 20px);
+  max-height: 120px; /* Limitar altura máxima */
   position: absolute;
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  opacity: 1; /* Siempre visible */
+  transform: translateY(0);
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+  overflow: hidden; /* Ocultar contenido que se desborde */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .carousel:hover .carousel-caption {
-  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 .carousel-caption h3,
 .carousel-caption p {
   color: white;
   margin: 0;
+  text-align: left;
+}
+
+.carousel-caption h3 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  /* Limitar a máximo 2 líneas */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carousel-caption p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  /* Limitar a máximo 2 líneas */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Indicadores en la esquina inferior izquierda */
@@ -115,5 +150,49 @@
     width: 100% !important;
     max-width: 100vw !important;
     align-items: stretch !important;
+  }
+}
+
+/* Responsive para carrusel de noticias */
+@media (max-width: 768px) {
+  .carousel-caption {
+    max-height: 100px;
+    padding: 12px 15px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+  }
+  
+  .carousel-caption h3 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  
+  .carousel-caption p {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-caption {
+    max-height: 80px;
+    padding: 10px 12px;
+  }
+  
+  .carousel-caption h3 {
+    font-size: 1rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  
+  .carousel-caption p {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
 }

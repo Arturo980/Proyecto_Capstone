@@ -11,6 +11,8 @@ import DuringMatch from '../components/DuringMatch';
 import AfterMatch from '../components/AfterMatch';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
+import ConfirmModal from '../components/ConfirmModal';
 
 const API_TEAMS = `${API_BASE_URL}/api/teams`;
 const API_LEAGUES = `${API_BASE_URL}/api/leagues`;
@@ -67,7 +69,8 @@ const GamesPage = ({ language = 'es' }) => {
   const [selectedGame, setSelectedGame] = useState(null);
 
   // Modal de confirmación para eliminar partido
-  const [deleteGameId, setDeleteGameId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState(null);
 
   // NUEVO: Estado para el partido que se está editando el marcador en vivo
   const [liveScoreGame, setLiveScoreGame] = useState(null);
@@ -407,22 +410,26 @@ const GamesPage = ({ language = 'es' }) => {
   };
 
   const handleDeleteGame = (gameId) => {
-    setDeleteGameId(gameId);
+    const game = games.find(g => g._id === gameId);
+    setGameToDelete({ 
+      id: gameId, 
+      name: game ? `${game.team1?.name || 'Equipo 1'} vs ${game.team2?.name || 'Equipo 2'}` : 'Partido'
+    });
+    setShowConfirmModal(true);
   };
 
   const confirmDeleteGame = async () => {
-    if (deleteGameId) {
-      const res = await fetch(`${API_GAMES}/${deleteGameId}`, { method: 'DELETE' });
+    if (gameToDelete) {
+      const res = await fetch(`${API_GAMES}/${gameToDelete.id}`, { method: 'DELETE' });
       if (res.ok) {
         await fetchGames();
       }
       setEditingGame(null);
       setForm({ team1: '', team2: '', date: '', time: '' });
-      setDeleteGameId(null);
     }
+    setShowConfirmModal(false);
+    setGameToDelete(null);
   };
-
-  const cancelDeleteGame = () => setDeleteGameId(null);
 
   const handleCancelEdit = () => {
     setEditingGame(null);
@@ -538,7 +545,7 @@ const GamesPage = ({ language = 'es' }) => {
       setLiveScoreGame(prev => (prev && prev._id === _id ? null : prev));
       setPublicGameModal(prev => (prev && prev._id === _id ? null : prev));
       setEditingGame(prev => (prev && prev._id === _id ? null : prev));
-      setDeleteGameId(prev => (prev === _id ? null : prev));
+      setGameToDelete(prev => (prev && prev.id === _id ? null : prev));
     };
 
     // Nuevo: Actualizar partidos en tiempo real cuando se confirmen citados o se cree/actualice un partido
@@ -955,7 +962,21 @@ const GamesPage = ({ language = 'es' }) => {
           </div>
         )}
         <div className="row justify-content-center">
-          {games.map((game, idx) => {
+          {!loading && games.length === 0 ? (
+            <div className="col-12">
+              <EmptyState
+                icon="🏐"
+                title={language === 'en' ? 'No Games Scheduled' : 'No Hay Partidos Programados'}
+                description={
+                  language === 'en' 
+                    ? 'There are no games scheduled for the selected league. Check back later or select a different league.' 
+                    : 'No hay partidos programados para la liga seleccionada. Vuelve más tarde o selecciona una liga diferente.'
+                }
+                language={language}
+              />
+            </div>
+          ) : (
+            games.map((game, idx) => {
             // Buscar los objetos de equipo para obtener el logo
             const team1Obj = teams.find(t => t.name === game.team1);
             const team2Obj = teams.find(t => t.name === game.team2);
@@ -1069,7 +1090,8 @@ const GamesPage = ({ language = 'es' }) => {
                 </div>
               </div>
             );
-          })}
+            })
+          )}
         </div>
         {/* Modal para editar configuración */}
         {editConfigGame && (
@@ -1235,24 +1257,25 @@ const GamesPage = ({ language = 'es' }) => {
           </div>
         )}
         {/* Modal de confirmación para eliminar partido */}
-        {deleteGameId && (
-          <div className="modal-overlay" onClick={cancelDeleteGame}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
-              <p>
-                {language === 'en'
-                  ? 'Are you sure you want to delete this game?'
-                  : '¿Seguro que deseas eliminar este partido?'}
-              </p>
-              <button className="btn btn-danger me-2" onClick={confirmDeleteGame}>
-                {language === 'en' ? 'Delete' : 'Eliminar'}
-              </button>
-              <button className="btn btn-secondary" onClick={cancelDeleteGame}>
-                {language === 'en' ? 'Cancel' : 'Cancelar'}
-              </button>
-            </div>
-          </div>
-        )}
+        <ConfirmModal
+          show={showConfirmModal}
+          onHide={() => {
+            setShowConfirmModal(false);
+            setGameToDelete(null);
+          }}
+          onConfirm={confirmDeleteGame}
+          title={language === 'en' ? 'Delete Game' : 'Eliminar Partido'}
+          message={
+            gameToDelete 
+              ? (language === 'en' 
+                  ? `Are you sure you want to delete the game "${gameToDelete.name}"?`
+                  : `¿Seguro que deseas eliminar el partido "${gameToDelete.name}"?`)
+              : ''
+          }
+          confirmText={language === 'en' ? 'Delete' : 'Eliminar'}
+          cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
+          confirmVariant="danger"
+        />
         {/* Modal para seleccionar citados antes de mostrar el marcador */}
         {pendingCitadosGame && (
           <div className="modal-overlay" onClick={() => setPendingCitadosGame(null)}>
@@ -1392,9 +1415,6 @@ const GamesPage = ({ language = 'es' }) => {
           handleEditGame={handleEditGame}
           handleDeleteGame={handleDeleteGame}
           handleCancelEdit={handleCancelEdit}
-          deleteGameId={deleteGameId}
-          confirmDeleteGame={confirmDeleteGame}
-          cancelDeleteGame={cancelDeleteGame}
           language={language}
           texts={texts}
           selectedCitados={selectedCitados}

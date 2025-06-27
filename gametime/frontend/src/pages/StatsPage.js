@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../assets/Configuration/config';
 import texts from '../translations/texts';
 import '../styles/StatsPage.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
 import { Modal, Button, Form } from 'react-bootstrap'; // Asegúrate de tener react-bootstrap instalado
 
 // Cambia la definición de STAT_CATEGORIES para usar totales en vez de "por set"
@@ -444,7 +445,8 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
   }, [selectedPlayer, selectedGame, teams]);
 
   return (
-    <div className="stats-container">
+    <div className="full-page-container">
+      <div className="stats-container">
       {loading && <LoadingSpinner />}
       {!loading && (
         <>
@@ -521,8 +523,16 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
                               <tbody>
                                 {stats.length === 0 ? (
                                   <tr>
-                                    <td colSpan={cat.columns.length + 1} className="text-center text-muted">
-                                      {texts[language]?.no_stats_data || 'No hay datos de estadísticas disponibles.'}
+                                    <td colSpan={cat.columns.length + 1} className="text-center" style={{ padding: '40px' }}>
+                                      <EmptyState 
+                                        icon="📊"
+                                        title={language === 'en' ? 'No Statistics Available' : 'No hay estadísticas disponibles'}
+                                        description={language === 'en' 
+                                          ? 'No player statistics have been recorded for this category yet.' 
+                                          : 'Aún no se han registrado estadísticas de jugadores para esta categoría.'
+                                        }
+                                        language={language}
+                                      />
                                     </td>
                                   </tr>
                                 ) : (
@@ -733,6 +743,7 @@ const StatsPage = ({ language = 'es', activeLeague, onLeagueChange }) => {
           </Modal>
         </>
       )}
+      </div>
     </div>
   );
 };

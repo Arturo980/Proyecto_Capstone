@@ -1,13 +1,15 @@
 .carousel-container {
   width: 100vw;
-  padding: 10px 0;
-  background: #575757;
+  padding: 12px 0;
+  background: linear-gradient(135deg, #575757 0%, #4a4a4a 100%);
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   box-sizing: border-box;
   /* Nuevo: permite scroll horizontal en móviles */
   overflow-x: auto;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
 }
 
 .carousel-title {
@@ -16,11 +18,12 @@
   gap: 16px;
   color: #fff;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   min-width: 220px;
   margin-left: 16px;
   margin-bottom: 12px;
   flex-shrink: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .carousel-dropdown {
@@ -32,6 +35,18 @@
   font-weight: 700;
   cursor: pointer;
   font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+
+.carousel-dropdown:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.carousel-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.3);
 }
 
 .carousel-scroll {
@@ -61,18 +76,24 @@
 }
 
 .game-card {
-  background: #152549;
-  border-radius: 8px;
-  min-width: 230px; /* antes: 200px */
-  max-width: 420px; /* antes: 400px */
-  padding: 10px 32px 6px 10px; /* padding-right aumentado para el círculo */
+  background: linear-gradient(135deg, #152549 0%, #1e3a5f 100%);
+  border-radius: 12px;
+  min-width: 240px; /* Ligeramente más ancho */
+  max-width: 420px;
+  padding: 12px 32px 8px 12px; /* Mejor padding */
   color: #fff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: transform 0.15s;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .teams {
@@ -96,8 +117,13 @@
 }
 
 .game-date {
-  color: #b0b0b0;
-  font-size: 0.85rem;
+  color: #bfc9e0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 2px;
 }
 
 /* Carrusel horizontal: equipos alineados a la izquierda */
@@ -159,12 +185,17 @@
 }
 
 .team-logo-vertical {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   background: transparent !important;
-  /* Elimina el borde blanco si lo deseas */
-  /* border: none; */
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.team-logo-vertical:hover {
+  transform: scale(1.05);
 }
 
 .team-abbr-vertical {
@@ -233,20 +264,26 @@
 
 .team-abbr-vertical {
   font-weight: bold;
-  font-size: 1.08rem;
+  font-size: 1.1rem;
   color: #fff;
   letter-spacing: 0.5px;
   min-width: 28px;
   text-align: left;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .team-sets-vertical {
   font-weight: bold;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: #ffffff;
-  min-width: 18px;
+  min-width: 20px;
   margin-left: 10px;
   text-align: right;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Responsive: reduce tamaño en móviles */
@@ -330,8 +367,8 @@
 @media (max-width: 600px) {
   .carousel-container {
     width: 100vw;
-    padding: 4px 0;
-    flex-direction: row; /* Mantiene partidos a la derecha */
+    padding: 8px 0;
+    flex-direction: row;
     align-items: flex-start;
     overflow-x: auto;
   }
@@ -339,38 +376,109 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-    margin-left: 8px;
-    margin-bottom: 6px;
-    font-size: 0.98rem;
-    min-width: 140px;
-    max-width: 160px;
+    margin-left: 12px;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    min-width: 150px;
+    max-width: 170px;
     flex-shrink: 0;
-    margin-right: 10px;
+    margin-right: 12px;
   }
   .carousel-dropdown {
-    padding: 6px 10px;
-    font-size: 0.98rem;
+    padding: 8px 12px;
+    font-size: 0.9rem;
     width: 100%;
-    max-width: 140px;
+    max-width: 150px;
   }
   .carousel-scroll {
-    gap: 8px;
-    padding-bottom: 4px;
+    gap: 12px;
+    padding-bottom: 6px;
     min-width: 0;
-    min-height: 110px; /* Reduce el min-height en móviles para evitar vacío */
+    min-height: 140px;
+    margin-left: 8px;
+    margin-right: 16px;
+  }
+  .game-card {
+    min-width: 180px;
+    max-width: 280px;
+    padding: 10px 10px 8px 10px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    gap: 8px;
+  }
+  .teams-vertical-sets {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .team-vertical-sets {
+    gap: 8px;
+    padding: 2px 0;
+  }
+  .team-logo-vertical {
+    width: 28px;
+    height: 28px;
+  }
+  .team-abbr-vertical {
+    font-size: 1rem;
+    min-width: 24px;
+  }
+  .team-sets-vertical {
+    font-size: 1.1rem;
+    min-width: 18px;
+    margin-left: 8px;
+    padding: 2px 5px;
+  }
+  .game-date {
+    font-size: 0.8rem;
+    padding: 4px 6px;
+    margin-top: 4px;
+  }
+}
+
+/* Para pantallas muy pequeñas (menos de 400px) */
+@media (max-width: 400px) {
+  .carousel-title {
+    margin-left: 8px;
+    min-width: 120px;
+    max-width: 140px;
+    font-size: 0.95rem;
+  }
+  .carousel-dropdown {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    max-width: 120px;
+  }
+  .carousel-scroll {
+    margin-left: 4px;
+    margin-right: 8px;
+    gap: 8px;
   }
   .game-card {
     min-width: 150px;
-    max-width: 300px;
-    padding: 7px 6px 4px 6px;
-    font-size: 0.92rem;
+    max-width: 240px;
+    padding: 8px 8px 6px 8px;
+    gap: 6px;
   }
-  .team-logo {
-    width: 18px;
-    height: 18px;
+  .teams-vertical-sets {
+    gap: 6px;
+  }
+  .team-logo-vertical {
+    width: 24px;
+    height: 24px;
+  }
+  .team-abbr-vertical {
+    font-size: 0.9rem;
+    min-width: 20px;
+  }
+  .team-sets-vertical {
+    font-size: 1rem;
+    min-width: 16px;
+    margin-left: 6px;
+    padding: 1px 4px;
   }
   .game-date {
     font-size: 0.75rem;
+    padding: 3px 5px;
   }
 }
 
@@ -408,17 +516,44 @@ body.theme-light .modal-content td.sets-cell {
   background: #e53935;
   border: 2px solid #fff;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   display: inline-block;
-  box-shadow: 0 0 6px #e53935;
+  box-shadow: 0 0 8px #e53935, 0 0 16px rgba(229, 57, 53, 0.4);
 }
 
 .live-dot-blink {
-  animation: live-blink 2s infinite; /* Más lento: antes 1s, ahora 2s */
+  animation: live-blink 1.5s infinite; /* Más suave */
 }
 
 @keyframes live-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+    box-shadow: 0 0 8px #e53935, 0 0 16px rgba(229, 57, 53, 0.4);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: scale(1.1);
+    box-shadow: 0 0 12px #e53935, 0 0 24px rgba(229, 57, 53, 0.6);
+  }
+}
+
+/* Ajustes para el indicador LIVE en móviles */
+@media (max-width: 600px) {
+  .live-dot {
+    width: 16px;
+    height: 16px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .live-dot {
+    width: 14px;
+    height: 14px;
+    top: 6px;
+    right: 6px;
+  }
 }

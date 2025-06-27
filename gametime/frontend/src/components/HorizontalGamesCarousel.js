@@ -8,7 +8,7 @@ const GAMES_URL = `${API_BASE_URL}/api/games`;
 const TEAMS_URL = `${API_BASE_URL}/api/teams`;
 const SOCKET_URL = API_BASE_URL;
 
-const HorizontalGamesCarousel = () => {
+const HorizontalGamesCarousel = ({ language = 'es' }) => {
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState("");
   const [games, setGames] = useState([]);
@@ -18,6 +18,34 @@ const HorizontalGamesCarousel = () => {
   const [publicGameModal, setPublicGameModal] = useState(null);
   const [liveSetScore, setLiveSetScore] = useState({ score1: 0, score2: 0 });
   const [loadingDots, setLoadingDots] = useState(0);
+
+  // Función para formatear fechas según el idioma
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      
+      if (language === 'en') {
+        // Formato inglés: MM/DD/YYYY
+        return date.toLocaleDateString('en-US', {
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric'
+        });
+      } else {
+        // Formato español: DD/MM/YYYY
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
 
   // Animación de puntos para "Cargando..."
   useEffect(() => {
@@ -231,7 +259,7 @@ const HorizontalGamesCarousel = () => {
   return (
     <div className="carousel-container">
       <div className="carousel-title">
-        <span>Resultados</span>
+        <span>{language === 'en' ? 'Results' : 'Resultados'}</span>
         <select
           className="carousel-dropdown"
           value={selectedLeague}
@@ -258,14 +286,30 @@ const HorizontalGamesCarousel = () => {
               padding: 16,
               textAlign: "left",
               width: "100%",
-              fontSize: "clamp(1rem, 2.5vw, 1.3rem)"
+              fontSize: "clamp(1rem, 2.5vw, 1.3rem)",
+              background: "rgba(255, 255, 255, 0.05)",
+              borderRadius: 8,
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              backdropFilter: "blur(10px)"
             }}
           >
-            {`Cargando${'.'.repeat(loadingDots + 1)}`}
+            {language === 'en' 
+              ? `Loading${'.'.repeat(loadingDots + 1)}`
+              : `Cargando${'.'.repeat(loadingDots + 1)}`
+            }
           </div>
         ) : games.length === 0 ? (
-          <div style={{ color: "#fff", padding: 16 }}>
-            No hay partidos programados.
+          <div style={{ 
+            color: "#fff", 
+            padding: 16, 
+            background: "rgba(255, 255, 255, 0.05)",
+            borderRadius: 8,
+            border: "1px solid rgba(255, 255, 255, 0.1)"
+          }}>
+            {language === 'en' 
+              ? 'No games scheduled.'
+              : 'No hay partidos programados.'
+            }
           </div>
         ) : (
           games.map((game, idx) => {
@@ -346,7 +390,7 @@ const HorizontalGamesCarousel = () => {
                   </div>
                 </div>
                 <div className="game-date">
-                  {game.date} {game.time}
+                  {formatDate(game.date)} {game.time}
                 </div>
               </div>
             );
@@ -467,10 +511,12 @@ const HorizontalGamesCarousel = () => {
                     {/* Solo mostrar columna en vivo si el partido está en curso */}
                     {(!publicGameModal.partidoFinalizado && publicGameModal.citados && publicGameModal.citados.trim() !== '') && (
                       <th style={{ padding: 6, border: '1px solid #ddd', color: '#007bff' }}>
-                        En vivo
+                        {language === 'en' ? 'Live' : 'En vivo'}
                       </th>
                     )}
-                    <th style={{ padding: 6, border: '1px solid #ddd' }}>Sets</th>
+                    <th style={{ padding: 6, border: '1px solid #ddd' }}>
+                      {language === 'en' ? 'Sets' : 'Sets'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -541,7 +587,7 @@ const HorizontalGamesCarousel = () => {
                 </tbody>
               </table>
               <div style={{ fontSize: 15, color: '#888', marginTop: 10 }}>
-                {publicGameModal.date} {publicGameModal.time}
+                {formatDate(publicGameModal.date)} {publicGameModal.time}
               </div>
               <div style={{
                 marginTop: 12,
@@ -555,10 +601,10 @@ const HorizontalGamesCarousel = () => {
                     : '#28a745'
               }}>
                 {publicGameModal.partidoFinalizado
-                  ? 'Finalizado'
+                  ? (language === 'en' ? 'Finished' : 'Finalizado')
                   : (!publicGameModal.citados || publicGameModal.citados.trim() === '')
-                    ? 'Pendiente'
-                    : 'En vivo'}
+                    ? (language === 'en' ? 'Pending' : 'Pendiente')
+                    : (language === 'en' ? 'Live' : 'En vivo')}
               </div>
             </div>
           </div>

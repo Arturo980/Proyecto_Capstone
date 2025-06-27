@@ -4,6 +4,8 @@ import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
+import ConfirmModal from '../components/ConfirmModal';
 
 const API_GAMES = `${API_BASE_URL}/api/games`;
 const API_MATCH_IMAGES = `${API_BASE_URL}/api/match-images`;
@@ -34,7 +36,8 @@ const MediaPage = ({ language }) => {
   const [modalImage, setModalImage] = useState(null);
 
   // Modal de confirmación para eliminar imagen
-  const [deleteImageId, setDeleteImageId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState(null);
 
   // Estado de carga
   const [loading, setLoading] = useState(true);
@@ -95,46 +98,62 @@ const MediaPage = ({ language }) => {
   };
 
   // Eliminar imagen (con modal)
-  const handleDeleteImage = async (imageId) => {
-    setDeleteImageId(imageId);
+  const handleDeleteImage = async (imageId, imageName) => {
+    setImageToDelete({ id: imageId, name: imageName });
+    setShowConfirmModal(true);
   };
 
   const confirmDeleteImage = async () => {
-    if (deleteImageId) {
-      await fetch(`${API_MATCH_IMAGES}/${deleteImageId}`, { method: 'DELETE' });
+    if (imageToDelete) {
+      await fetch(`${API_MATCH_IMAGES}/${imageToDelete.id}`, { method: 'DELETE' });
       if (selectedGame) fetchImages(selectedGame._id);
-      setDeleteImageId(null);
     }
+    setShowConfirmModal(false);
+    setImageToDelete(null);
   };
-
-  const cancelDeleteImage = () => setDeleteImageId(null);
 
   // Render para todos los usuarios (público y autenticados)
   return (
-    <div className="media-page container mt-5">
-      {loading && <LoadingSpinner />}
-      {!loading && (
-        <>
-          <h1>{language === 'en' ? 'Match Images' : 'Imágenes de Partidos'}</h1>
+    <div className="media-page">
+      <div className="container">
+        {loading && <LoadingSpinner />}
+        {!loading && (
+          <>
+            <h1>{language === 'en' ? 'Match Images' : 'Imágenes de Partidos'}</h1>
           {!selectedGame ? (
             <div className="row">
-              {games.map((game, idx) => (
-                <div
-                  key={game._id || idx}
-                  className="col-md-6 match-card d-flex align-items-center justify-content-center mb-4"
-                  onClick={() => handleSelectGame(game)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: 18 }}>
-                      {game.team1} {texts[language]?.vs || 'vs'} {game.team2}
-                    </div>
-                    <div style={{ fontSize: 15, color: '#555' }}>
-                      {game.date} - {game.time}
+              {games.length === 0 ? (
+                <div className="col-12">
+                  <EmptyState
+                    icon="🏐"
+                    title={language === 'en' ? 'No Games Available' : 'No Hay Partidos Disponibles'}
+                    description={
+                      language === 'en' 
+                        ? 'There are no games scheduled yet. Please check back later.' 
+                        : 'Aún no hay partidos programados. Por favor, vuelve más tarde.'
+                    }
+                    language={language}
+                  />
+                </div>
+              ) : (
+                games.map((game, idx) => (
+                  <div
+                    key={game._id || idx}
+                    className="col-md-6 match-card d-flex align-items-center justify-content-center mb-4"
+                    onClick={() => handleSelectGame(game)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: 18 }}>
+                        {game.team1} {texts[language]?.vs || 'vs'} {game.team2}
+                      </div>
+                      <div style={{ fontSize: 15, color: '#555' }}>
+                        {game.date} - {game.time}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           ) : (
             <div>
@@ -202,36 +221,51 @@ const MediaPage = ({ language }) => {
               )}
               {/* Renderiza las imágenes usando la URL del backend o Cloudinary */}
               <div className="row">
-                {images.map((image, idx) => (
-                  <div key={idx} className="col-md-4 d-flex flex-column align-items-center">
-                    <img
-                      src={
-                        image.url.startsWith('http')
-                          ? image.url
-                          : `${API_BASE_URL}${image.url}`
+                {!loading && images.length === 0 ? (
+                  <div className="col-12">
+                    <EmptyState
+                      icon="📸"
+                      title={language === 'en' ? 'No Images' : 'Sin Imágenes'}
+                      description={
+                        language === 'en' 
+                          ? 'No images have been uploaded for this match yet.' 
+                          : 'Aún no se han subido imágenes para este partido.'
                       }
-                      alt=""
-                      className="img-fluid rounded mb-3"
-                      style={{
-                        width: '100%',
-                        maxWidth: 300,
-                        height: 200,
-                        objectFit: 'cover',
-                        cursor: 'pointer',
-                        background: '#eee'
-                      }}
-                      onClick={() => setModalImage(image)}
+                      language={language}
                     />
-                    {(userRole === 'content-editor' || userRole === 'admin') && (
-                      <button
-                        className="btn btn-outline-danger btn-sm mt-2"
-                        onClick={() => handleDeleteImage(image._id)}
-                      >
-                        {language === 'en' ? 'Delete' : 'Eliminar'}
-                      </button>
-                    )}
                   </div>
-                ))}
+                ) : (
+                  images.map((image, idx) => (
+                    <div key={idx} className="col-md-4 d-flex flex-column align-items-center">
+                      <img
+                        src={
+                          image.url.startsWith('http')
+                            ? image.url
+                            : `${API_BASE_URL}${image.url}`
+                        }
+                        alt=""
+                        className="img-fluid rounded mb-3"
+                        style={{
+                          width: '100%',
+                          maxWidth: 300,
+                          height: 200,
+                          objectFit: 'cover',
+                          cursor: 'pointer',
+                          background: '#eee'
+                        }}
+                        onClick={() => setModalImage(image)}
+                      />
+                      {(userRole === 'content-editor' || userRole === 'admin') && (
+                        <button
+                          className="btn btn-outline-danger btn-sm mt-2"
+                          onClick={() => handleDeleteImage(image._id, image.name || 'Imagen')}
+                        >
+                          {language === 'en' ? 'Delete' : 'Eliminar'}
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
               {/* Modal para ver imagen en tamaño original */}
               {modalImage && (
@@ -279,28 +313,30 @@ const MediaPage = ({ language }) => {
                 </div>
               )}
               {/* Modal de confirmación para eliminar imagen */}
-              {deleteImageId && (
-                <div className="modal-overlay" onClick={cancelDeleteImage}>
-                  <div className="modal-content" onClick={e => e.stopPropagation()}>
-                    <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
-                    <p>
-                      {language === 'en'
-                        ? 'Are you sure you want to delete this image?'
-                        : '¿Seguro que deseas eliminar esta imagen?'}
-                    </p>
-                    <button className="btn btn-danger me-2" onClick={confirmDeleteImage}>
-                      {language === 'en' ? 'Delete' : 'Eliminar'}
-                    </button>
-                    <button className="btn btn-secondary" onClick={cancelDeleteImage}>
-                      {language === 'en' ? 'Cancel' : 'Cancelar'}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <ConfirmModal
+                show={showConfirmModal}
+                onHide={() => {
+                  setShowConfirmModal(false);
+                  setImageToDelete(null);
+                }}
+                onConfirm={confirmDeleteImage}
+                title={language === 'en' ? 'Delete Image' : 'Eliminar Imagen'}
+                message={
+                  imageToDelete 
+                    ? (language === 'en' 
+                        ? `Are you sure you want to delete "${imageToDelete.name}"?`
+                        : `¿Seguro que deseas eliminar "${imageToDelete.name}"?`)
+                    : ''
+                }
+                confirmText={language === 'en' ? 'Delete' : 'Eliminar'}
+                cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
+                confirmVariant="danger"
+              />
             </div>
           )}
         </>
       )}
+      </div>
     </div>
   );
 };

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import { useParams, useNavigate } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
 
 const NewsDetailPage = ({ language }) => {
   const { id } = useParams();
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const navigate = useNavigate();
 
   // Detecta si el usuario es editor o admin
@@ -27,9 +29,10 @@ const NewsDetailPage = ({ language }) => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm(language === 'en'
-      ? 'Are you sure you want to delete this news?'
-      : '¿Estás seguro de que deseas eliminar esta noticia?')) return;
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/news/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -41,6 +44,7 @@ const NewsDetailPage = ({ language }) => {
     } catch {
       setError(language === 'en' ? 'Error deleting news.' : 'Error al eliminar la noticia.');
     }
+    setShowConfirmModal(false);
   };
 
   if (loading) {
@@ -108,6 +112,24 @@ const NewsDetailPage = ({ language }) => {
           </div>
         )}
       </div>
+
+      {/* Modal de confirmación para eliminar */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        onConfirm={confirmDelete}
+        title={language === 'en' ? 'Delete News' : 'Eliminar Noticia'}
+        message={
+          news 
+            ? (language === 'en' 
+                ? `Are you sure you want to delete "${news.titulo}"?`
+                : `¿Estás seguro de eliminar "${news.titulo}"?`)
+            : ''
+        }
+        confirmText={language === 'en' ? 'Delete' : 'Eliminar'}
+        cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
+        confirmVariant="danger"
+      />
     </div>
   );
 };

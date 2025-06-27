@@ -3,6 +3,8 @@ import '../styles/MediaPage.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 import LeagueConfigModal from '../components/LeagueConfigModal'; // Nuevo import
+import EmptyState from '../components/EmptyState';
+import ConfirmModal from '../components/ConfirmModal';
 import settingsIcon from '../assets/images/icons8-settings-384.png';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import { useNavigate } from 'react-router-dom'; // NUEVO
@@ -50,8 +52,9 @@ const TeamsPage = ({ language, userRole }) => {
   const [leagueConfig, setLeagueConfig] = useState(defaultLeagueConfig);
   const [showLeagueConfigModal, setShowLeagueConfigModal] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
-  const [showDeleteLeagueModal, setShowDeleteLeagueModal] = useState(false);
-  const [leagueToDelete, setLeagueToDelete] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmData, setConfirmData] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -218,34 +221,33 @@ const TeamsPage = ({ language, userRole }) => {
   // Reemplaza handleDeleteLeague para abrir el modal en vez de usar window.confirm
   const handleDeleteLeague = (leagueId) => {
     setShowLeagueConfigModal(false); // Cierra el modal de configuración
-    setLeagueToDelete(leagueId);
-    setShowDeleteLeagueModal(true);
+    const league = leagues.find(l => l._id === leagueId);
+    setConfirmAction('deleteLeague');
+    setConfirmData({ leagueId, leagueName: league?.nombre || 'Liga' });
+    setShowConfirmModal(true);
   };
 
   const confirmDeleteLeague = async () => {
-    if (!leagueToDelete) return;
-    setShowLeagueConfigModal(false); // Asegura que el modal de configuración esté cerrado
-    const res = await fetch(`${LEAGUES_URL}/${leagueToDelete}`, { method: 'DELETE' });
-    if (res.ok) {
-      setLeagues(prev => prev.filter(l => l._id !== leagueToDelete));
-      if (activeLeague === leagueToDelete) {
-        const remaining = leagues.filter(l => l._id !== leagueToDelete);
-        setActiveLeague(remaining.length > 0 ? remaining[0]._id : '');
-        setTeams([]);
+    if (confirmData && confirmAction === 'deleteLeague') {
+      setShowLeagueConfigModal(false); // Asegura que el modal de configuración esté cerrado
+      const res = await fetch(`${LEAGUES_URL}/${confirmData.leagueId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setLeagues(prev => prev.filter(l => l._id !== confirmData.leagueId));
+        if (activeLeague === confirmData.leagueId) {
+          const remaining = leagues.filter(l => l._id !== confirmData.leagueId);
+          setActiveLeague(remaining.length > 0 ? remaining[0]._id : '');
+          setTeams([]);
+        }
+      } else {
+        const data = await res.json();
+        alert(data.error || (language === 'en'
+          ? 'Could not delete league.'
+          : 'No se pudo eliminar la liga.'));
       }
-    } else {
-      const data = await res.json();
-      alert(data.error || (language === 'en'
-        ? 'Could not delete league.'
-        : 'No se pudo eliminar la liga.'));
     }
-    setShowDeleteLeagueModal(false);
-    setLeagueToDelete(null);
-  };
-
-  const cancelDeleteLeague = () => {
-    setShowDeleteLeagueModal(false);
-    setLeagueToDelete(null);
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+    setConfirmData(null);
   };
 
   // Eliminar liga
@@ -328,29 +330,38 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // Modal de confirmación para eliminar equipo
-  const [deleteTeamIdx, setDeleteTeamIdx] = useState(null);
-
-  // Eliminar equipo (con modal)
   const handleDeleteTeam = (idx) => {
-    setDeleteTeamIdx(idx);
+    const team = teams[idx];
+    setConfirmAction('deleteTeam');
+    setConfirmData({ idx, teamName: team.name });
+    setShowConfirmModal(true);
   };
 
   const confirmDeleteTeam = async () => {
-    if (deleteTeamIdx !== null) {
-      const teamId = teams[deleteTeamIdx]._id;
+    if (confirmData && confirmAction === 'deleteTeam') {
+      const teamId = teams[confirmData.idx]._id;
       setLoading(true);
       // eslint-disable-next-line no-unused-vars
       const res = await fetch(`${API_URL}/${teamId}`, { method: 'DELETE' });
       // Elimina el equipo del estado local sin afectar otras secciones ni recargar la liga
-      setTeams(prev => prev.filter((_, i) => i !== deleteTeamIdx));
+      setTeams(prev => prev.filter((_, i) => i !== confirmData.idx));
       setEditingTeam(null);
       setTeamForm(defaultTeam);
       setLoading(false);
-      setDeleteTeamIdx(null);
     }
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+    setConfirmData(null);
   };
 
-  const cancelDeleteTeam = () => setDeleteTeamIdx(null);
+  // Función genérica para manejar confirmaciones
+  const handleConfirm = () => {
+    if (confirmAction === 'deleteTeam') {
+      confirmDeleteTeam();
+    } else if (confirmAction === 'deleteLeague') {
+      confirmDeleteLeague();
+    }
+  };
 
   // Cambia handleShowTeam para agregar un pequeño delay antes de navegar
   const handleShowTeam = (team) => {
@@ -596,11 +607,12 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   return (
-    <div className="container" style={{ margin: 0 }}>
-      {loading && <LoadingSpinner />}
-      {!loading && (
-        <>
-          <h2>{texts[language]?.teams_title || (language === 'en' ? 'Teams' : 'Equipos')}</h2>
+    <div className="full-page-container">
+      <div className="container">
+        {loading && <LoadingSpinner />}
+        {!loading && (
+          <>
+            <h2>{texts[language]?.teams_title || (language === 'en' ? 'Teams' : 'Equipos')}</h2>
           {/* Selector de liga */}
           <div className="mb-4">
             <label className="form-label">{texts[language]?.select_league || (language === 'en' ? 'Select League:' : 'Selecciona Liga:')}</label>
@@ -663,27 +675,6 @@ const TeamsPage = ({ language, userRole }) => {
               editConfig={editConfig} // Pasa editConfig y handleEditConfigChange si tu modal lo soporta
               handleEditConfigChange={handleEditConfigChange}
             />
-          )}
-          {/* Modal de confirmación para eliminar liga */}
-          {showDeleteLeagueModal && (
-            <div className="modal-overlay" onClick={cancelDeleteLeague}>
-              <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
-                <p>
-                  {language === 'en'
-                    ? 'Are you sure you want to delete this league and all its teams?'
-                    : '¿Seguro que deseas eliminar esta liga y todos sus equipos?'}
-                </p>
-                <div className="delete-league-modal-buttons">
-                  <button className="btn btn-danger" style={{ minWidth: 140 }} onClick={confirmDeleteLeague}>
-                    {language === 'en' ? 'Delete League' : 'Eliminar Liga'}
-                  </button>
-                  <button className="btn btn-secondary" style={{ minWidth: 140 }} onClick={cancelDeleteLeague}>
-                    {language === 'en' ? 'Cancel' : 'Cancelar'}
-                  </button>
-                </div>
-              </div>
-            </div>
           )}
           {/* Formulario para crear nueva liga */}
           {showCreateLeague && (userRole === 'content-editor' || userRole === 'admin') && (
@@ -801,7 +792,35 @@ const TeamsPage = ({ language, userRole }) => {
             </div>
           ) : null}
           <div className="row justify-content-center">
-            {teams.map((team, idx) => (
+            {teams.length === 0 ? (
+              <EmptyState 
+                icon="⚽"
+                title={language === 'en' ? 'No Teams Yet' : 'Aún no hay equipos'}
+                description={
+                  (userRole === 'content-editor' || userRole === 'admin') 
+                    ? (language === 'en' 
+                        ? 'No teams have been created in this league yet. Start by adding your first team.' 
+                        : 'Aún no se han creado equipos en esta liga. Comienza agregando tu primer equipo.'
+                      )
+                    : (language === 'en' 
+                        ? 'No teams are registered in this league yet. Check back later.' 
+                        : 'Aún no hay equipos registrados en esta liga. Vuelve más tarde.'
+                      )
+                }
+                actionText={
+                  (userRole === 'content-editor' || userRole === 'admin') 
+                    ? (language === 'en' ? 'Add First Team' : 'Agregar primer equipo') 
+                    : null
+                }
+                onAction={
+                  (userRole === 'content-editor' || userRole === 'admin') 
+                    ? openAddTeam 
+                    : null
+                }
+                language={language}
+              />
+            ) : (
+              teams.map((team, idx) => (
               <div
                 key={team._id}
                 className="col-md-4 mb-3"
@@ -851,7 +870,7 @@ const TeamsPage = ({ language, userRole }) => {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
           {/* Elimina el modal para ver equipo */}
           {/* Modal para agregar/editar equipo */}
@@ -1033,29 +1052,41 @@ const TeamsPage = ({ language, userRole }) => {
             </div>
           )}
 
-          {/* Modal de confirmación para eliminar equipo */}
-          {deleteTeamIdx !== null && (
-            <div className="modal-overlay" onClick={cancelDeleteTeam}>
-              <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <h4>{language === 'en' ? 'Confirm Deletion' : 'Confirmar Eliminación'}</h4>
-                <p>
-                  {language === 'en'
-                    ? 'Are you sure you want to delete this team?'
-                    : '¿Seguro que deseas eliminar este equipo?'}
-                </p>
-                <button className="btn btn-danger me-2" onClick={confirmDeleteTeam}>
-                  {language === 'en' ? 'Delete' : 'Eliminar'}
-                </button>
-                <button className="btn btn-secondary" onClick={cancelDeleteTeam}>
-                  {language === 'en' ? 'Cancel' : 'Cancelar'}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Elimina el modal para editar stats de jugador */}
+          {/* Modal de confirmación unificado */}
+          <ConfirmModal
+            show={showConfirmModal}
+            onHide={() => {
+              setShowConfirmModal(false);
+              setConfirmAction(null);
+              setConfirmData(null);
+            }}
+            onConfirm={handleConfirm}
+            title={
+              confirmAction === 'deleteTeam' 
+                ? (language === 'en' ? 'Delete Team' : 'Eliminar Equipo')
+                : confirmAction === 'deleteLeague'
+                ? (language === 'en' ? 'Delete League' : 'Eliminar Liga')
+                : ''
+            }
+            message={
+              confirmAction === 'deleteTeam' 
+                ? (language === 'en' 
+                    ? `Are you sure you want to delete the team "${confirmData?.teamName}"?`
+                    : `¿Seguro que deseas eliminar el equipo "${confirmData?.teamName}"?`)
+                : confirmAction === 'deleteLeague'
+                ? (language === 'en' 
+                    ? `Are you sure you want to delete the league "${confirmData?.leagueName}" and all its teams?`
+                    : `¿Seguro que deseas eliminar la liga "${confirmData?.leagueName}" y todos sus equipos?`)
+                : ''
+            }
+            confirmText={language === 'en' ? 'Delete' : 'Eliminar'}
+            cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
+            confirmVariant="danger"
+          />
         </>
       )}
+      </div>
     </div>
   );
 };
