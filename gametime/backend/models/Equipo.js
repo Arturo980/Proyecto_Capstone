@@ -7,6 +7,9 @@ const equipoSchema = new mongoose.Schema({
   logo: String,
   roster: [{
     name: { type: String, required: true },
+    rut: { type: String, default: '' }, // RUT del jugador
+    age: { type: Number, default: 0 }, // Edad del jugador
+    image: { type: String, default: '' }, // URL de la imagen del jugador
     stats: {
       acesPerSet: { type: Number, default: 0 },
       assistsPerSet: { type: Number, default: 0 },

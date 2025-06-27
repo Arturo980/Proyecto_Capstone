@@ -5,10 +5,9 @@
 }
 
 .standings-table-container {
-  border-radius: 9px;
+  border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(90deg, #f1f5f9 0%, #e0e7ef 100%);
-  box-shadow: 0 4px 18px 0 rgba(30, 41, 59, 0.08);
+  background: #ffffff;
   margin-bottom: 16px;
 }
 
@@ -19,6 +18,8 @@
   table-layout: fixed;
   border-radius: 12px;
   overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 4px 18px 0 rgba(0,0,0,0.10);
 }
 
 .standingsTable th,
@@ -28,70 +29,99 @@
 }
 
 .standings-header-row th {
-  background: #1e293b !important;
-  color: #fff !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
   font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 1px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
   border: none !important;
+  padding: 12px 8px;
+  text-transform: uppercase;
+}
+
+.standings-header-row th:first-child {
+  width: 50px;
+}
+
+.standings-header-row th:nth-child(2) {
+  min-width: 80px;
+  text-align: left;
+}
+
+.standings-header-row th:nth-child(n+3) {
+  width: 13%;
+  text-align: center;
 }
 
 .standings-row {
-  background: #fff;
-  transition: background 0.2s;
+  background: #ffffff;
+  transition: background 0.2s ease;
 }
 
 .standings-row:hover {
+  background: #f8fafc;
+}
+
+.standings-row:nth-child(even) {
+  background: #f8fafc;
+}
+
+.standings-row:nth-child(even):hover {
   background: #f1f5f9;
-}
-
-.first-place {
-  background: linear-gradient(90deg, #ffe066 0%, #fffbe6 100%) !important;
-}
-
-.second-place {
-  background: linear-gradient(90deg, #bcdffb 0%, #e6f7ff 100%) !important;
-}
-
-.third-place {
-  background: linear-gradient(90deg, #ffd6a5 0%, #fff3e6 100%) !important;
 }
 
 .standings-row td {
   border: none !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
   text-align: center;
+  padding: 10px 8px;
 }
 
 .standings-row td img {
-  background: transparent !important;
+  background: #ffffff !important;
   border-radius: 8px;
-  border: 2px solid #e2e8f0;
-  height: 45px !important;
-  width: 45px !important;
+  border: 1px solid #e5e7eb;
+  height: 40px !important;
+  width: 40px !important;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .standings-row td:first-child {
   text-align: center;
   vertical-align: middle !important;
-  padding-left: 0;
-  padding-right: 0;
-  width: 50px;
+  padding: 10px 8px;
+  width: 55px;
 }
 
 .standings-row td:nth-child(2) {
   text-align: left;
   vertical-align: middle !important;
-  font-size: 1.1em;
-  font-weight: bold;
-  padding-left: 8px;
-  white-space: nowrap;        /* Solo una línea */
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: var(--abbr-max-width, 180px);
   min-width: 0;
-  line-height: 1.1;
+  color: #1f2937;
+}
+
+.standings-row td:nth-child(n+3):not(:last-child) {
+  font-weight: 500;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.standings-row td:last-child {
+  font-weight: 700;
+  font-size: 16px;
+  color: #1f2937;
+  text-align: center;
 }
 
 .standings-abbr-text {
@@ -103,48 +133,11 @@
   font-weight: inherit;
 }
 
-/* Variables para modo claro/oscuro */
+/* Variables para colores */
 :root {
-  --standings-title-bg: #1e293b;
-  --standings-title-color: #fff;
   --standings-select-bg: #fff;
   --standings-select-color: #1e293b;
   --standings-select-border: #cbd5e1;
-}
-.theme-dark {
-  --standings-title-bg: #f1f5f9;
-  --standings-title-color: #1e293b;
-  --standings-select-bg: #1e293b;
-  --standings-select-color: #fff;
-  --standings-select-border: #64748b;
-}
-
-/* Título de la tabla de posiciones */
-.standings-title {
-  background-color: var(--standings-title-bg) !important;
-  color: var(--standings-title-color) !important;
-  font-size: 2rem;
-  font-weight: bold;
-  text-align: center;
-  padding: 16px 0 8px 0;
-  border-radius: 9px 9px 0 0;
-  margin-bottom: 0;
-  letter-spacing: 1px;
-  /* Elimina cualquier gradiente heredado */
-  background-image: none !important;
-}
-
-.standings-title-text {
-  color: #1e293b;
-  font-size: 2rem;
-  font-weight: bold;
-  text-align: left;
-  letter-spacing: 1px;
-  /* sin fondo ni padding extra */
-}
-
-.theme-dark .standings-title-text {
-  color: #fff !important;
 }
 
 /* Select de ligas */
@@ -178,16 +171,12 @@
   padding-left: 0;
 }
 
-/* Opcional: para que el select no sea demasiado ancho en pantallas pequeñas */
-@media (max-width: 600px) {
-  .standings-league-select-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 12px;
-  }
+.standings-league-select-wrapper label {
+  font-weight: bold;
+  margin-right: 8px;
 }
 
-/* Responsive max-width for abbreviation column */
+/* Responsive design */
 @media (max-width: 900px) {
   :root {
     --abbr-max-width: 120px;
@@ -196,9 +185,6 @@
   .standingsTable td {
     font-size: 13px;
     padding: 6px 4px;
-  }
-  .standings-row td:nth-child(2) {
-    font-size: 1em;
   }
 }
 
@@ -211,17 +197,18 @@
     font-size: 11px;
     padding: 4px 2px;
   }
-  .standingsTable th:first-child,
-  .standingsTable td:first-child {
-    min-width: 60px;
-    max-width: 90px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
   .standings-row td:nth-child(2) {
     font-size: 0.8em;
     padding-left: 6px;
+  }
+  .standings-league-select-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .standings-league-select {
+    font-size: 0.95rem;
+    padding: 4px 8px;
   }
 }
 
@@ -229,39 +216,5 @@
   .standings-row td:nth-child(2) {
     font-size: 0.75em;
     padding-left: 4px;
-  }
-}
-
-@media (max-width: 340px) {
-  .standings-row td:nth-child(2) {
-    font-size: 0.7em;
-    padding-left: 0px;
-  }
-}
-
-/* Asegura que la tabla ocupe toda la fila y se muestre debajo del carousel/noticias en tablets */
-@media (max-width: 900px) and (min-width: 600px), (max-width: 1024px) and (min-width: 768px) {
-  .standingsWrapper {
-    width: 100% !important;
-    max-width: 100vw !important;
-    margin: 0 auto !important;
-    float: none !important;
-    clear: both !important;
-    display: block !important;
-  }
-  .standings-table-container {
-    margin-top: 24px !important;
-  }
-}
-
-/* Ajustes responsivos opcionales */
-@media (max-width: 600px) {
-  .standings-title {
-    font-size: 1.2rem;
-    padding: 10px 0 6px 0;
-  }
-  .standings-league-select {
-    font-size: 0.95rem;
-    padding: 4px 8px;
   }
 }

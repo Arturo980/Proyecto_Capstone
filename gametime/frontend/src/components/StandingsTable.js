@@ -87,11 +87,11 @@ const StandingsTable = ({
   };
 
   return (
-    <div className="standingsWrapper" style={{ overflowX: 'visible', width: '100%', paddingBottom: 0 }}>
+    <div className="standingsWrapper">
       {/* Selector de liga arriba de la tabla */}
       {leagues.length > 0 && (
         <div className="standings-league-select-wrapper">
-          <label style={{ fontWeight: 'bold', marginRight: 8 }}>
+          <label>
             {/* Puedes poner aquí un texto si lo deseas, por ejemplo: 'Liga:' */}
           </label>
           <select
@@ -109,31 +109,16 @@ const StandingsTable = ({
         </div>
       )}
       <div className="standings-table-container">
-        <Table
-          striped
-          bordered
-          hover
-          size="sm"
-          className="standingsTable"
-          style={{
-            minWidth: 0,
-            width: '100%',
-            maxWidth: '100%',
-            tableLayout: 'fixed',
-            borderRadius: 12,
-            overflow: 'hidden',
-            boxShadow: '0 4px 18px 0 rgba(0,0,0,0.10)'
-          }}
-        >
+        <Table className="standingsTable">
           <thead>
             <tr className="standings-header-row">
-              <th style={{ width: 50, background: '#1e293b', color: '#fff', border: 'none' }}></th>
-              <th style={{ minWidth: 80, background: '#1e293b', color: '#fff', border: 'none', textAlign: 'left' }}></th>
-              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>J</th>
-              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>G</th>
-              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>P</th>
-              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>+/-</th>
-              <th style={{ width: '13%', textAlign: 'center', background: '#1e293b', color: '#fff', border: 'none' }}>Pts</th>
+              <th></th>
+              <th></th>
+              <th>J</th>
+              <th>G</th>
+              <th>P</th>
+              <th>+/-</th>
+              <th>Pts</th>
             </tr>
           </thead>
           <tbody>
@@ -144,39 +129,19 @@ const StandingsTable = ({
                     <img
                       src={teamLogoMap[team.team]}
                       alt={teamAbbrMap[team.team] || team.team}
-                      style={{
-                        height: 45,
-                        width: 45,
-                        objectFit: 'contain',
-                        background: 'transparent',
-                        borderRadius: 8,
-                        border: '2px solid #e2e8f0'
-                      }}
                     />
                   )}
                 </td>
-                <td
-                  style={{
-                    textAlign: 'left',
-                    fontWeight: 'bold',
-                    fontSize: '1.1em',
-                    verticalAlign: 'middle',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: 'var(--abbr-max-width, 180px)',
-                    minWidth: 0,
-                  }}
-                >
+                <td>
                   <span className="standings-abbr-text">
                     {teamAbbrMap[team.team] || team.team}
                   </span>
                 </td>
-                <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.played}</td>
-                <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.won}</td>
-                <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.lost}</td>
-                <td style={{ textAlign: 'center', fontWeight: 500, fontSize: 16 }}>{team.setsWon - team.setsLost}</td>
-                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 18, color: '#1e293b' }}>{team.points}</td>
+                <td>{team.played}</td>
+                <td>{team.won}</td>
+                <td>{team.lost}</td>
+                <td>{team.setsWon - team.setsLost}</td>
+                <td>{team.points}</td>
               </tr>
             ))}
           </tbody>

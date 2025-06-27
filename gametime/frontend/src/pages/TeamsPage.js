@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/MediaPage.css';
+import '../styles/Teams.css';
 import texts from '../translations/texts';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 import LeagueConfigModal from '../components/LeagueConfigModal'; // Nuevo import
@@ -284,12 +285,42 @@ const TeamsPage = ({ language, userRole }) => {
       logoToSave = getLogoPreview();
     }
 
-    // Asegura que el roster sea array de objetos { name, stats }
+    // Asegura que el roster sea array de objetos { name, rut, age, image, stats }
     const roster = Array.isArray(teamForm.roster)
       ? teamForm.roster.map(p =>
           typeof p === 'string'
-            ? { name: p, stats: { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
-            : { ...p, stats: p.stats || { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+            ? { 
+                name: p, 
+                rut: '',
+                age: 0,
+                image: '', 
+                stats: { 
+                  acesPerSet: 0, 
+                  assistsPerSet: 0, 
+                  attacksPerSet: 0, 
+                  blocksPerSet: 0, 
+                  digsPerSet: 0, 
+                  hittingPercentage: 0, 
+                  killsPerSet: 0, 
+                  pointsPerSet: 0 
+                } 
+              }
+            : { 
+                ...p, 
+                rut: p.rut || '',
+                age: p.age || 0,
+                image: p.image || '', 
+                stats: p.stats || { 
+                  acesPerSet: 0, 
+                  assistsPerSet: 0, 
+                  attacksPerSet: 0, 
+                  blocksPerSet: 0, 
+                  digsPerSet: 0, 
+                  hittingPercentage: 0, 
+                  killsPerSet: 0, 
+                  pointsPerSet: 0 
+                } 
+              }
         )
       : [];
 
@@ -370,13 +401,46 @@ const TeamsPage = ({ language, userRole }) => {
     }, 500); // 180ms de delay para dar feedback visual
   };
 
+  // NOTA: Función comentada ya que se eliminó el botón de editar desde las tarjetas
+  // La edición ahora se hace desde la página de detalle del equipo
+  /*
   const openEditTeam = (team) => {
-    // Asegura que el roster sea array de objetos { name, stats }
+    // Asegura que el roster sea array de objetos { name, rut, age, image, stats }
     const roster = Array.isArray(team.roster)
       ? team.roster.map(p =>
           typeof p === 'string'
-            ? { name: p, stats: { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
-            : { ...p, stats: p.stats || { acesPerSet: 0, assistsPerSet: 0, attacksPerSet: 0, blocksPerSet: 0, digsPerSet: 0, hittingPercentage: 0, killsPerSet: 0, pointsPerSet: 0 } }
+            ? { 
+                name: p, 
+                rut: '',
+                age: 0,
+                image: '', 
+                stats: { 
+                  acesPerSet: 0, 
+                  assistsPerSet: 0, 
+                  attacksPerSet: 0, 
+                  blocksPerSet: 0, 
+                  digsPerSet: 0, 
+                  hittingPercentage: 0, 
+                  killsPerSet: 0, 
+                  pointsPerSet: 0 
+                } 
+              }
+            : { 
+                ...p, 
+                rut: p.rut || '',
+                age: p.age || 0,
+                image: p.image || '', 
+                stats: p.stats || { 
+                  acesPerSet: 0, 
+                  assistsPerSet: 0, 
+                  attacksPerSet: 0, 
+                  blocksPerSet: 0, 
+                  digsPerSet: 0, 
+                  hittingPercentage: 0, 
+                  killsPerSet: 0, 
+                  pointsPerSet: 0 
+                } 
+              }
         )
       : [];
     setEditingTeam(team._id);
@@ -387,6 +451,7 @@ const TeamsPage = ({ language, userRole }) => {
     setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+  */
 
   const openAddTeam = () => {
     setEditingTeam('new');
@@ -415,7 +480,22 @@ const TeamsPage = ({ language, userRole }) => {
         ...prev,
         roster: [
           ...prev.roster,
-          ...names.map(name => ({ name, stats: { ...playerStatsForm } }))
+          ...names.map(name => ({ 
+            name, 
+            rut: '',
+            age: 0,
+            image: '', 
+            stats: { 
+              acesPerSet: 0, 
+              assistsPerSet: 0, 
+              attacksPerSet: 0, 
+              blocksPerSet: 0, 
+              digsPerSet: 0, 
+              hittingPercentage: 0, 
+              killsPerSet: 0, 
+              pointsPerSet: 0 
+            } 
+          }))
         ],
       }));
       setRosterInput('');
@@ -428,65 +508,6 @@ const TeamsPage = ({ language, userRole }) => {
       roster: prev.roster.filter((_, i) => i !== idx),
     }));
   };
-
-  // NUEVO: Estado para modal de edición de stats de jugador
-  const [editingPlayerStats, setEditingPlayerStats] = useState(null); // { team, player, idx }
-  const [playerStatsForm, setPlayerStatsForm] = useState({
-    acesPerSet: 0,
-    assistsPerSet: 0,
-    attacksPerSet: 0,
-    blocksPerSet: 0,
-    digsPerSet: 0,
-    hittingPercentage: 0,
-    killsPerSet: 0,
-    pointsPerSet: 0
-  });
-
-  // NUEVO: Abrir modal de stats de jugador
-  // eslint-disable-next-line no-unused-vars
-  const openEditPlayerStats = (player, idx) => {
-    setEditingPlayerStats({ player, idx });
-    setPlayerStatsForm(player.stats || {
-      acesPerSet: 0,
-      assistsPerSet: 0,
-      attacksPerSet: 0,
-      blocksPerSet: 0,
-      digsPerSet: 0,
-      hittingPercentage: 0,
-      killsPerSet: 0,
-      pointsPerSet: 0
-    });
-  };
-
-  // NUEVO: Guardar stats de jugador en el roster local y opcionalmente en backend
-  // eslint-disable-next-line no-unused-vars
-  const handleSavePlayerStats = async () => {
-    if (editingPlayerStats) {
-      setTeamForm(prev => {
-        const newRoster = [...prev.roster];
-        newRoster[editingPlayerStats.idx] = {
-          ...newRoster[editingPlayerStats.idx],
-          stats: { ...playerStatsForm }
-        };
-        return { ...prev, roster: newRoster };
-      });
-      // Opcional: guardar en backend stats individuales
-      if (activeLeague) {
-        await fetch(`${API_BASE_URL}/api/player-stats`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            playerName: editingPlayerStats.player.name,
-            team: teamForm.name,
-            league: activeLeague,
-            ...playerStatsForm
-          })
-        });
-      }
-      setEditingPlayerStats(null);
-    }
-  };
-
   // Manejar cambio de liga (mostrar config si eligen "nueva liga")
   const handleLeagueSelect = (e) => {
     const value = e.target.value;
@@ -827,12 +848,8 @@ const TeamsPage = ({ language, userRole }) => {
               >
                 <div
                   className="card h-100"
-                  style={{ cursor: (userRole !== 'content-editor' && userRole !== 'admin') ? 'pointer' : 'default' }}
-                  onClick={
-                    (userRole !== 'content-editor' && userRole !== 'admin')
-                      ? () => handleShowTeam(team)
-                      : undefined
-                  }
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleShowTeam(team)}
                 >
                   {team.logo && (
                     <img
@@ -845,19 +862,6 @@ const TeamsPage = ({ language, userRole }) => {
                     <h5 className="card-title">{team.name}</h5>
                     {(userRole === 'content-editor' || userRole === 'admin') && (
                       <>
-                        <button
-                          className="btn btn-outline-info btn-sm me-2"
-                          onClick={e => { e.stopPropagation(); handleShowTeam(team); }}
-                        >
-                          {language === 'en' ? 'View' : 'Ver'}
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary btn-sm me-2"
-                          onClick={e => { e.stopPropagation(); openEditTeam(team); }}
-                          disabled={loading}
-                        >
-                          {language === 'en' ? 'Edit' : 'Editar'}
-                        </button>
                         <button
                           className="btn btn-outline-danger btn-sm"
                           onClick={e => { e.stopPropagation(); handleDeleteTeam(idx); }}
@@ -974,8 +978,8 @@ const TeamsPage = ({ language, userRole }) => {
                       onChange={e => setRosterInput(e.target.value)}
                       placeholder={
                         language === 'en'
-                          ? 'Add player(s), separated by comma or new line'
-                          : 'Agregar jugador(es), separados por coma o salto de línea'
+                          ? 'Add player(s) quickly, separated by comma or new line'
+                          : 'Agregar jugador(es) rápidamente, separados por coma o salto de línea'
                       }
                       rows={1}
                       style={{ resize: 'vertical', minHeight: 38, maxHeight: 120 }}
@@ -990,17 +994,39 @@ const TeamsPage = ({ language, userRole }) => {
                       +
                     </button>
                   </div>
-                  <ul>
+                  <ul className="list-group">
                     {teamForm.roster.map((playerObj, idx) => (
-                      <li key={idx} className="d-flex align-items-center">
-                        {playerObj.name}
-                        <button
-                          className="btn btn-link text-danger ms-2 p-0"
-                          type="button"
-                          onClick={() => handleRemoveRoster(idx)}
-                        >
-                          &times;
-                        </button>
+                      <li key={idx} className="list-group-item player-list-item d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center">
+                          {playerObj.image ? (
+                            <img 
+                              src={playerObj.image} 
+                              alt={playerObj.name}
+                              className="player-avatar-small me-3"
+                            />
+                          ) : (
+                            <div 
+                              className="player-avatar-small me-3 d-flex align-items-center justify-content-center"
+                              style={{ 
+                                backgroundColor: 'var(--card-background-color, #f8f9fa)',
+                                color: 'var(--text-color, #6c757d)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {playerObj.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span>{playerObj.name}</span>
+                        </div>
+                        <div>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            type="button"
+                            onClick={() => handleRemoveRoster(idx)}
+                          >
+                            {language === 'en' ? 'Remove' : 'Eliminar'}
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
