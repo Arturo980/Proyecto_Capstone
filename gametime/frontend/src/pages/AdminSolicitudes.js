@@ -57,7 +57,7 @@ const AdminSolicitudes = () => {
 
   return (
     <div className="full-page-container">
-      <div style={{ maxWidth: 700, margin: '40px auto', padding: 24, background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px #0001' }}>
+      <div className="container card" style={{ maxWidth: 700, margin: '40px auto', padding: 24, borderRadius: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
       <h2>Solicitudes de Registro</h2>
       {loading ? (
         <div style={{
@@ -65,8 +65,7 @@ const AdminSolicitudes = () => {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '40px',
-          fontSize: '1.1rem',
-          color: '#666'
+          fontSize: '1.1rem'
         }}>
           <div className="spinner-border text-primary me-3" role="status"></div>
           Cargando solicitudes...

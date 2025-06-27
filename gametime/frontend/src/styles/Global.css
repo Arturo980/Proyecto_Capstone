@@ -251,6 +251,205 @@ footer a:hover {
   color: var(--text-color, #000) !important;
 }
 
+/* Estilos para tablas que respeten el tema */
+.table {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.table th,
+.table td {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--text-color, #000) !important;
+  opacity: 0.8;
+}
+
+.table thead th {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border-bottom: 2px solid var(--text-color, #000) !important;
+  opacity: 0.9;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+.table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: var(--text-color, #000) !important;
+  opacity: 0.05;
+}
+
+/* Removido el efecto hover problemático para mejorar legibilidad */
+
+.table-warning {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.theme-dark .table-warning {
+  background-color: #664d03 !important;
+  color: #ffecb5 !important;
+}
+
+/* Estilos para elementos pre y code */
+pre {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--text-color, #000) !important;
+  opacity: 0.8;
+}
+
+code {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Estilos para details y summary */
+details {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+summary {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  cursor: pointer !important;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--text-color, #000);
+  opacity: 0.8;
+}
+
+summary:hover {
+  background-color: var(--text-color, #000) !important;
+  color: var(--card-background-color, #fff) !important;
+  opacity: 0.9;
+}
+
+/* Estilos para spans con clases de Bootstrap que deben respetar el tema */
+.text-muted {
+  color: var(--text-color, #6c757d) !important;
+  opacity: 0.6;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.theme-dark .text-danger {
+  color: #ff6b6b !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.theme-dark .text-success {
+  color: #51cf66 !important;
+}
+
+.text-warning {
+  color: #fd7e14 !important;
+}
+
+.theme-dark .text-warning {
+  color: #ffa94d !important;
+}
+
+/* Estilos para elementos small que deben respetar el tema */
+small {
+  color: var(--text-color) !important;
+  opacity: 0.8;
+}
+
+/* Asegurar que los divs con .d-block respeten el tema */
+.d-block {
+  color: inherit !important;
+}
+
+/* Estilos para elementos de Bootstrap que necesitan adaptarse al tema */
+.table-responsive {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.fw-bold {
+  color: inherit !important;
+}
+
+/* Estilos para alertas */
+.alert {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--text-color, #000) !important;
+  opacity: 0.9;
+}
+
+.alert-danger {
+  background-color: #f8d7da !important;
+  color: #721c24 !important;
+  border-color: #f5c6cb !important;
+}
+
+.theme-dark .alert-danger {
+  background-color: #722c35 !important;
+  color: #f8d7da !important;
+  border-color: #a94442 !important;
+}
+
+.alert-success {
+  background-color: #d4edda !important;
+  color: #155724 !important;
+  border-color: #c3e6cb !important;
+}
+
+.theme-dark .alert-success {
+  background-color: #1e4d2b !important;
+  color: #d4edda !important;
+  border-color: #28a745 !important;
+}
+
+.alert-warning {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+  border-color: #ffeaa7 !important;
+}
+
+.theme-dark .alert-warning {
+  background-color: #664d03 !important;
+  color: #fff3cd !important;
+  border-color: #ffecb5 !important;
+}
+
+/* Estilos para spinners */
+.spinner-border {
+  color: var(--text-color, #007bff) !important;
+}
+
+/* Estilos para badges */
+.badge {
+  background-color: var(--text-color, #007bff) !important;
+  color: var(--card-background-color, #fff) !important;
+}
+
+/* Asegurar que los títulos h1-h6 respeten el tema */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-color) !important;
+}
+
+/* Estilos para elementos de lista */
+.list-group-item {
+  background-color: var(--card-background-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--text-color, #000) !important;
+  opacity: 0.8;
+}
+
+.list-group-item:hover {
+  background-color: var(--text-color, #000) !important;
+  color: var(--card-background-color, #fff) !important;
+  opacity: 0.9;
+}
+
 /* Splash/loading global para la carga inicial */
 .splash-loading {
   min-height: 100vh;

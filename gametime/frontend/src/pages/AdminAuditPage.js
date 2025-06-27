@@ -185,7 +185,7 @@ const AdminAuditPage = ({ language }) => {
                     </td>
                     <td>
                       <details>
-                        <summary style={{ cursor: 'pointer' }}>
+                        <summary>
                           {language === 'en' ? 'View data' : 'Ver datos'}
                         </summary>
                         <pre style={{ maxWidth: 300, maxHeight: 120, overflow: 'auto', fontSize: 12, marginTop: 8 }}>
