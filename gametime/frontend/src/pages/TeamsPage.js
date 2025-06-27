@@ -8,7 +8,7 @@ import EmptyState from '../components/EmptyState';
 import ConfirmModal from '../components/ConfirmModal';
 import settingsIcon from '../assets/images/icons8-settings-384.png';
 import { API_BASE_URL } from '../assets/Configuration/config';
-import { useNavigate } from 'react-router-dom'; // NUEVO
+import { useNavigate, useParams } from 'react-router-dom'; // NUEVO: agregado useParams
 import LoadingSpinner from '../components/LoadingSpinner';
 
 // Cambia defaultTeam para solo incluir los campos necesarios
@@ -54,10 +54,13 @@ const TeamsPage = ({ language, userRole }) => {
   const [confirmData, setConfirmData] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const { leagueId } = useParams(); // NUEVO: obtener el parámetro de liga de la URL
 
-  // Usa sessionStorage para recordar la última liga seleccionada
+  // Usa sessionStorage para recordar la última liga seleccionada, pero prioriza la URL
   const [activeLeague, setActiveLeague] = useState(() => {
-    // Si hay una liga guardada, úsala; si no, deja vacío
+    // Priorizar el parámetro de URL si existe
+    if (leagueId) return leagueId;
+    // Si no hay parámetro, usar sessionStorage
     return sessionStorage.getItem('teamsActiveLeague') || '';
   });
 
@@ -67,6 +70,13 @@ const TeamsPage = ({ language, userRole }) => {
       sessionStorage.setItem('teamsActiveLeague', activeLeague);
     }
   }, [activeLeague]);
+
+  // NUEVO: Sincronizar cuando cambia el parámetro de URL
+  useEffect(() => {
+    if (leagueId && leagueId !== activeLeague) {
+      setActiveLeague(leagueId);
+    }
+  }, [leagueId, activeLeague]);
 
   // Cargar ligas al montar (asegúrate de llamar fetchLeagues en useEffect)
   useEffect(() => {
@@ -84,13 +94,26 @@ const TeamsPage = ({ language, userRole }) => {
     data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     setLeagues(data);
 
-    // Solo cambia la liga activa si no hay una guardada o la guardada ya no existe
-    const storedLeague = sessionStorage.getItem('teamsActiveLeague');
-    if (storedLeague && data.some(l => l._id === storedLeague)) {
-      setActiveLeague(storedLeague);
-    } else if (data.length > 0) {
-      setActiveLeague(data[0]._id); // Selecciona la primera liga si existe
-      sessionStorage.setItem('teamsActiveLeague', data[0]._id);
+    // Priorizar parámetro de URL > sessionStorage > primera liga
+    let targetLeague = '';
+    if (leagueId && data.some(l => l._id === leagueId)) {
+      targetLeague = leagueId;
+    } else {
+      const storedLeague = sessionStorage.getItem('teamsActiveLeague');
+      if (storedLeague && data.some(l => l._id === storedLeague)) {
+        targetLeague = storedLeague;
+      } else if (data.length > 0) {
+        targetLeague = data[0]._id;
+      }
+    }
+
+    if (targetLeague) {
+      setActiveLeague(targetLeague);
+      sessionStorage.setItem('teamsActiveLeague', targetLeague);
+      // Si no estamos en la URL correcta, actualizarla
+      if (targetLeague !== leagueId) {
+        navigate(`/teams/${targetLeague}`, { replace: true });
+      }
     } else {
       setActiveLeague('');
       sessionStorage.removeItem('teamsActiveLeague');
@@ -207,6 +230,8 @@ const TeamsPage = ({ language, userRole }) => {
       setLeagueName('');
       setLeagues(prev => [...prev, newLeague]);
       setActiveLeague(newLeague._id);
+      // Actualizar la URL para reflejar la nueva liga
+      navigate(`/teams/${newLeague._id}`, { replace: true });
     } else {
       const data = await res.json();
       alert(data.error || (language === 'en'
@@ -232,8 +257,15 @@ const TeamsPage = ({ language, userRole }) => {
         setLeagues(prev => prev.filter(l => l._id !== confirmData.leagueId));
         if (activeLeague === confirmData.leagueId) {
           const remaining = leagues.filter(l => l._id !== confirmData.leagueId);
-          setActiveLeague(remaining.length > 0 ? remaining[0]._id : '');
+          const newActiveLeague = remaining.length > 0 ? remaining[0]._id : '';
+          setActiveLeague(newActiveLeague);
           setTeams([]);
+          // Actualizar la URL
+          if (newActiveLeague) {
+            navigate(`/teams/${newActiveLeague}`, { replace: true });
+          } else {
+            navigate('/teams', { replace: true });
+          }
         }
       } else {
         const data = await res.json();
@@ -352,11 +384,19 @@ const TeamsPage = ({ language, userRole }) => {
     }
   };
 
-  // Cambia handleShowTeam para agregar un pequeño delay antes de navegar
+  // Cambia handleShowTeam para navegar con la estructura correcta de URL usando ID
   const handleShowTeam = (team) => {
-    setTimeout(() => {
-      navigate(`/teams/${team._id}`);
-    }, 500); // 180ms de delay para dar feedback visual
+    if (activeLeague) {
+      // Usar el ID del equipo para garantizar unicidad
+      console.log('Navegando a equipo:', { 
+        teamName: team.name, 
+        teamId: team._id,
+        url: `/teams/${activeLeague}/${team._id}`
+      });
+      navigate(`/teams/${activeLeague}/${team._id}`);
+    } else {
+      console.warn('No se puede navegar: falta activeLeague', { activeLeague });
+    }
   };
 
   // NOTA: Función comentada ya que se eliminó el botón de editar desde las tarjetas
@@ -431,15 +471,19 @@ const TeamsPage = ({ language, userRole }) => {
     }
   };
 
-  // Manejar cambio de liga (mostrar config si eligen "nueva liga")
+  // Función para manejar el cambio de liga y actualizar la URL
   const handleLeagueSelect = (e) => {
-    const value = e.target.value;
-    if (value === NEW_LEAGUE_OPTION) {
+    const selectedLeague = e.target.value;
+    if (selectedLeague === NEW_LEAGUE_OPTION) {
       setShowCreateLeague(true);
-      // No cambies activeLeague aquí, solo muestra el modal de crear liga
+      return;
+    }
+    setActiveLeague(selectedLeague);
+    // Actualizar la URL para reflejar la liga seleccionada
+    if (selectedLeague) {
+      navigate(`/teams/${selectedLeague}`, { replace: true });
     } else {
-      setShowCreateLeague(false);
-      setActiveLeague(value);
+      navigate('/teams', { replace: true });
     }
   };
 
@@ -686,8 +730,8 @@ const TeamsPage = ({ language, userRole }) => {
               </div>
             </div>
           )}
-          {/* Inputs solo si el usuario es content-editor o admin */}
-          {(userRole === 'content-editor' || userRole === 'admin') ? (
+          {/* Inputs solo si el usuario es content-editor o admin y hay una liga seleccionada */}
+          {(userRole === 'content-editor' || userRole === 'admin') && activeLeague ? (
             <div className="mb-4">
               <label className="form-label">
                 {texts[language]?.number_of_teams_label || (language === 'en' ? 'Number of Teams:' : 'Cantidad de Equipos:')}
@@ -708,7 +752,7 @@ const TeamsPage = ({ language, userRole }) => {
           <div className="row justify-content-center">
             {teams.length === 0 ? (
               <EmptyState 
-                icon="⚽"
+                icon="🏐"
                 title={language === 'en' ? 'No Teams Yet' : 'Aún no hay equipos'}
                 description={
                   (userRole === 'content-editor' || userRole === 'admin') 
@@ -720,16 +764,6 @@ const TeamsPage = ({ language, userRole }) => {
                         ? 'No teams are registered in this league yet. Check back later.' 
                         : 'Aún no hay equipos registrados en esta liga. Vuelve más tarde.'
                       )
-                }
-                actionText={
-                  (userRole === 'content-editor' || userRole === 'admin') 
-                    ? (language === 'en' ? 'Add First Team' : 'Agregar primer equipo') 
-                    : null
-                }
-                onAction={
-                  (userRole === 'content-editor' || userRole === 'admin') 
-                    ? openAddTeam 
-                    : null
                 }
                 language={language}
               />

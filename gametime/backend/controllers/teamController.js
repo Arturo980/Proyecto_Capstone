@@ -2,16 +2,28 @@ const { Equipo, AuditLog } = require('../models');
 const { getUserEmailFromRequest } = require('../utils/auth');
 const { sendToTrash } = require('./auditController');
 
-// GET /api/teams?league=ID - Lista equipos de una liga
+// GET /api/teams?league=ID&abbr=ABBR - Lista equipos con filtros opcionales
 const getTeams = async (req, res) => {
   try {
-    const { league } = req.query;
-    let equipos = [];
-    if (league) {
-      equipos = await Equipo.find({ league }).populate('league');
-    } else {
-      equipos = await Equipo.find().populate('league');
+    const { league, abbr, teamId } = req.query;
+    let filter = {};
+    
+    // Si se proporciona teamId (compatibilidad hacia atrás)
+    if (teamId) {
+      filter._id = teamId;
     }
+    
+    // Si se proporciona league
+    if (league) {
+      filter.league = league;
+    }
+    
+    // Si se proporciona abbr
+    if (abbr) {
+      filter.abbr = abbr;
+    }
+    
+    const equipos = await Equipo.find(filter).populate('league');
     res.json({ teams: equipos });
   } catch (err) {
     res.status(500).json({ error: 'No se pudo obtener los equipos', details: err.message });
@@ -56,9 +68,26 @@ const deleteTeam = async (req, res) => {
   }
 };
 
+// GET /api/teams/:id - Obtener equipo específico por ID
+const getTeamById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const equipo = await Equipo.findById(id).populate('league');
+    
+    if (!equipo) {
+      return res.status(404).json({ error: 'Equipo no encontrado' });
+    }
+    
+    res.json(equipo);
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo obtener el equipo', details: err.message });
+  }
+};
+
 module.exports = {
   getTeams,
   createTeam,
   updateTeam,
-  deleteTeam
+  deleteTeam,
+  getTeamById
 };

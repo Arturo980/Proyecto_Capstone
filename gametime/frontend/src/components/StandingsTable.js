@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Table from 'react-bootstrap/Table';
+import { useNavigate } from 'react-router-dom';
 import '../styles/StandingsTable.css';
 
 const StandingsTable = ({
@@ -11,6 +12,21 @@ const StandingsTable = ({
   setActiveLeague = () => {}
 }) => {
   const [standings, setStandings] = useState([]);
+  const navigate = useNavigate();
+
+  // Función para manejar el cambio de liga y actualizar la URL
+  const handleLeagueChange = (leagueId) => {
+    setActiveLeague(leagueId);
+    // Actualizar la URL para reflejar la liga seleccionada
+    // Verificamos si estamos en la página principal (/) para decidir si navegar
+    if (leagueId && window.location.pathname === '/') {
+      // En la página principal, navegamos a /teams/leagueId
+      navigate(`/teams/${leagueId}`);
+    } else if (leagueId && window.location.pathname.startsWith('/teams')) {
+      // En la página de equipos, navegamos para actualizar el parámetro
+      navigate(`/teams/${leagueId}`, { replace: true });
+    }
+  };
 
   // Mapea nombre de equipo a su abreviación y logo
   const teamAbbrMap = {};
@@ -97,7 +113,7 @@ const StandingsTable = ({
           <select
             className="standings-league-select"
             value={activeLeague}
-            onChange={e => setActiveLeague(e.target.value)}
+            onChange={e => handleLeagueChange(e.target.value)}
           >
             <option value="" disabled>
               Selecciona una liga

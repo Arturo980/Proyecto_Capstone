@@ -9,7 +9,7 @@ import EmptyState from '../components/EmptyState';
 import CloudinaryUpload from '../components/CloudinaryUpload';
 
 const TeamDetailPage = ({ language, userRole }) => {
-  const { teamId } = useParams();
+  const { leagueId, teamId } = useParams();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -41,23 +41,53 @@ const TeamDetailPage = ({ language, userRole }) => {
     const fetchTeam = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/api/teams?teamId=${teamId}`);
+        
+        console.log('=== INICIANDO BÚSQUEDA DE EQUIPO ===');
+        console.log('TeamId:', teamId);
+        console.log('LeagueId:', leagueId);
+        console.log('URL completa:', window.location.href);
+        
+        // Buscar equipo específico por ID usando query parameter
+        const url = `${API_BASE_URL}/api/teams?teamId=${teamId}`;
+        console.log('URL de consulta:', url);
+        
+        const res = await fetch(url);
         const data = await res.json();
-        // Si el backend soporta buscar por ID, usa el primer resultado
-        if (Array.isArray(data.teams)) {
-          setTeam(data.teams.find(t => t._id === teamId) || null);
+        
+        console.log('=== RESPUESTA DEL BACKEND ===');
+        console.log('Status:', res.status);
+        console.log('Data completa:', JSON.stringify(data, null, 2));
+        
+        let foundTeam = null;
+        if (Array.isArray(data.teams) && data.teams.length > 0) {
+          foundTeam = data.teams[0];
+          console.log('=== EQUIPO ENCONTRADO ===');
+          console.log('ID del equipo:', foundTeam._id);
+          console.log('Nombre:', foundTeam.name);
+          console.log('Abreviación:', foundTeam.abbr);
+          console.log('Roster completo:', JSON.stringify(foundTeam.roster, null, 2));
+          console.log('Cantidad de jugadores:', foundTeam.roster ? foundTeam.roster.length : 0);
         } else {
-          setTeam(null);
+          console.log('=== NO SE ENCONTRÓ EQUIPO ===');
+          console.log('Teams array:', data.teams);
         }
+        
+        setTeam(foundTeam || null);
       } catch (error) {
-        console.error('Error fetching team:', error);
+        console.error('=== ERROR EN FETCH ===', error);
         setTeam(null);
       }
       setLoading(false);
     };
 
-    fetchTeam();
-  }, [teamId]);
+    if (leagueId && teamId) {
+      fetchTeam();
+    } else {
+      console.log('=== PARÁMETROS FALTANTES ===');
+      console.log('LeagueId:', leagueId);
+      console.log('TeamId:', teamId);
+    }
+  }, [leagueId, teamId]);
 
   // Funciones para el modal de edición
   const openEditModal = () => {
@@ -119,7 +149,7 @@ const TeamDetailPage = ({ language, userRole }) => {
         staff: team.staff || []
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -227,7 +257,7 @@ const TeamDetailPage = ({ language, userRole }) => {
         staff: team.staff || []
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -274,7 +304,7 @@ const TeamDetailPage = ({ language, userRole }) => {
         staff: team.staff || []
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -345,6 +375,13 @@ const TeamDetailPage = ({ language, userRole }) => {
         )}
       </div>
       <div className="row justify-content-center">
+        {/* Log de debug para verificar el roster */}
+        {console.log('Renderizando roster para equipo:', { 
+          teamName: team.name, 
+          teamId: team._id,
+          rosterLength: team.roster ? team.roster.length : 0,
+          roster: team.roster 
+        })}
         {Array.isArray(team.roster) && team.roster.length > 0 ? (
           <div className="row" style={{ maxWidth: 1200, margin: '0 auto' }}>
             {team.roster.map((player, idx) => (

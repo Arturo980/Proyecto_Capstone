@@ -8,7 +8,7 @@ const GAMES_URL = `${API_BASE_URL}/api/games`;
 const TEAMS_URL = `${API_BASE_URL}/api/teams`;
 const SOCKET_URL = API_BASE_URL;
 
-const HorizontalGamesCarousel = ({ language = 'es' }) => {
+const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = null, appLoading = false }) => {
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState("");
   const [games, setGames] = useState([]);
@@ -56,16 +56,38 @@ const HorizontalGamesCarousel = ({ language = 'es' }) => {
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Cargar ligas al montar
+  // Cargar ligas al montar (solo si no vienen desde props)
   useEffect(() => {
+    if (externalLeagues !== null) {
+      // Usar ligas desde props
+      setLeagues(Array.isArray(externalLeagues) ? externalLeagues : []);
+      if (Array.isArray(externalLeagues) && externalLeagues.length > 0) {
+        setSelectedLeague(externalLeagues[0]._id);
+      } else {
+        setSelectedLeague("");
+        setLoading(false); // No hay ligas, no hay que cargar nada
+      }
+      return;
+    }
+
+    // Cargar ligas desde API solo si no vienen desde props
     fetch(LEAGUES_URL)
       .then((res) => res.json())
       .then((data) => {
         setLeagues(Array.isArray(data) ? data : []);
-        if (Array.isArray(data) && data.length > 0)
+        if (Array.isArray(data) && data.length > 0) {
           setSelectedLeague(data[0]._id);
+        } else {
+          setSelectedLeague("");
+          setLoading(false); // No hay ligas, no hay que cargar nada
+        }
+      })
+      .catch(() => {
+        setLeagues([]);
+        setSelectedLeague("");
+        setLoading(false); // Error al cargar ligas
       });
-  }, []);
+  }, [externalLeagues]);
 
   // Cargar equipos de la liga seleccionada
   useEffect(() => {
@@ -83,24 +105,23 @@ const HorizontalGamesCarousel = ({ language = 'es' }) => {
     if (!selectedLeague) return;
     setLoading(true);
 
-    // Espera a que ambos: fetch termine y pasen al menos 3 segundos
     let isMounted = true;
-    const fetchPromise = fetch(`${GAMES_URL}?league=${selectedLeague}`)
+    
+    fetch(`${GAMES_URL}?league=${selectedLeague}`)
       .then((res) => res.json())
       .then((data) => {
         if (isMounted) {
-          setGames(Array.isArray(data.games) ? data.games : []);
+          const games = Array.isArray(data.games) ? data.games : [];
+          setGames(games);
+          setLoading(false);
         }
       })
       .catch(() => {
-        if (isMounted) setGames([]);
+        if (isMounted) {
+          setGames([]);
+          setLoading(false);
+        }
       });
-
-    const delayPromise = new Promise(resolve => setTimeout(resolve, 3000));
-
-    Promise.all([fetchPromise, delayPromise]).then(() => {
-      if (isMounted) setLoading(false);
-    });
 
     return () => { isMounted = false; };
   }, [selectedLeague]);
@@ -279,7 +300,7 @@ const HorizontalGamesCarousel = ({ language = 'es' }) => {
           transition: "min-height 0.2s"
         }}
       >
-        {loading ? (
+        {(loading || appLoading) ? (
           <div
             style={{
               color: "#fff",
@@ -296,6 +317,19 @@ const HorizontalGamesCarousel = ({ language = 'es' }) => {
             {language === 'en' 
               ? `Loading${'.'.repeat(loadingDots + 1)}`
               : `Cargando${'.'.repeat(loadingDots + 1)}`
+            }
+          </div>
+        ) : leagues.length === 0 ? (
+          <div style={{ 
+            color: "#fff", 
+            padding: 16, 
+            background: "rgba(255, 255, 255, 0.05)",
+            borderRadius: 8,
+            border: "1px solid rgba(255, 255, 255, 0.1)"
+          }}>
+            {language === 'en' 
+              ? 'No leagues available.'
+              : 'No hay ligas disponibles.'
             }
           </div>
         ) : games.length === 0 ? (

@@ -218,6 +218,13 @@ function App() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // NUEVO: Función para manejar cambio de liga desde StandingsTable
+  const handleActiveLeagueChange = (leagueId) => {
+    setActiveLeague(leagueId);
+    // No navegamos aquí porque StandingsTable está en la home page
+    // Solo actualizamos el estado
+  };
+
   // Splash: primero logo, luego spinner si sigue cargando
   if (showLogoSplash) {
     return (
@@ -312,6 +319,8 @@ function App() {
                     <HorizontalGamesCarousel
                       games={carouselGames}
                       language={language}
+                      leagues={leagues}
+                      appLoading={appLoading}
                     />
 
                     {/* Rutas internas */}
@@ -338,7 +347,7 @@ function App() {
                               language={language}
                               leagues={leagues}
                               activeLeague={activeLeague}
-                              setActiveLeague={setActiveLeague}
+                              setActiveLeague={handleActiveLeagueChange}
                               teams={teams}
                               games={games}
                               leagueConfig={leagueConfig}
@@ -357,7 +366,8 @@ function App() {
                     <Route path="/news/:id" element={<NewsDetailPage language={language} />} />
                     {/* Otras páginas: agrega marginTop y marginBottom */}
                     <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
-                    <Route path="/teams/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} userRole={userRole} /></div>} />
+                    <Route path="/teams/:leagueId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
+                    <Route path="/teams/:leagueId/:teamId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} userRole={userRole} /></div>} />
                     <Route path="/stats" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><StatsPage language={language} /></div>} />
                     <Route path="/games" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><GamesPage language={language} /></div>} />
                     <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />
