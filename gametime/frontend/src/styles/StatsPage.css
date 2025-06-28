@@ -80,6 +80,12 @@
     min-width: 90vw !important;
     max-width: 98vw !important;
     padding: 10px !important;
+    margin: 0 auto !important;
+  }
+  .wide-modal .modal-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto !important;
   }
   .modal-body {
     padding: 10px !important;
@@ -107,10 +113,136 @@
 .wide-modal .modal-dialog {
   max-width: 700px !important;
   width: 95vw;
+  margin: 0 auto !important;
 }
 
 /* ========================================
-   ESTILOS PARA MODO OSCURO
+   ESTILOS PARA MODAL PERSONALIZADO
+   ======================================== */
+
+.modal-overlay {
+  backdrop-filter: blur(3px);
+}
+
+.modal-overlay .modal-content .card {
+  transition: box-shadow 0.2s ease;
+}
+
+.modal-overlay .modal-content .card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modal-overlay .modal-content .btn {
+  transition: all 0.2s ease;
+}
+
+.modal-overlay .modal-content .btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Responsive para el modal personalizado */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px !important;
+  }
+  
+  .modal-content {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+  }
+  
+  .modal-header {
+    padding: 16px 20px !important;
+  }
+  
+  .modal-header h4 {
+    font-size: 1.1rem !important;
+  }
+  
+  .modal-body {
+    padding: 20px !important;
+  }
+  
+  .modal-footer {
+    padding: 12px 20px !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .modal-footer button {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+    min-width: auto !important;
+    margin: 0 !important;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 5px !important;
+  }
+  
+  .modal-content {
+    border-radius: 6px !important;
+  }
+  
+  .modal-header {
+    padding: 12px 16px !important;
+  }
+  
+  .modal-header h4 {
+    font-size: 1rem !important;
+  }
+  
+  .modal-body {
+    padding: 16px !important;
+  }
+  
+  .modal-footer {
+    padding: 10px 16px !important;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA MODO OSCURO - MODAL PERSONALIZADO
+   ======================================== */
+
+.theme-dark .modal-overlay .modal-content {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+.theme-dark .modal-overlay .modal-header {
+  border-bottom-color: #404040 !important;
+}
+
+.theme-dark .modal-overlay .modal-footer {
+  border-top-color: #404040 !important;
+}
+
+.theme-dark .modal-overlay .card {
+  background-color: #333333 !important;
+  border-color: #404040 !important;
+}
+
+.theme-dark .modal-overlay .card-header {
+  background-color: #404040 !important;
+  border-bottom-color: #555555 !important;
+}
+
+.theme-dark .modal-overlay table th {
+  border-bottom-color: #555555 !important;
+}
+
+.theme-dark .modal-overlay table td {
+  border-bottom-color: #404040 !important;
+}
+
+/* ========================================
+   ESTILOS EXISTENTES
    ======================================== */
 
 /* Estilos para el buscador en modo oscuro */
@@ -287,9 +419,533 @@
    ESTILOS GENERALES PARA ESTADÍSTICAS
    ======================================== */
 
-/* Estilos para encabezados h4 en la página de estadísticas */
-.stats-container h4 {
+/* Estilos para encabezados de las tablas de estadísticas */
+.stats-table-header h4 {
   color: #ffffff !important;
   font-weight: 600;
   margin-bottom: 1rem;
+}
+
+/* ========================================
+   ESTILOS ESPECÍFICOS PARA MODAL DE AGREGAR ESTADÍSTICAS
+   ======================================== */
+
+/* Estilos para la selección de jugadores */
+.player-selection-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.team-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.team-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.team-header-left {
+  text-align: left;
+}
+
+.team-header-right {
+  text-align: right;
+}
+
+.team-players-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-no-players {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.player-button {
+  text-align: left;
+  white-space: normal;
+  padding: 8px 12px;
+}
+
+.player-button-right {
+  text-align: right;
+  white-space: normal;
+  padding: 8px 12px;
+}
+
+.player-name {
+  font-weight: 600;
+}
+
+.player-team {
+  margin-left: 8px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* Grid de estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Estilos responsivos para móviles - Modal de Agregar Estadísticas */
+@media (max-width: 576px) {
+  /* Modal overlay y contenido */
+  .modal-overlay {
+    padding: 10px !important;
+    align-items: flex-start !important;
+    padding-top: 20px !important;
+  }
+  
+  .modal-content {
+    width: 100% !important;
+    margin: 0 !important;
+    max-height: calc(100vh - 40px) !important;
+  }
+  
+  /* Header del modal */
+  .modal-header {
+    padding: 16px 20px !important;
+  }
+  
+  /* Body del modal */
+  .modal-body {
+    padding: 16px !important;
+  }
+  
+  /* Footer del modal - BOTONES */
+  .modal-footer {
+    padding: 12px 16px !important;
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+  
+  .modal-footer button {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+    min-width: auto !important;
+    margin: 0 !important;
+  }
+  
+  /* Selección de jugadores */
+  .player-selection-container {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .team-section {
+    min-width: 100% !important;
+  }
+  
+  /* Grid de estadísticas */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .stats-grid > div {
+    min-width: 0 !important;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  .modal-header {
+    padding: 12px 16px !important;
+  }
+  
+  .modal-body {
+    padding: 12px 16px !important;
+  }
+  
+  .modal-footer {
+    padding: 10px 16px !important;
+  }
+}
+
+/* ========================================
+   ESTILOS COMPLETOS PARA MODALES DE ESTADÍSTICAS
+   ======================================== */
+
+/* Overlay base del modal */
+.stats-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 10px;
+  backdrop-filter: blur(3px);
+}
+
+/* Contenido del modal */
+.stats-modal-content {
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-color, #000);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: none;
+}
+
+/* Header del modal */
+.stats-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--text-color, #dee2e6);
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stats-modal-header h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Body del modal */
+.stats-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Footer del modal */
+.stats-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--text-color, #dee2e6);
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Estilos para botones del modal */
+.stats-modal-button {
+  min-width: 100px;
+  padding: 8px 16px;
+  max-width: 150px;
+}
+
+/* Estilos para formulario */
+.stats-form-group {
+  margin-bottom: 24px;
+}
+
+.stats-form-group-small {
+  margin-bottom: 16px;
+}
+
+.stats-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color, #000);
+}
+
+.stats-form-label-large {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--text-color, #000);
+}
+
+.stats-form-label-small {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color, #000);
+  font-size: 14px;
+}
+
+.stats-form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-color, #000);
+}
+
+/* Estilos para selección de jugadores */
+.player-selection-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.team-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.team-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.team-header-left {
+  text-align: left;
+}
+
+.team-header-right {
+  text-align: right;
+}
+
+.team-players-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-no-players {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.player-button {
+  text-align: left;
+  white-space: normal;
+  padding: 8px 12px;
+}
+
+.player-button-right {
+  text-align: right;
+  white-space: normal;
+  padding: 8px 12px;
+}
+
+.player-name {
+  font-weight: 600;
+}
+
+.player-team {
+  margin-left: 8px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* Grid de estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Modal de gestión - más ancho */
+.stats-manage-modal-content {
+  background-color: var(--card-background-color, #fff);
+  color: var(--text-color, #000);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: none;
+}
+
+.stats-manage-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+/* Estilos para tarjetas de gestión */
+.stats-game-card {
+  border: 1px solid var(--text-color, #dee2e6);
+  border-radius: 8px;
+  background-color: var(--card-background-color, #fff);
+  margin-bottom: 24px;
+}
+
+.stats-game-card-header {
+  padding: 16px 20px;
+  background-color: var(--card-background-color, #f8f9fa);
+  border-bottom: 1px solid var(--text-color, #dee2e6);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-game-card-header h6 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.stats-game-badge {
+  background-color: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.stats-game-card-body {
+  padding: 20px;
+}
+
+.stats-game-no-data {
+  margin: 0;
+  color: #6c757d;
+}
+
+.stats-game-table-container {
+  overflow-x: auto;
+}
+
+.stats-game-table {
+  width: 100%;
+  margin-bottom: 0;
+  background-color: transparent;
+}
+
+.stats-game-table th,
+.stats-game-table td {
+  padding: 8px 12px;
+}
+
+.stats-game-table th {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.stats-game-table td {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.stats-action-button {
+  margin-right: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.stats-action-button-delete {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+/* Estilos responsivos para móviles - Modal de Agregar Estadísticas */
+@media (max-width: 576px) {
+  /* Modal overlay y contenido */
+  .stats-modal-overlay {
+    padding: 10px !important;
+    align-items: flex-start !important;
+    padding-top: 20px !important;
+  }
+  
+  .stats-modal-content {
+    width: 100% !important;
+    margin: 0 !important;
+    max-height: calc(100vh - 40px) !important;
+  }
+  
+  /* Header del modal */
+  .stats-modal-header {
+    padding: 16px !important;
+  }
+  
+  /* Body del modal */
+  .stats-modal-body {
+    padding: 16px !important;
+  }
+  
+  /* Footer del modal - BOTONES */
+  .stats-modal-footer {
+    padding: 12px 16px !important;
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+  
+  .stats-modal-footer button,
+  .stats-modal-button {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: auto !important;
+    margin: 0 !important;
+  }
+  
+  /* Selección de jugadores */
+  .player-selection-container {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .team-section {
+    min-width: 100% !important;
+  }
+  
+  /* Grid de estadísticas */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .stats-grid > div {
+    min-width: 0 !important;
+  }
+  
+  /* Modal de gestión */
+  .stats-manage-modal-overlay {
+    padding: 10px !important;
+    align-items: flex-start !important;
+    padding-top: 20px !important;
+  }
+  
+  .stats-manage-modal-content {
+    width: 100% !important;
+    margin: 0 !important;
+    max-height: calc(100vh - 40px) !important;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  .stats-modal-header {
+    padding: 12px 16px !important;
+  }
+  
+  .stats-modal-body {
+    padding: 12px 16px !important;
+  }
+  
+  .stats-modal-footer {
+    padding: 10px 16px !important;
+  }
 }

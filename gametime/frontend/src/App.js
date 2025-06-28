@@ -329,29 +329,31 @@ function App() {
                     <Route
                       path="/"
                       element={
-                        <div className="main-content-responsive">
-                          <div className="carousel-section">
-                            <ControlledCarousel language={language} />
-                          </div>
-                          <div className="standings-section">
-                            <div className="standings-header">
-                              <h3
-                                className="standings-title-text"
-                                style={{ marginBottom: 0 }}
-                              >
-                                {texts[language].standings_title}
-                              </h3>
-                              <div className="standings-underline"></div>
+                        <div style={{ minHeight: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <div className="main-content-responsive">
+                            <div className="carousel-section">
+                              <ControlledCarousel language={language} />
                             </div>
-                            <StandingsTable
-                              language={language}
-                              leagues={leagues}
-                              activeLeague={activeLeague}
-                              setActiveLeague={handleActiveLeagueChange}
-                              teams={teams}
-                              games={games}
-                              leagueConfig={leagueConfig}
-                            />
+                            <div className="standings-section">
+                              <div className="standings-header">
+                                <h3
+                                  className="standings-title-text"
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  {texts[language].standings_title}
+                                </h3>
+                                <div className="standings-underline"></div>
+                              </div>
+                              <StandingsTable
+                                language={language}
+                                leagues={leagues}
+                                activeLeague={activeLeague}
+                                setActiveLeague={handleActiveLeagueChange}
+                                teams={teams}
+                                games={games}
+                                leagueConfig={leagueConfig}
+                              />
+                            </div>
                           </div>
                         </div>
                       }
@@ -367,7 +369,7 @@ function App() {
                     {/* Otras páginas: agrega marginTop y marginBottom */}
                     <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
                     <Route path="/teams/:leagueId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
-                    <Route path="/teams/:leagueParam/:teamParam" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamDetailPage language={language} userRole={userRole} /></div>} />
+                    <Route path="/teams/:leagueParam/:teamParam" element={<div className="page-wrapper" style={{ minHeight: 'calc(100vh - 160px)', marginTop: 48, marginBottom: 48 }}><div className="container"><TeamDetailPage language={language} userRole={userRole} /></div></div>} />
                     <Route path="/stats" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><StatsPage language={language} /></div>} />
                     <Route path="/games" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><GamesPage language={language} /></div>} />
                     <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />

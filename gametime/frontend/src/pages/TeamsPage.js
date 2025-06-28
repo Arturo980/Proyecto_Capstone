@@ -86,14 +86,8 @@ const TeamsPage = ({ language, userRole }) => {
     }
   }, [leagueParam, leagues, activeLeague]);
 
-  // Cargar ligas al montar (asegúrate de llamar fetchLeagues en useEffect)
-  useEffect(() => {
-    setLoading(true); // <-- muestra spinner al cargar ligas
-    fetchLeagues().finally(() => setLoading(false));
-  }, []);
-
   // Cuando se cargan las ligas, si hay una liga guardada en sessionStorage y existe en la lista, selecciónala automáticamente
-  const fetchLeagues = async () => {
+  const fetchLeagues = useCallback(async () => {
     const res = await fetch(LEAGUES_URL);
     let data = await res.json();
     if (!Array.isArray(data)) {
@@ -147,7 +141,13 @@ const TeamsPage = ({ language, userRole }) => {
       setActiveLeague('');
       sessionStorage.removeItem('teamsActiveLeague');
     }
-  };
+  }, [leagueParam, activeLeague, navigate]);
+
+  // Cargar ligas al montar (asegúrate de llamar fetchLeagues en useEffect)
+  useEffect(() => {
+    setLoading(true); // <-- muestra spinner al cargar ligas
+    fetchLeagues().finally(() => setLoading(false));
+  }, [fetchLeagues]);
 
   const fetchTeamsAndLeague = useCallback(async (leagueId) => {
     setLoading(true);
@@ -813,7 +813,7 @@ const TeamsPage = ({ language, userRole }) => {
                 className="col-md-4 mb-3"
               >
                 <div
-                  className="card h-100"
+                  className="card h-100 team-card"
                   style={{ cursor: 'pointer' }}
                   onClick={() => handleShowTeam(team)}
                 >

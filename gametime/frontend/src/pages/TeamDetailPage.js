@@ -388,61 +388,65 @@ const TeamDetailPage = ({ language, userRole }) => {
 
   if (!team) {
     return (
-      <div className="container mt-5">
-        <Link to="/teams" className="btn btn-secondary mb-3">
-          {language === 'en' ? 'Back to Teams' : 'Volver a Equipos'}
-        </Link>
-        <EmptyState
-          icon="❌"
-          title={language === 'en' ? 'Team Not Found' : 'Equipo No Encontrado'}
-          description={
-            language === 'en' 
-              ? 'The team you are looking for does not exist or has been removed.' 
-              : 'El equipo que buscas no existe o ha sido eliminado.'
-          }
-          language={language}
-        />
+      <div className="team-detail-page-wrapper" style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+        <div className="container mt-5" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Link to="/teams" className="btn btn-secondary mb-3">
+            {language === 'en' ? 'Back to Teams' : 'Volver a Equipos'}
+          </Link>
+          <div className="empty-state-container" style={{ flex: 1 }}>
+            <EmptyState
+              icon="❌"
+              title={language === 'en' ? 'Team Not Found' : 'Equipo No Encontrado'}
+              description={
+                language === 'en' 
+                  ? 'The team you are looking for does not exist or has been removed.' 
+                  : 'El equipo que buscas no existe o ha sido eliminado.'
+              }
+              language={language}
+            />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mt-5">
-      <Link to="/teams" className="btn btn-secondary mb-3">
-        {language === 'en' ? 'Back to Teams' : 'Volver a Equipos'}
-      </Link>
-      
-      <div className="d-flex justify-content-between align-items-center mb-4 team-header-responsive">
-        <h2 style={{ textAlign: 'center', marginBottom: 0 }}>{team.name}</h2>
-        {(userRole === 'content-editor' || userRole === 'admin') && (
-          <div className="team-actions">
-            <button 
-              className="btn btn-outline-primary btn-sm"
-              onClick={openEditModal}
-            >
-              <i className="fas fa-edit"></i>
-              {language === 'en' ? 'Edit Team' : 'Editar Equipo'}
-            </button>
-            <button 
-              className="btn btn-primary btn-sm"
-              onClick={openPlayersModal}
-            >
-              <i className="fas fa-users"></i>
-              {language === 'en' ? 'Manage Players' : 'Gestionar Jugadores'}
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="row justify-content-center">
-        {/* Log de debug para verificar el roster */}
-        {console.log('Renderizando roster para equipo:', { 
-          teamName: team.name, 
-          teamId: team._id,
-          rosterLength: team.roster ? team.roster.length : 0,
-          roster: team.roster 
-        })}
-        {Array.isArray(team.roster) && team.roster.length > 0 ? (
-          <div className="row" style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="team-detail-page-wrapper" style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+      <div className="container mt-5" style={{ flex: 1 }}>
+        <Link to="/teams" className="btn btn-secondary mb-3">
+          {language === 'en' ? 'Back to Teams' : 'Volver a Equipos'}
+        </Link>
+        
+        <div className="d-flex justify-content-between align-items-center mb-4 team-header-responsive">
+          <h2 style={{ textAlign: 'center', marginBottom: 0 }}>{team.name}</h2>
+          {(userRole === 'content-editor' || userRole === 'admin') && (
+            <div className="team-actions">
+              <button 
+                className="btn btn-outline-primary btn-sm"
+                onClick={openEditModal}
+              >
+                <i className="fas fa-edit"></i>
+                {language === 'en' ? 'Edit Team' : 'Editar Equipo'}
+              </button>
+              <button 
+                className="btn btn-primary btn-sm"
+                onClick={openPlayersModal}
+              >
+                <i className="fas fa-users"></i>
+                {language === 'en' ? 'Manage Players' : 'Gestionar Jugadores'}
+              </button>
+            </div>
+          )}
+        </div>        <div className="row justify-content-center team-detail-content" style={{ minHeight: '400px' }}>
+          {/* Log de debug para verificar el roster */}
+          {console.log('Renderizando roster para equipo:', { 
+            teamName: team.name, 
+            teamId: team._id,
+            rosterLength: team.roster ? team.roster.length : 0,
+            roster: team.roster 
+          })}
+          {Array.isArray(team.roster) && team.roster.length > 0 ? (
+            <div className="row team-players-grid" style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
             {team.roster.map((player, idx) => (
               <div key={idx} className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4 d-flex flex-column align-items-center">
                 <div className="player-image-container">
@@ -468,21 +472,20 @@ const TeamDetailPage = ({ language, userRole }) => {
                 </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="col-12">
-            <EmptyState
-              icon="👥"
-              title={language === 'en' ? 'No Players' : 'Sin Jugadores'}
-              description={
-                language === 'en' 
-                  ? 'This team does not have any players in the roster yet.' 
-                  : 'Este equipo aún no tiene jugadores en la plantilla.'
-              }
-              language={language}
-            />
-          </div>
-        )}
+          </div>          ) : (
+            <div className="col-12 empty-state-container">
+              <EmptyState
+                icon="👥"
+                title={language === 'en' ? 'No Players' : 'Sin Jugadores'}
+                description={
+                  language === 'en' 
+                    ? 'This team does not have any players in the roster yet.' 
+                    : 'Este equipo aún no tiene jugadores en la plantilla.'
+                }
+                language={language}
+              />
+            </div>
+          )}
       </div>
 
       {/* Modal de edición de equipo */}
@@ -840,6 +843,7 @@ const TeamDetailPage = ({ language, userRole }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
