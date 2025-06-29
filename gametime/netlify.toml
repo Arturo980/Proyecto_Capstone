@@ -1,0 +1,22 @@
+[build]
+  # Directorio base donde está el código fuente
+  base = "gametime/frontend"
+  
+  # Comando para construir el proyecto
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+  # Directorio donde están los archivos construidos
+  publish = "build"
+
+[build.environment]
+  # Versión de Node.js a usar
+  NODE_VERSION = "18.17.0"
+  
+  # Variables de entorno para npm
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Configuración para manejar rutas de SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
