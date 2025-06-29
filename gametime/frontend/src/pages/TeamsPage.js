@@ -519,17 +519,19 @@ const TeamsPage = ({ language, userRole }) => {
   };
 
   // Estado para edición de configuración de la liga seleccionada
-  const [editConfig, setEditConfig] = useState({ setsToWin: 3, lastSetPoints: 15, pointsWin: 3, pointsLose: 0 });
+  const [editConfig, setEditConfig] = useState({ setsToWin: 3, lastSetPoints: 15, pointsWin: 3, pointsLose: 0, priority: 100 });
 
   // Sincroniza editConfig con la liga seleccionada cada vez que cambia activeLeague o leagues
   useEffect(() => {
     if (activeLeague && leagues.length > 0) {
       const liga = leagues.find(l => l._id === activeLeague);
       setEditConfig({
+        name: liga?.name ?? '',
         setsToWin: liga?.setsToWin ?? 3,
         lastSetPoints: liga?.lastSetPoints ?? 15,
-        pointsWin: liga?.pointsWin ?? 3,      // NUEVO
-        pointsLose: liga?.pointsLose ?? 0     // NUEVO
+        pointsWin: liga?.pointsWin ?? 3,
+        pointsLose: liga?.pointsLose ?? 0,
+        priority: liga?.priority ?? 100
       });
     }
   }, [activeLeague, leagues]);
@@ -539,7 +541,7 @@ const TeamsPage = ({ language, userRole }) => {
     const { name, value } = e.target;
     setEditConfig(prev => ({
       ...prev,
-      [name]: ['setsToWin', 'lastSetPoints', 'pointsWin', 'pointsLose'].includes(name) ? Number(value) : value
+      [name]: ['setsToWin', 'lastSetPoints', 'pointsWin', 'pointsLose', 'priority'].includes(name) ? Number(value) : value
     }));
   };
 
@@ -556,7 +558,8 @@ const TeamsPage = ({ language, userRole }) => {
         setsToWin: editConfig.setsToWin,
         lastSetPoints: editConfig.lastSetPoints,
         pointsWin: editConfig.pointsWin,
-        pointsLose: editConfig.pointsLose
+        pointsLose: editConfig.pointsLose,
+        priority: editConfig.priority
       };
       // Solo intenta si leagueId parece un ObjectId (24 caracteres hex)
       if (!/^[a-fA-F0-9]{24}$/.test(leagueId)) {

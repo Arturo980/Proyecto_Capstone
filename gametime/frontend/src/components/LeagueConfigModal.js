@@ -110,6 +110,27 @@ function LeagueConfigModal({ league, onSave, onDelete, onClose, loading, languag
               required
             />
           </div>
+          <div className="mb-2">
+            <label className="form-label">
+              {language === 'en' ? 'Priority (lower = more important):' : 'Prioridad (menor = más importante):'}
+            </label>
+            <input
+              type="number"
+              className="form-control"
+              name="priority"
+              value={editConfig.priority ?? league?.priority ?? 100}
+              onChange={handleEditConfigChange}
+              min={1}
+              max={999}
+              required
+              disabled={typeof window !== 'undefined' && !JSON.parse(localStorage.getItem('user') || '{}').esAdmin}
+            />
+            <small className="text-muted">
+              {language === 'en'
+                ? 'Only admins can change this. Lower number = higher priority.'
+                : 'Solo los administradores pueden cambiar esto. Un número menor significa más prioridad.'}
+            </small>
+          </div>
           <div className="d-flex gap-2 mt-3 flex-column">
             <button className="btn btn-success w-100" type="submit" disabled={loading}>
               {language === 'en' ? 'Save' : 'Guardar'}
