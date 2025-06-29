@@ -162,17 +162,7 @@ const getWeekGames = async (req, res) => {
     };
     if (league) query.league = league;
 
-    console.log('Rango de semana:', startOfWeek.toISOString().slice(0, 10), '-', endOfWeek.toISOString().slice(0, 10));
-    console.log('Query:', query);
-
     const partidos = await Partido.find(query).populate('league');
-    console.log('Partidos encontrados:', partidos.map(p => ({
-      date: p.date,
-      time: p.time,
-      team1: p.team1,
-      team2: p.team2,
-      league: p.league?.name
-    })));
 
     const equipos = await Equipo.find();
     const getTeamData = (teamName) => {

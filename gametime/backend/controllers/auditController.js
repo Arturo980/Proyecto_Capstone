@@ -33,7 +33,6 @@ const cleanupExpiredTrashItems = async () => {
       });
     }
     
-    console.log(`Limpieza automática completada: ${expiredItems.length} elementos eliminados permanentemente`);
   } catch (error) {
     console.error('Error en limpieza automática:', error);
   }
@@ -79,7 +78,6 @@ const sendToTrash = async (entity, entityId, data, userEmail) => {
 const restoreEntity = async (req, res) => {
   try {
     const { entity, id } = req.params;
-    console.log(`🔄 Intentando restaurar ${entity} con ID: ${id}`);
     
     const log = await AuditLog.findOne({ 
       entity, 
@@ -90,7 +88,6 @@ const restoreEntity = async (req, res) => {
     }).sort({ timestamp: -1 });
     
     if (!log) {
-      console.log(`❌ No se encontró elemento para restaurar: ${entity}:${id}`);
       return res.status(404).json({ error: 'No hay datos para restaurar' });
     }
 
@@ -106,7 +103,6 @@ const restoreEntity = async (req, res) => {
     } else if (entity === 'news') {
       restored = await Noticia.create(log.data);
     } else {
-      console.log(`❌ Entidad no soportada: ${entity}`);
       return res.status(400).json({ error: 'Entidad no soportada' });
     }
     
@@ -125,7 +121,6 @@ const restoreEntity = async (req, res) => {
       user: getUserEmailFromRequest(req)
     });
     
-    console.log(`✅ Restaurado exitosamente: ${entity}:${id}`);
     res.json({ message: 'Restaurado exitosamente', restored });
   } catch (error) {
     console.error(`❌ Error al restaurar ${req.params.entity}:${req.params.id}:`, error);
@@ -137,7 +132,6 @@ const restoreEntity = async (req, res) => {
 const permanentDelete = async (req, res) => {
   try {
     const { entity, id } = req.params;
-    console.log(`🗑️ Intentando eliminar permanentemente ${entity} con ID: ${id}`);
     
     const log = await AuditLog.findOne({ 
       entity, 
@@ -148,7 +142,6 @@ const permanentDelete = async (req, res) => {
     }).sort({ timestamp: -1 });
     
     if (!log) {
-      console.log(`❌ No se encontró elemento para eliminar: ${entity}:${id}`);
       return res.status(404).json({ error: 'No hay datos para eliminar' });
     }
     
@@ -168,7 +161,6 @@ const permanentDelete = async (req, res) => {
       isPermanentlyDeleted: true
     });
     
-    console.log(`✅ Eliminado permanentemente: ${entity}:${id}`);
     res.json({ message: 'Eliminado permanentemente' });
   } catch (error) {
     console.error(`❌ Error al eliminar permanentemente ${req.params.entity}:${req.params.id}:`, error);

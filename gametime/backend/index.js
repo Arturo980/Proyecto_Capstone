@@ -94,7 +94,6 @@ const PORT = process.env.PORT || 4000;
 // Configurar limpieza automática cada 24 horas
 setInterval(async () => {
   try {
-    console.log('🗑️ Ejecutando limpieza automática de papelera...');
     await cleanupExpiredTrashItems();
   } catch (error) {
     console.error('❌ Error en limpieza automática:', error);
@@ -104,7 +103,6 @@ setInterval(async () => {
 // Ejecutar limpieza inicial al arrancar el servidor
 setTimeout(async () => {
   try {
-    console.log('🗑️ Ejecutando limpieza inicial...');
     await cleanupExpiredTrashItems();
   } catch (error) {
     console.error('❌ Error en limpieza inicial:', error);
@@ -112,9 +110,5 @@ setTimeout(async () => {
 }, 5000); // 5 segundos después de arrancar
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 MongoDB URI configured: ${process.env.MONGO_URI ? 'Yes' : 'No'}`);
-  console.log(`☁️ Cloudinary configured: ${process.env.CLOUDINARY_CLOUD_NAME ? 'Yes' : 'No'}`);
-  console.log(`🗑️ Auto-cleanup scheduled: Every 24 hours`);
+  // Server started successfully
 });

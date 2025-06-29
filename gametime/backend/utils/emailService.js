@@ -76,7 +76,6 @@ const sendPasswordResetEmail = async (email, resetToken) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('Email de recuperación enviado:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Error enviando email de recuperación:', error);

@@ -57,11 +57,6 @@ const TeamDetailPage = ({ language, userRole }) => {
       try {
         setLoading(true);
         
-        console.log('=== INICIANDO BÚSQUEDA DE EQUIPO ===');
-        console.log('TeamParam:', teamParam);
-        console.log('LeagueParam:', leagueParam);
-        console.log('URL completa:', window.location.href);
-        
         const decodedTeamParam = decodeURIComponent(teamParam);
         const decodedLeagueParam = decodeURIComponent(leagueParam);
         let foundTeam = null;
@@ -84,9 +79,6 @@ const TeamDetailPage = ({ language, userRole }) => {
           
           if (foundLeague) {
             actualLeagueId = foundLeague._id;
-            console.log('Liga encontrada:', foundLeague.name, 'con código:', foundLeague.code);
-          } else {
-            console.log('Liga no encontrada con parámetro:', decodedLeagueParam);
           }
         }
         
@@ -94,10 +86,8 @@ const TeamDetailPage = ({ language, userRole }) => {
         const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(teamParam);
         
         if (isValidObjectId) {
-          console.log('Buscando por ID...');
           // Buscar por ID específico
           const url = `${API_BASE_URL}/api/teams?teamId=${teamParam}`;
-          console.log('URL de consulta por ID:', url);
           
           const res = await fetch(url);
           const data = await res.json();
@@ -106,11 +96,9 @@ const TeamDetailPage = ({ language, userRole }) => {
             foundTeam = data.teams[0];
           }
         } else {
-          console.log('Buscando por abreviación/nombre...');
           // Buscar por abreviación o nombre
           // Primero buscar por abreviación
           let url = `${API_BASE_URL}/api/teams?league=${actualLeagueId}&abbr=${decodedTeamParam}`;
-          console.log('URL de consulta por abbr:', url);
           
           let res = await fetch(url);
           let data = await res.json();
@@ -119,9 +107,7 @@ const TeamDetailPage = ({ language, userRole }) => {
             foundTeam = data.teams[0];
           } else {
             // Si no encuentra por abbr, buscar todos los equipos de la liga y filtrar por nombre
-            console.log('No encontrado por abbr, buscando por nombre...');
             url = `${API_BASE_URL}/api/teams?league=${actualLeagueId}`;
-            console.log('URL de consulta por liga:', url);
             
             res = await fetch(url);
             data = await res.json();
@@ -135,17 +121,6 @@ const TeamDetailPage = ({ language, userRole }) => {
           }
         }
         
-        console.log('=== RESPUESTA FINAL ===');
-        if (foundTeam) {
-          console.log('ID del equipo:', foundTeam._id);
-          console.log('Nombre:', foundTeam.name);
-          console.log('Abreviación:', foundTeam.abbr);
-          console.log('Roster completo:', JSON.stringify(foundTeam.roster, null, 2));
-          console.log('Cantidad de jugadores:', foundTeam.roster ? foundTeam.roster.length : 0);
-        } else {
-          console.log('=== NO SE ENCONTRÓ EQUIPO ===');
-        }
-        
         setTeam(foundTeam || null);
       } catch (error) {
         console.error('=== ERROR EN FETCH ===', error);
@@ -156,10 +131,6 @@ const TeamDetailPage = ({ language, userRole }) => {
 
     if (leagueParam && teamParam) {
       fetchTeam();
-    } else {
-      console.log('=== PARÁMETROS FALTANTES ===');
-      console.log('LeagueParam:', leagueParam);
-      console.log('TeamParam:', teamParam);
     }
   }, [leagueParam, teamParam]);
 
@@ -570,13 +541,6 @@ const TeamDetailPage = ({ language, userRole }) => {
             </div>
           )}
         </div>        <div className="row justify-content-center team-detail-content" style={{ minHeight: '400px' }}>
-          {/* Log de debug para verificar el roster */}
-          {console.log('Renderizando roster para equipo:', { 
-            teamName: team.name, 
-            teamId: team._id,
-            rosterLength: team.roster ? team.roster.length : 0,
-            roster: team.roster 
-          })}
           {Array.isArray(team.roster) && team.roster.length > 0 ? (
             <div className="col-12">
               {/* Agrupar jugadores por posición */}

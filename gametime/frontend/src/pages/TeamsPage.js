@@ -115,7 +115,6 @@ const TeamsPage = ({ language, userRole }) => {
       
       if (foundLeague) {
         targetLeague = foundLeague._id;
-        console.log('Liga encontrada en TeamsPage:', foundLeague.name, 'con código:', foundLeague.code);
       }
     }
     
@@ -423,13 +422,6 @@ const TeamsPage = ({ language, userRole }) => {
       const currentLeague = leagues.find(l => l._id === activeLeague);
       const leagueCode = currentLeague ? currentLeague.code : activeLeague;
       
-      console.log('Navegando a equipo:', { 
-        teamName: team.name, 
-        teamAbbr: team.abbr,
-        teamIdentifier,
-        leagueCode: currentLeague?.code,
-        url: `/teams/${leagueCode}/${encodeURIComponent(teamIdentifier)}`
-      });
       navigate(`/teams/${leagueCode}/${encodeURIComponent(teamIdentifier)}`);
     } else {
       console.warn('No se puede navegar: falta activeLeague', { activeLeague });

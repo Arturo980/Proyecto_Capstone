@@ -15,14 +15,6 @@ const Register = () => {
     const handleRegister = async () => {
         if (username && email && password && accountType) {
             try {
-                // Log para depuración
-                console.log('Enviando datos de registro:', {
-                    nombre: username,
-                    correo: email,
-                    contraseña: password,
-                    tipoCuenta: accountType,
-                });
-
                 const response = await fetch(`${API_BASE_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -35,9 +27,6 @@ const Register = () => {
                 });
 
                 const data = await response.json();
-
-                // Log para depuración
-                console.log('Respuesta del backend:', data);
 
                 if (response.ok) {
                     setSuccess(data.message || 'Usuario registrado con éxito');
