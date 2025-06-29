@@ -608,11 +608,12 @@
   display: flex;
   flex-direction: column;
   border: none;
+  min-height: 0;
 }
 
 /* Header del modal */
 .stats-modal-header {
-  padding: 20px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--text-color, #dee2e6);
   border-radius: 12px 12px 0 0;
   display: flex;
@@ -623,13 +624,16 @@
 .stats-modal-header h4 {
   margin: 0;
   font-weight: 600;
+  font-size: 1.1rem;
 }
 
 /* Body del modal */
 .stats-modal-body {
-  padding: 24px;
+  padding: 16px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Footer del modal */
@@ -689,263 +693,584 @@
   color: var(--text-color, #000);
 }
 
-/* Estilos para selección de jugadores */
-.player-selection-container {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
+/* Nuevo modal de estadísticas - diseño de tabla */
+.stats-modal-wide {
+  width: 95vw !important;
+  max-width: 1400px !important;
+  height: 90vh !important;
+  max-height: 90vh !important;
 }
 
-.team-section {
-  flex: 1;
-  min-width: 250px;
+.match-info {
+  margin-top: 10px;
 }
 
-.team-header {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.team-header-left {
-  text-align: left;
-}
-
-.team-header-right {
-  text-align: right;
-}
-
-.team-players-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.team-no-players {
-  font-size: 13px;
-  color: #6c757d;
-}
-
-.player-button {
-  text-align: left;
-  white-space: normal;
-  padding: 8px 12px;
-}
-
-.player-button-right {
-  text-align: right;
-  white-space: normal;
-  padding: 8px 12px;
-}
-
-.player-name {
-  font-weight: 600;
-}
-
-.player-team {
-  margin-left: 8px;
-  font-size: 13px;
-  opacity: 0.7;
-}
-
-/* Grid de estadísticas */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-/* Modal de gestión - más ancho */
-.stats-manage-modal-content {
-  background-color: var(--card-background-color, #fff);
-  color: var(--text-color, #000);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  border: none;
-}
-
-.stats-manage-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+.match-teams {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1050;
-  padding: 20px;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-/* Estilos para tarjetas de gestión */
-.stats-game-card {
-  border: 1px solid var(--text-color, #dee2e6);
-  border-radius: 8px;
-  background-color: var(--card-background-color, #fff);
-  margin-bottom: 24px;
+.team-name {
+  color: #142f69;
 }
 
-.stats-game-card-header {
-  padding: 16px 20px;
-  background-color: var(--card-background-color, #f8f9fa);
-  border-bottom: 1px solid var(--text-color, #dee2e6);
-  border-radius: 8px 8px 0 0;
+.vs-text {
+  color: #666;
+  font-weight: normal;
+}
+
+.match-date {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.match-stats-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.stats-categories-filter {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
-.stats-game-card-header h6 {
-  margin: 0;
+.category-tabs {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.category-tab {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-tab:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.category-tab.active {
+  background: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+.legend-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.legend-icon {
+  font-size: 1.1rem;
+}
+
+.match-stats-table-container {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  min-height: 0;
+  /* Hacer la barra de scroll más visible */
+  scrollbar-width: thick;
+  scrollbar-color: #142f69 #f1f1f1;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.match-stats-table-container::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.match-stats-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.match-stats-table-container::-webkit-scrollbar-thumb {
+  background: #142f69;
+  border-radius: 6px;
+  border: 2px solid #f1f1f1;
+}
+
+.match-stats-table-container::-webkit-scrollbar-thumb:hover {
+  background: #0f2450;
+}
+
+/* Añadir sombras laterales para indicar scroll */
+.match-stats-table-container {
+  position: relative;
+}
+
+.match-stats-table-container::before,
+.match-stats-table-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.match-stats-table-container::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0.8), transparent);
+}
+
+.match-stats-table-container::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+}
+
+.match-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.match-stats-table th {
+  background: #142f69;
+  color: white;
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-right: 1px solid #34495e;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.match-stats-table th:last-child {
+  border-right: none;
+}
+
+.player-header {
+  width: 80px;
+  min-width: 80px;
+}
+
+.stat-header {
+  width: 90px;
+  min-width: 90px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-icon {
+  font-size: 1rem;
+}
+
+.sub-header {
+  font-size: 0.75rem;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+.player-stats-row {
+  border-bottom: 1px solid #eee;
+}
+
+.player-stats-row:hover {
+  background: #f8f9fa;
+}
+
+.player-stats-row:nth-child(even) {
+  background: #fafafa;
+}
+
+.player-stats-row:nth-child(even):hover {
+  background: #f0f0f0;
+}
+
+.player-number {
+  padding: 8px 6px;
+  text-align: center;
+  border-right: 1px solid #eee;
+  width: 80px;
+  font-weight: bold;
+}
+
+.jersey-number {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  background: #142f69;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.player-name-cell {
+  padding: 8px 6px;
+  text-align: left;
+  border-right: 1px solid #eee;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.85rem;
+}
+
+.position-cell {
+  padding: 8px 6px;
+  text-align: center;
+  border-right: 1px solid #eee;
+  font-weight: 500;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.stat-input-cell {
+  padding: 6px;
+  text-align: center;
+  border-right: 1px solid #eee;
+}
+
+.stat-calculated-cell {
+  padding: 6px;
+  text-align: center;
+  border-right: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.stat-input {
+  width: 55px;
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.stat-calculated {
+  display: inline-block;
+  width: 55px;
+  padding: 4px 6px;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  background-color: #d4edda;
+  color: #155724;
+  text-align: center;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
-.stats-game-badge {
-  background-color: #007bff;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+.stat-input:focus {
+  outline: none;
+  border-color: #142f69;
+  box-shadow: 0 0 0 2px rgba(20, 47, 105, 0.1);
 }
 
-.stats-game-card-body {
-  padding: 20px;
+.efficiency-cell {
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: 600;
+  color: #e74c3c;
+  font-size: 0.8rem;
 }
 
-.stats-game-no-data {
-  margin: 0;
-  color: #6c757d;
+.efficiency-value {
+  font-size: 0.95rem;
 }
 
-.stats-game-table-container {
-  overflow-x: auto;
-}
-
-.stats-game-table {
-  width: 100%;
-  margin-bottom: 0;
-  background-color: transparent;
-}
-
-.stats-game-table th,
-.stats-game-table td {
-  padding: 8px 12px;
-}
-
-.stats-game-table th {
-  border-bottom: 2px solid #dee2e6;
-}
-
-.stats-game-table td {
-  border-bottom: 1px solid #dee2e6;
-}
-
-.stats-action-button {
-  margin-right: 8px;
-  font-size: 12px;
-  padding: 4px 8px;
-}
-
-.stats-action-button-delete {
-  font-size: 12px;
-  padding: 4px 8px;
-}
-
-/* Estilos responsivos para móviles - Modal de Agregar Estadísticas */
-@media (max-width: 576px) {
-  /* Modal overlay y contenido */
-  .stats-modal-overlay {
-    padding: 10px !important;
-    align-items: flex-start !important;
-    padding-top: 20px !important;
+/* Responsive design para móviles */
+@media (max-width: 768px) {
+  .stats-modal-wide {
+    width: 98vw !important;
+    height: 95vh !important;
+    margin: 10px auto !important;
+    max-height: 95vh !important;
   }
   
-  .stats-modal-content {
-    width: 100% !important;
-    margin: 0 !important;
-    max-height: calc(100vh - 40px) !important;
-  }
-  
-  /* Header del modal */
-  .stats-modal-header {
-    padding: 16px !important;
-  }
-  
-  /* Body del modal */
   .stats-modal-body {
-    padding: 16px !important;
+    padding: 12px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 !important;
+    min-height: 0 !important;
   }
   
-  /* Footer del modal - BOTONES */
-  .stats-modal-footer {
-    padding: 12px 16px !important;
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-  }
-  
-  .stats-modal-footer button,
-  .stats-modal-button {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: auto !important;
-    margin: 0 !important;
-  }
-  
-  /* Selección de jugadores */
-  .player-selection-container {
+  .match-stats-container {
+    height: auto !important;
+    min-height: 0 !important;
+    display: flex !important;
     flex-direction: column !important;
-    gap: 15px !important;
   }
   
-  .team-section {
-    min-width: 100% !important;
+  .team-filter-section {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    flex-shrink: 0;
   }
   
-  /* Grid de estadísticas */
-  .stats-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
+  .team-filter-buttons {
+    flex-direction: column;
+    gap: 6px;
   }
   
-  .stats-grid > div {
-    min-width: 0 !important;
+  .team-filter-btn {
+    min-width: 100%;
+    padding: 10px 12px;
   }
   
-  /* Modal de gestión */
-  .stats-manage-modal-overlay {
-    padding: 10px !important;
-    align-items: flex-start !important;
-    padding-top: 20px !important;
+  .stats-categories-filter {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    flex-shrink: 0;
   }
   
-  .stats-manage-modal-content {
-    width: 100% !important;
-    margin: 0 !important;
-    max-height: calc(100vh - 40px) !important;
+  .category-tabs {
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .category-tab {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    min-width: auto;
+    flex: 1;
+  }
+  
+  .match-stats-table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    flex: 1 !important;
+    min-height: 300px !important;
+    max-height: none !important;
+    -webkit-overflow-scrolling: touch;
+    /* Forzar scroll visible siempre */
+    scrollbar-width: thick;
+  }
+  
+  .match-stats-table {
+    font-size: 0.75rem;
+    min-width: 700px; /* Aumentamos el ancho mínimo para forzar scroll */
+    white-space: nowrap;
+  }
+  
+  .match-stats-table th {
+    padding: 6px 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  
+  .match-stats-table td {
+    padding: 6px 4px;
+    white-space: nowrap;
+  }
+  
+  .player-header {
+    width: 60px;
+    min-width: 60px;
+  }
+  
+  .stat-header {
+    width: 70px;
+    min-width: 70px;
+  }
+  
+  .stat-input {
+    width: 45px;
+    padding: 3px 4px;
+    font-size: 0.75rem;
+  }
+  
+  .stat-calculated {
+    width: 45px;
+    padding: 3px 4px;
+    font-size: 0.75rem;
+  }
+  
+  .jersey-number {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 0.7rem;
+  }
+  
+  .player-name-cell {
+    font-size: 0.75rem;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .position-cell {
+    font-size: 0.7rem;
+  }
+  
+  .efficiency-cell {
+    font-size: 0.7rem;
   }
 }
 
-/* Estilos para pantallas muy pequeñas */
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+/* Indicador de scroll para móviles */
+.mobile-scroll-hint {
+  display: none;
+  background: linear-gradient(90deg, #142f69, #2c5aa0);
+  color: white;
+  padding: 10px 15px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .mobile-scroll-hint {
+    display: block;
   }
   
-  .stats-modal-header {
-    padding: 12px 16px !important;
+  /* Hacer la barra de scroll más gruesa en móviles */
+  .match-stats-table-container::-webkit-scrollbar {
+    height: 16px;
   }
   
-  .stats-modal-body {
-    padding: 12px 16px !important;
+  .match-stats-table-container::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border: 3px solid #f1f1f1;
   }
   
-  .stats-modal-footer {
-    padding: 10px 16px !important;
+  .match-stats-table-container::-webkit-scrollbar-thumb:hover {
+    background: #c0392b;
   }
+}
+
+/* Filtros por equipo */
+.team-filter-section {
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.team-filter-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.team-filter-btn {
+  padding: 8px 16px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.team-filter-btn:hover {
+  border-color: #142f69;
+  background: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.team-filter-btn.active {
+  border-color: #142f69;
+  background: #142f69;
+  color: white;
+  box-shadow: 0 2px 8px rgba(20, 47, 105, 0.2);
+}
+
+.team-filter-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.team-filter-flag {
+  font-size: 1.2rem;
+}
+
+.team-filter-icon {
+  font-size: 1.2rem;
+}
+
+.team-filter-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.team-filter-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.team-filter-btn.active .team-filter-name {
+  color: white;
+}
+
+/* Responsive para filtros de equipo */
+@media (max-width: 768px) {
+  .team-filter-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .team-filter-btn {
+    min-width: 120px;
+    padding: 10px 16px;
+  }
+  
+  .team-filter-name {
+    font-size: 0.85rem;
+  }
+}
+
+/* Indicadores de scroll lateral para móviles */
+.match-stats-table-container {
+  position: relative;
+}
+
+@keyframes bounce-horizontal {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(-3px); }
 }

@@ -110,5 +110,6 @@ setTimeout(async () => {
 }, 5000); // 5 segundos después de arrancar
 
 server.listen(PORT, () => {
-  // Server started successfully
+  console.log(`🚀 Servidor backend ejecutándose en puerto ${PORT}`);
+  console.log(`📊 API disponible en http://localhost:${PORT}/api`);
 });

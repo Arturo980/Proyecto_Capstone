@@ -18,6 +18,35 @@ const gameStatsSchema = new mongoose.Schema({
   kills: { type: Number, default: 0 },
   points: { type: Number, default: 0 },
   
+  // Campos expandidos para Attack
+  attackErrors: { type: Number, default: 0 },
+  attackTotal: { type: Number, default: 0 },
+  
+  // Campos expandidos para Block  
+  blockErrors: { type: Number, default: 0 },
+  blockTouches: { type: Number, default: 0 },
+  blockTotal: { type: Number, default: 0 },
+  
+  // Campos expandidos para Serve
+  serveErrors: { type: Number, default: 0 },
+  serveAttempts: { type: Number, default: 0 },
+  serveTotal: { type: Number, default: 0 },
+  
+  // Campos expandidos para Reception
+  receptionSuccessful: { type: Number, default: 0 },
+  receptionErrors: { type: Number, default: 0 },
+  receptionAttempts: { type: Number, default: 0 },
+  receptionTotal: { type: Number, default: 0 },
+  
+  // Campos expandidos para Dig
+  digErrors: { type: Number, default: 0 },
+  digTotal: { type: Number, default: 0 },
+  
+  // Campos expandidos para Set
+  setErrors: { type: Number, default: 0 },
+  setAttempts: { type: Number, default: 0 },
+  setTotal: { type: Number, default: 0 },
+  
   // Timestamp para control
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

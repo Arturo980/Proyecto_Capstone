@@ -11,6 +11,9 @@ router.get('/player-averages', gameStatsController.getPlayerAverages);
 // POST /api/game-stats - Crear o actualizar estadísticas de un partido
 router.post('/', gameStatsController.createOrUpdateGameStats);
 
+// PUT /api/game-stats/:id - Actualizar estadísticas específicas
+router.put('/:id', gameStatsController.updateGameStats);
+
 // DELETE /api/game-stats/:id - Eliminar estadísticas específicas
 router.delete('/:id', gameStatsController.deleteGameStats);
 

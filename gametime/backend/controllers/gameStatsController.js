@@ -68,6 +68,56 @@ const createOrUpdateGameStats = async (req, res) => {
   }
 };
 
+// PUT /api/game-stats/:id
+const updateGameStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { gameId, playerName, team, league, ...stats } = req.body;
+    
+    if (!gameId || !playerName || !team || !league) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    // Verificar que el partido existe y está finalizado
+    const game = await Partido.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ error: 'Partido no encontrado' });
+    }
+    
+    if (!game.partidoFinalizado) {
+      return res.status(400).json({ error: 'Solo se pueden actualizar estadísticas de partidos finalizados' });
+    }
+
+    // Verificar que el jugador está citado para el partido
+    const citados = (game.citados || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!citados.includes(playerName)) {
+      return res.status(400).json({ error: 'El jugador debe estar citado para el partido' });
+    }
+
+    // Actualizar las estadísticas
+    const updatedStats = await GameStats.findByIdAndUpdate(
+      id,
+      { 
+        gameId, 
+        playerName, 
+        team, 
+        league, 
+        ...stats,
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedStats) {
+      return res.status(404).json({ error: 'Estadística no encontrada' });
+    }
+
+    res.json(updatedStats);
+  } catch (err) {
+    res.status(400).json({ error: 'No se pudieron actualizar las estadísticas', details: err.message });
+  }
+};
+
 // GET /api/game-stats/player-averages?league=ID
 const getPlayerAverages = async (req, res) => {
   try {
@@ -182,6 +232,7 @@ const deleteGameStats = async (req, res) => {
 module.exports = {
   getGameStats,
   createOrUpdateGameStats,
+  updateGameStats,
   getPlayerAverages,
   deleteGameStats
 };
