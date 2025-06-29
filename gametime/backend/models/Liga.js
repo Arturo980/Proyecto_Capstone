@@ -7,7 +7,8 @@ const ligaSchema = new mongoose.Schema({
   setsToWin: { type: Number, default: 3 },      // Mejor de 5 por defecto (gana 3)
   lastSetPoints: { type: Number, default: 15 }, // Último set a 15 por defecto
   pointsWin: { type: Number, default: 3 },      // puntos por victoria
-  pointsLose: { type: Number, default: 0 }      // puntos por derrota
+  pointsLose: { type: Number, default: 0 },     // puntos por derrota
+  priority: { type: Number, default: 100 }      // Prioridad, menor es más prioritario
 });
 
 module.exports = mongoose.model('Liga', ligaSchema);

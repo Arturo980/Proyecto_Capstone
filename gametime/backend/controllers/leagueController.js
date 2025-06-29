@@ -58,11 +58,10 @@ const createLeague = async (req, res) => {
   }
 };
 
-// Listar ligas
+// Listar ligas ordenadas por prioridad (menor primero)
 const getLeagues = async (req, res) => {
   try {
-    const ligas = await Liga.find();
-    
+    const ligas = await Liga.find().sort({ priority: 1, name: 1 });
     // Migrar ligas que no tengan código único
     let needsUpdate = false;
     for (const liga of ligas) {
@@ -72,21 +71,25 @@ const getLeagues = async (req, res) => {
         needsUpdate = true;
       }
     }
-    
     // Si se actualizaron ligas, volver a consultar
-    const finalLigas = needsUpdate ? await Liga.find() : ligas;
+    const finalLigas = needsUpdate ? await Liga.find().sort({ priority: 1, name: 1 }) : ligas;
     res.json(finalLigas);
   } catch (err) {
     res.status(500).json({ error: 'No se pudo obtener las ligas', details: err.message });
   }
 };
 
-// Actualizar liga
+// Actualizar liga (incluye prioridad, solo admin)
 const updateLeague = async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'ID de liga inválido (no es un ObjectId)' });
+    }
+    // Solo admin puede cambiar prioridad
+    const user = req.user || req.body.user;
+    if (typeof req.body.priority === 'number' && (!user || !user.esAdmin)) {
+      return res.status(403).json({ error: 'Solo el administrador puede modificar la prioridad de la liga' });
     }
     const update = {};
     if (typeof req.body.setsToWin === 'number') update.setsToWin = req.body.setsToWin;
@@ -94,7 +97,7 @@ const updateLeague = async (req, res) => {
     if (typeof req.body.name === 'string') update.name = req.body.name;
     if (typeof req.body.pointsWin === 'number') update.pointsWin = req.body.pointsWin;
     if (typeof req.body.pointsLose === 'number') update.pointsLose = req.body.pointsLose;
-    
+    if (typeof req.body.priority === 'number') update.priority = req.body.priority;
     const liga = await Liga.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!liga) {
       return res.status(404).json({ error: 'Liga no encontrada' });
