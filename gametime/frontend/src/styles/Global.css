@@ -413,7 +413,7 @@ footer a:hover {
 
 /* Tema claro */
 .theme-light {
-  --background-color: #ffffff;
+  --background-color: #f8f9fa;
   --text-color: #000000;
   --card-background-color: #ffffff; /* Cambiar para que coincida con el fondo */
 }

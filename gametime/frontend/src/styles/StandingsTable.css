@@ -9,6 +9,30 @@
   overflow: hidden;
   background: var(--card-background-color, #ffffff);
   margin-bottom: 16px;
+  /* Hacer la tabla scrolleable para listas largas */
+  max-height: 500px;
+  overflow-y: auto;
+  /* Scroll suave */
+  scroll-behavior: smooth;
+}
+
+/* Personalizar la scrollbar */
+.standings-table-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.standings-table-container::-webkit-scrollbar-track {
+  background: var(--background-color, #f1f1f1);
+  border-radius: 3px;
+}
+
+.standings-table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.standings-table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .standingsTable {
@@ -32,10 +56,10 @@
   background: #142f69 !important;
   color: #ffffff !important;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px; /* Reducir ligeramente el tamaño de fuente */
   letter-spacing: 0.5px;
   border: none !important;
-  padding: 12px 8px;
+  padding: 10px 8px; /* Reducir padding */
   text-transform: uppercase;
 }
 
@@ -75,7 +99,7 @@
   border-bottom: 1px solid rgba(229, 231, 235, 0.5) !important;
   vertical-align: middle !important;
   text-align: center;
-  padding: 10px 8px;
+  padding: 6px 8px; /* Reducir padding para hacer más compacta */
   color: var(--text-color, #1f2937);
 }
 
@@ -83,8 +107,8 @@
   background: var(--card-background-color, #ffffff) !important;
   border-radius: 8px;
   border: 1px solid rgba(229, 231, 235, 0.5);
-  height: 40px !important;
-  width: 40px !important;
+  height: 32px !important; /* Reducir tamaño de las imágenes */
+  width: 32px !important;
   object-fit: contain;
   display: block;
   margin: 0 auto;
@@ -93,16 +117,16 @@
 .standings-row td:first-child {
   text-align: center;
   vertical-align: middle !important;
-  padding: 10px 8px;
+  padding: 6px 8px; /* Reducir padding para consistencia */
   width: 55px;
 }
 
 .standings-row td:nth-child(2) {
   text-align: left;
   vertical-align: middle !important;
-  font-size: 14px;
+  font-size: 13px; /* Reducir ligeramente el tamaño de fuente */
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 6px 12px; /* Reducir padding */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

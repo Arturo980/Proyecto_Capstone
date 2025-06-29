@@ -168,7 +168,7 @@ const PlayerDetailPage = ({ language }) => {
                   {player.height && (
                     <div className="info-row">
                       <strong>{language === 'en' ? 'Height:' : 'Estatura:'}</strong>
-                      <span className="ms-2">{player.height}</span>
+                      <span className="ms-2">{player.height} cm</span>
                     </div>
                   )}
                 </div>
