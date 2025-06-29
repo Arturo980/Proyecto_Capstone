@@ -790,6 +790,19 @@ body.theme-dark .calendar-icon .material-symbols-outlined {
   color: #fff !important; /* Blanco para tema oscuro */
 }
 
+/* Estilos para la imagen del calendario */
+.calendar-icon img {
+  transition: filter 0.3s ease;
+}
+
+body.theme-light .calendar-icon img {
+  filter: none; /* Sin filtro para tema claro */
+}
+
+body.theme-dark .calendar-icon img {
+  filter: invert(1) brightness(1.2); /* Invierte los colores para tema oscuro */
+}
+
 .material-symbols-outlined {
   font-variation-settings:
     'FILL' 0,

@@ -38,6 +38,20 @@ const TeamDetailPage = ({ language, userRole }) => {
   const [playerImageFile, setPlayerImageFile] = useState(null);
   const playerFileInputRef = useRef(null);
 
+  // Estado para el modal de edición de jugador
+  const [showEditPlayerModal, setShowEditPlayerModal] = useState(false);
+  const [editingPlayerIndex, setEditingPlayerIndex] = useState(null);
+  const [editPlayerForm, setEditPlayerForm] = useState({
+    name: '',
+    age: '',
+    height: '',
+    position: '',
+    image: ''
+  });
+  const [editPlayerImageType, setEditPlayerImageType] = useState('url');
+  const [editPlayerImageFile, setEditPlayerImageFile] = useState(null);
+  const editPlayerFileInputRef = useRef(null);
+
   useEffect(() => {
     const fetchTeam = async () => {
       try {
@@ -388,6 +402,118 @@ const TeamDetailPage = ({ language, userRole }) => {
     navigate(`/teams/${leagueParam}/${teamParam}/player/${playerIndex}`);
   };
 
+  // Funciones para el modal de edición de jugador
+  const openEditPlayerModal = (playerIndex) => {
+    const player = team.roster[playerIndex];
+    setEditingPlayerIndex(playerIndex);
+    setEditPlayerForm({
+      name: player.name || '',
+      age: player.age || '',
+      height: player.height || '',
+      position: player.position || '',
+      image: player.image || ''
+    });
+    setEditPlayerImageType('url');
+    setEditPlayerImageFile(null);
+    if (editPlayerFileInputRef.current) editPlayerFileInputRef.current.value = '';
+    setShowEditPlayerModal(true);
+  };
+
+  const closeEditPlayerModal = () => {
+    setShowEditPlayerModal(false);
+    setEditingPlayerIndex(null);
+    setEditPlayerForm({
+      name: '',
+      age: '',
+      height: '',
+      position: '',
+      image: ''
+    });
+    setEditPlayerImageType('url');
+    setEditPlayerImageFile(null);
+    if (editPlayerFileInputRef.current) editPlayerFileInputRef.current.value = '';
+  };
+
+  const handleEditPlayerFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditPlayerForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditPlayerImageUpload = (url) => {
+    if (url) {
+      setEditPlayerForm(prev => ({ ...prev, image: url }));
+    }
+  };
+
+  const getEditPlayerImagePreview = () => {
+    if (editPlayerImageType === 'file' && editPlayerImageFile) {
+      return URL.createObjectURL(editPlayerImageFile);
+    }
+    if (editPlayerForm.image) return editPlayerForm.image;
+    return null;
+  };
+
+  const handleUpdatePlayer = async (e) => {
+    e.preventDefault();
+    if (!editPlayerForm.name.trim() || editingPlayerIndex === null) return;
+    
+    setLoading(true);
+    try {
+      let imageToSave = editPlayerForm.image || '';
+      if (editPlayerImageType === 'file' && editPlayerImageFile) {
+        imageToSave = getEditPlayerImagePreview();
+      }
+
+      const updatedPlayer = {
+        name: editPlayerForm.name.trim(),
+        age: parseInt(editPlayerForm.age) || 0,
+        height: editPlayerForm.height.trim(),
+        position: editPlayerForm.position.trim(),
+        image: imageToSave,
+        stats: team.roster[editingPlayerIndex].stats || {
+          acesPerSet: 0,
+          assistsPerSet: 0,
+          attacksPerSet: 0,
+          blocksPerSet: 0,
+          digsPerSet: 0,
+          hittingPercentage: 0,
+          killsPerSet: 0,
+          pointsPerSet: 0
+        }
+      };
+
+      const updatedRoster = [...team.roster];
+      updatedRoster[editingPlayerIndex] = updatedPlayer;
+
+      const payload = {
+        name: team.name,
+        abbr: team.abbr,
+        logo: team.logo,
+        league: team.league,
+        roster: updatedRoster,
+        staff: team.staff || []
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const updatedTeam = await response.json();
+        setTeam(updatedTeam);
+        closeEditPlayerModal();
+      } else {
+        alert(language === 'en' ? 'Error updating player' : 'Error al actualizar jugador');
+      }
+    } catch (error) {
+      console.error('Error updating player:', error);
+      alert(language === 'en' ? 'Error updating player' : 'Error al actualizar jugador');
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -452,36 +578,63 @@ const TeamDetailPage = ({ language, userRole }) => {
             roster: team.roster 
           })}
           {Array.isArray(team.roster) && team.roster.length > 0 ? (
-            <div className="row team-players-grid" style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
-            {team.roster.map((player, idx) => (
-              <div 
-                key={idx} 
-                className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4 d-flex flex-column align-items-center player-card-clickable"
-                onClick={() => handlePlayerClick(idx)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="player-image-container">
-                  <img
-                    src={
-                      (typeof player === 'object' && player.image) 
-                        ? player.image 
-                        : avatarGenerico
+            <div className="col-12">
+              {/* Agrupar jugadores por posición */}
+              {(() => {
+                // Agrupar jugadores por posición
+                const playersByPosition = team.roster.reduce((acc, player, idx) => {
+                  if (typeof player === 'object' && player.name) {
+                    const position = player.position || 'Sin Posición';
+                    if (!acc[position]) {
+                      acc[position] = [];
                     }
-                    alt="avatar"
-                    className="player-image"
-                  />
-                </div>
-                <div className="player-name">
-                  {typeof player === 'string' ? player : player.name}
-                  {typeof player === 'object' && player.position && (
-                    <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
-                      {player.position}
+                    acc[position].push({ ...player, originalIndex: idx });
+                  }
+                  return acc;
+                }, {});
+
+                // Orden de posiciones para mostrar
+                const positionOrder = ['Armador', 'Punta', 'Central', 'Opuesto', 'Líbero', 'Sin Posición'];
+                
+                return positionOrder.map(position => {
+                  const playersInPosition = playersByPosition[position];
+                  if (!playersInPosition || playersInPosition.length === 0) return null;
+
+                  return (
+                    <div key={position} className="position-group mb-4">
+                      <h4 className="position-title">
+                        {position === 'Sin Posición' 
+                          ? (language === 'en' ? 'No Position' : 'Sin Posición')
+                          : position
+                        }
+                      </h4>
+                      <div className="row">
+                        {playersInPosition.map((player) => (
+                          <div 
+                            key={player.originalIndex} 
+                            className="col-6 col-sm-4 col-md-3 col-lg-2 mb-3 d-flex flex-column align-items-center player-card-clickable"
+                            onClick={() => handlePlayerClick(player.originalIndex)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="player-image-container">
+                              <img
+                                src={player.image || avatarGenerico}
+                                alt="avatar"
+                                className="player-image"
+                              />
+                            </div>
+                            <div className="player-name" style={{ textAlign: 'center' }}>
+                              {player.name}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>          ) : (
+                  );
+                });
+              })()}
+            </div>
+          ) : (
             <div className="col-12 empty-state-container">
               <EmptyState
                 icon="👥"
@@ -698,12 +851,11 @@ const TeamDetailPage = ({ language, userRole }) => {
                       <option value="">
                         {language === 'en' ? 'Select Position' : 'Seleccionar Posición'}
                       </option>
-                      <option value="Setter">{language === 'en' ? 'Setter' : 'Armador'}</option>
-                      <option value="Outside Hitter">{language === 'en' ? 'Outside Hitter' : 'Atacante Exterior'}</option>
-                      <option value="Middle Blocker">{language === 'en' ? 'Middle Blocker' : 'Bloqueador Central'}</option>
-                      <option value="Opposite Hitter">{language === 'en' ? 'Opposite Hitter' : 'Opuesto'}</option>
-                      <option value="Libero">{language === 'en' ? 'Libero' : 'Líbero'}</option>
-                      <option value="Defensive Specialist">{language === 'en' ? 'Defensive Specialist' : 'Especialista Defensivo'}</option>
+                      <option value="Armador">{language === 'en' ? 'Setter' : 'Armador'}</option>
+                      <option value="Punta">{language === 'en' ? 'Outside Hitter' : 'Punta'}</option>
+                      <option value="Central">{language === 'en' ? 'Middle Blocker' : 'Central'}</option>
+                      <option value="Opuesto">{language === 'en' ? 'Opposite Hitter' : 'Opuesto'}</option>
+                      <option value="Líbero">{language === 'en' ? 'Libero' : 'Líbero'}</option>
                     </select>
                   </div>
                 </div>
@@ -821,13 +973,22 @@ const TeamDetailPage = ({ language, userRole }) => {
                             {player.position && <span>Posición: {player.position}</span>}
                           </div>
                         </div>
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleRemovePlayer(index)}
-                          disabled={loading}
-                        >
-                          {language === 'en' ? 'Remove' : 'Eliminar'}
-                        </button>
+                        <div className="player-actions">
+                          <button
+                            className="btn btn-outline-primary btn-sm me-2"
+                            onClick={() => openEditPlayerModal(index)}
+                            disabled={loading}
+                          >
+                            {language === 'en' ? 'Edit' : 'Editar'}
+                          </button>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleRemovePlayer(index)}
+                            disabled={loading}
+                          >
+                            {language === 'en' ? 'Remove' : 'Eliminar'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -848,6 +1009,181 @@ const TeamDetailPage = ({ language, userRole }) => {
                 {language === 'en' ? 'Close' : 'Cerrar'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de edición de jugador */}
+      {showEditPlayerModal && (userRole === 'content-editor' || userRole === 'admin') && (
+        <div className="modal-overlay" onClick={closeEditPlayerModal}>
+          <div className="modal-content edit-player-modal" onClick={e => e.stopPropagation()}>
+            <button
+              className="btn btn-secondary close-button"
+              onClick={closeEditPlayerModal}
+            >
+              &times;
+            </button>
+            <h2>{language === 'en' ? 'Edit Player' : 'Editar Jugador'}</h2>
+            
+            <form onSubmit={handleUpdatePlayer}>
+              <div className="row">
+                <div className="col-md-6">
+                  <label className="form-label">
+                    {language === 'en' ? 'Name' : 'Nombre'} *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    name="name"
+                    value={editPlayerForm.name}
+                    onChange={handleEditPlayerFormChange}
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">
+                    {language === 'en' ? 'Age' : 'Edad'}
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control mb-2"
+                    name="age"
+                    value={editPlayerForm.age}
+                    onChange={handleEditPlayerFormChange}
+                    min="15"
+                    max="50"
+                  />
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <label className="form-label">
+                    {language === 'en' ? 'Height' : 'Estatura'}
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    name="height"
+                    value={editPlayerForm.height}
+                    onChange={handleEditPlayerFormChange}
+                    placeholder={language === 'en' ? 'e.g. 1.85m' : 'Ej: 1.85m'}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">
+                    {language === 'en' ? 'Position' : 'Posición'}
+                  </label>
+                  <select
+                    className="form-select mb-2"
+                    name="position"
+                    value={editPlayerForm.position}
+                    onChange={handleEditPlayerFormChange}
+                  >
+                    <option value="">
+                      {language === 'en' ? 'Select Position' : 'Seleccionar Posición'}
+                    </option>
+                    <option value="Armador">{language === 'en' ? 'Setter' : 'Armador'}</option>
+                    <option value="Punta">{language === 'en' ? 'Outside Hitter' : 'Punta'}</option>
+                    <option value="Central">{language === 'en' ? 'Middle Blocker' : 'Central'}</option>
+                    <option value="Opuesto">{language === 'en' ? 'Opposite Hitter' : 'Opuesto'}</option>
+                    <option value="Líbero">{language === 'en' ? 'Libero' : 'Líbero'}</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Imagen del jugador */}
+              <div className="mb-2">
+                <label className="form-label">
+                  {language === 'en' ? 'Player Image' : 'Imagen del Jugador'}
+                </label>
+                <div className="mb-2">
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="editPlayerImageType"
+                      id="editPlayerImageUrl"
+                      checked={editPlayerImageType === 'url'}
+                      onChange={() => {
+                        setEditPlayerImageType('url');
+                        setEditPlayerImageFile(null);
+                        if (editPlayerFileInputRef.current) editPlayerFileInputRef.current.value = '';
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="editPlayerImageUrl">
+                      {language === 'en' ? 'By URL' : 'Por URL'}
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="editPlayerImageType"
+                      id="editPlayerImageFile"
+                      checked={editPlayerImageType === 'file'}
+                      onChange={() => {
+                        setEditPlayerImageType('file');
+                        setEditPlayerForm(prev => ({ ...prev, image: '' }));
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="editPlayerImageFile">
+                      {language === 'en' ? 'Upload Image' : 'Subir Imagen'}
+                    </label>
+                  </div>
+                </div>
+                
+                {editPlayerImageType === 'url' && (
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    name="image"
+                    value={editPlayerForm.image}
+                    onChange={handleEditPlayerFormChange}
+                    placeholder={language === 'en' ? 'Image URL' : 'URL de la Imagen'}
+                  />
+                )}
+                
+                {editPlayerImageType === 'file' && (
+                  <CloudinaryUpload onUpload={handleEditPlayerImageUpload} />
+                )}
+                
+                {/* Preview de la imagen */}
+                {getEditPlayerImagePreview() && (
+                  <div className="mb-2">
+                    <img 
+                      src={getEditPlayerImagePreview()} 
+                      alt="player preview" 
+                      style={{ 
+                        maxWidth: 80, 
+                        maxHeight: 80, 
+                        marginTop: 8, 
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="d-flex gap-2 mt-3">
+                <button 
+                  className="btn btn-primary" 
+                  type="submit" 
+                  disabled={loading}
+                >
+                  {language === 'en' ? 'Update Player' : 'Actualizar Jugador'}
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  type="button" 
+                  onClick={closeEditPlayerModal}
+                  disabled={loading}
+                >
+                  {language === 'en' ? 'Cancel' : 'Cancelar'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

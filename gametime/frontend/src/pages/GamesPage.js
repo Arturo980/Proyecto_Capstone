@@ -1479,9 +1479,11 @@ const GamesPage = ({ language = 'es' }) => {
             onClick={() => setShowModal(true)}
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 36, color: 'inherit' }}>
-              calendar_month
-            </span>
+            <img 
+              src={require('../assets/images/calendario.png')} 
+              alt="Calendario" 
+              style={{ width: 36, height: 36, objectFit: 'contain' }}
+            />
           </button>
         </div>
       </div>
