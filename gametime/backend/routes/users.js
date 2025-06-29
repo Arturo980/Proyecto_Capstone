@@ -7,7 +7,10 @@ const {
   getUsers, 
   getPendingSolicitudes, 
   approveUser, 
-  rejectUser 
+  rejectUser,
+  requestPasswordReset,
+  resetPassword,
+  verifyResetToken
 } = require('../controllers/userController');
 
 // Rutas de autenticación
@@ -22,5 +25,10 @@ router.get('/usuarios', getUsers);
 router.get('/solicitudes-pendientes', getPendingSolicitudes);
 router.post('/aprobar-usuario/:id', approveUser);
 router.post('/rechazar-usuario/:id', rejectUser);
+
+// Rutas de recuperación de contraseña
+router.post('/forgot-password', requestPasswordReset);
+router.post('/reset-password', resetPassword);
+router.get('/verify-reset-token/:token', verifyResetToken);
 
 module.exports = router;

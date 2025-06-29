@@ -12,6 +12,8 @@ import GamesPage from './pages/GamesPage'; // Cambiar el nombre del componente
 import MediaPage from './pages/MediaPage'; // Importar la nueva página
 import Login from './pages/Login'; // Importar la página de Login
 import Register from './pages/Register'; // Importar la página de Registro
+import ForgotPassword from './pages/ForgotPassword'; // Importar la página de Olvidé mi contraseña
+import ResetPassword from './pages/ResetPassword'; // Importar la página de Restablecer contraseña
 import AdminSolicitudes from './pages/AdminSolicitudes'; // Importar la página de Solicitudes de Admin
 import AdminAuditPage from './pages/AdminAuditPage';
 import texts from './translations/texts';
@@ -296,6 +298,24 @@ function App() {
               element={
                 <div>
                   <Register />
+                </div>
+              }
+            />
+            {/* Página de Olvidé mi contraseña */}
+            <Route
+              path="/forgot-password"
+              element={
+                <div>
+                  <ForgotPassword />
+                </div>
+              }
+            />
+            {/* Página de Restablecer contraseña */}
+            <Route
+              path="/reset-password"
+              element={
+                <div>
+                  <ResetPassword />
                 </div>
               }
             />

@@ -98,3 +98,59 @@
 .link:hover {
     color: #1a5bb8;
 }
+
+/* Estilos específicos para páginas de recuperación de contraseña */
+.forgot-password-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.success-message {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 12px;
+    border-radius: 5px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.success-message p {
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.success-message p:last-child {
+    margin-bottom: 0;
+}
+
+/* Estado disabled para botones */
+.login-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.login-button:disabled:hover {
+    background-color: #6c757d;
+}
+
+/* Estados de carga */
+.input-field:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* Responsive para dispositivos móviles */
+@media (max-width: 480px) {
+    .login-box {
+        padding: 20px 25px;
+        margin: 20px;
+    }
+    
+    .forgot-password-description {
+        font-size: 0.85rem;
+    }
+}
