@@ -1528,3 +1528,122 @@
 .theme-dark .popover-body {
   color: var(--text-color) !important;
 }
+
+/* ========================================
+   ESTILOS PARA MODAL DE PRIORIDADES DE LIGAS
+   ======================================== */
+
+.priority-modal {
+  max-width: 600px !important;
+  width: 90% !important;
+}
+
+.priority-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+
+.priority-item {
+  padding: 0.75rem;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.priority-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.priority-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.priority-btn {
+  width: 40px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.priority-btn:hover:not(:disabled) {
+  background-color: #007bff !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+.priority-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.priority-badge {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  border: 3px solid #fff;
+}
+
+.league-info {
+  font-size: 0.95rem;
+}
+
+.priority-input .form-control {
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Tema oscuro para modal de prioridades */
+.theme-dark .priority-list {
+  background-color: #2d2d2d;
+  border-color: #404040;
+}
+
+.theme-dark .priority-item {
+  background-color: #383838;
+  border-color: #404040;
+  color: var(--text-color);
+}
+
+.theme-dark .priority-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.theme-dark .priority-btn {
+  border-color: #505050 !important;
+  color: #ccc !important;
+  background-color: #383838 !important;
+}
+
+.theme-dark .priority-btn:hover:not(:disabled) {
+  background-color: #007bff !important;
+  color: white !important;
+  border-color: #007bff !important;
+}
+
+.theme-dark .priority-badge {
+  background: linear-gradient(135deg, #0066cc, #004499);
+  border-color: #404040;
+}

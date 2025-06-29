@@ -52,6 +52,9 @@ const TeamsPage = ({ language, userRole }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmData, setConfirmData] = useState(null);
+  // Estado para el modal de gestión de prioridades de ligas
+  const [showPriorityModal, setShowPriorityModal] = useState(false);
+  const [priorityLeagues, setPriorityLeagues] = useState([]);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { leagueParam } = useParams(); // NUEVO: obtener el parámetro de liga de la URL (puede ser ID o nombre)
@@ -592,6 +595,85 @@ const TeamsPage = ({ language, userRole }) => {
     setLoading(false);
   };
 
+  // Cerrar modal de gestión de prioridades
+  const closePriorityModal = () => {
+    setShowPriorityModal(false);
+    setPriorityLeagues([]);
+  };
+
+  // Funciones para gestión de prioridades de ligas
+  const openPriorityModal = () => {
+    // Copiar las ligas con sus prioridades actuales y ordenarlas por prioridad
+    const leaguesWithPriority = leagues.map(league => ({
+      ...league,
+      priority: league.priority || 100
+    })).sort((a, b) => a.priority - b.priority);
+    
+    setPriorityLeagues(leaguesWithPriority);
+    setShowPriorityModal(true);
+  };
+
+  const movePriorityUp = (index) => {
+    if (index > 0) {
+      const newLeagues = [...priorityLeagues];
+      // Intercambiar posiciones en el array
+      const temp = newLeagues[index];
+      newLeagues[index] = newLeagues[index - 1];
+      newLeagues[index - 1] = temp;
+      
+      setPriorityLeagues(newLeagues);
+    }
+  };
+
+  const movePriorityDown = (index) => {
+    if (index < priorityLeagues.length - 1) {
+      const newLeagues = [...priorityLeagues];
+      // Intercambiar posiciones en el array
+      const temp = newLeagues[index];
+      newLeagues[index] = newLeagues[index + 1];
+      newLeagues[index + 1] = temp;
+      
+      setPriorityLeagues(newLeagues);
+    }
+  };
+
+  const savePriorities = async () => {
+    setLoading(true);
+    try {
+      // Asignar prioridades basadas en la posición en el array (1, 2, 3...)
+      const updatePromises = priorityLeagues.map((league, index) => 
+        fetch(`${LEAGUES_URL}/${league._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: league.name,
+            setsToWin: league.setsToWin,
+            lastSetPoints: league.lastSetPoints,
+            pointsWin: league.pointsWin,
+            pointsLose: league.pointsLose,
+            priority: index + 1, // La posición determina la prioridad (1, 2, 3...)
+            code: league.code
+          }),
+        })
+      );
+
+      await Promise.all(updatePromises);
+      
+      // Actualizar el estado local de las ligas con las nuevas prioridades
+      const updatedLeagues = priorityLeagues.map((league, index) => ({
+        ...league,
+        priority: index + 1
+      }));
+      setLeagues(updatedLeagues);
+      closePriorityModal();
+      
+    } catch (error) {
+      console.error('Error updating priorities:', error);
+      alert(language === 'en' ? 'Error updating priorities' : 'Error al actualizar las prioridades');
+    }
+    setLoading(false);
+  };
+
   const handleCloseModal = () => {
     setSelectedTeam(null);
     setEditingTeam(null);
@@ -778,9 +860,22 @@ const TeamsPage = ({ language, userRole }) => {
                 readOnly
                 style={{ width: 'auto' }} // Cambia el ancho aquí
               />
-              <button className="btn btn-primary mt-3" onClick={openAddTeam} disabled={loading}>
-                {texts[language]?.add_team || (language === 'en' ? 'Add Team' : 'Agregar Equipo')}
-              </button>
+              <div className="d-flex gap-2 mt-3">
+                <button className="btn btn-primary" onClick={openAddTeam} disabled={loading}>
+                  {texts[language]?.add_team || (language === 'en' ? 'Add Team' : 'Agregar Equipo')}
+                </button>
+                {/* Botón para gestionar prioridades de ligas - solo para admin */}
+                {userRole === 'admin' && leagues.length > 1 && (
+                  <button 
+                    className="btn btn-outline-secondary" 
+                    onClick={openPriorityModal} 
+                    disabled={loading}
+                    title={language === 'en' ? 'Manage League Priority Order' : 'Gestionar Orden de Prioridad de Ligas'}
+                  >
+                    <i className="fas fa-sort"></i> {language === 'en' ? 'League Order' : 'Orden de Ligas'}
+                  </button>
+                )}
+              </div>
             </div>
           ) : null}
           <div className="row justify-content-center">
@@ -971,6 +1066,80 @@ const TeamsPage = ({ language, userRole }) => {
             cancelText={language === 'en' ? 'Cancel' : 'Cancelar'}
             confirmVariant="danger"
           />
+
+          {/* Modal de gestión de prioridades de ligas */}
+          {showPriorityModal && userRole === 'admin' && (
+            <div className="modal-overlay" onClick={closePriorityModal}>
+              <div className="modal-content priority-modal" onClick={e => e.stopPropagation()}>
+                <button
+                  className="btn btn-secondary close-button"
+                  onClick={closePriorityModal}
+                >
+                  &times;
+                </button>
+                <h2>{language === 'en' ? 'Manage League Priority Order' : 'Gestionar Orden de Prioridad de Ligas'}</h2>
+                <p className="text-muted mb-3">
+                  {language === 'en' 
+                    ? 'Arrange the leagues in order of priority. Position 1 has the highest priority.'
+                    : 'Ordena las ligas por prioridad. La posición 1 tiene la mayor prioridad.'
+                  }
+                </p>
+                
+                <div className="priority-list">
+                  {priorityLeagues.map((league, index) => (
+                    <div key={league._id} className="priority-item d-flex align-items-center mb-3">
+                      <div className="priority-controls me-3">
+                        <button
+                          className="btn btn-sm btn-outline-primary priority-btn"
+                          onClick={() => movePriorityUp(index)}
+                          disabled={index === 0 || loading}
+                          title={language === 'en' ? 'Move up' : 'Subir'}
+                        >
+                          ▲
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-primary priority-btn"
+                          onClick={() => movePriorityDown(index)}
+                          disabled={index === priorityLeagues.length - 1 || loading}
+                          title={language === 'en' ? 'Move down' : 'Bajar'}
+                        >
+                          ▼
+                        </button>
+                      </div>
+                      
+                      <div className="priority-number me-3">
+                        <div className="priority-badge">{index + 1}</div>
+                      </div>
+                      
+                      <div className="league-info flex-grow-1">
+                        <strong>{league.name}</strong>
+                        {league.code && (
+                          <span className="text-muted ms-2">({league.code})</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="d-flex gap-2 mt-4">
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={savePriorities}
+                    disabled={loading}
+                  >
+                    {language === 'en' ? 'Save Order' : 'Guardar Orden'}
+                  </button>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={closePriorityModal}
+                    disabled={loading}
+                  >
+                    {language === 'en' ? 'Cancel' : 'Cancelar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
       </div>
