@@ -66,6 +66,28 @@ const createTeam = async (req, res) => {
 const updateTeam = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Validar que el roster tenga la estructura correcta si se está actualizando
+    if (req.body.roster && Array.isArray(req.body.roster)) {
+      req.body.roster = req.body.roster.map(player => ({
+        name: player.name || '',
+        age: player.age || 0,
+        height: player.height || '',
+        position: player.position || '',
+        image: player.image || '',
+        stats: player.stats || {
+          acesPerSet: 0,
+          assistsPerSet: 0,
+          attacksPerSet: 0,
+          blocksPerSet: 0,
+          digsPerSet: 0,
+          hittingPercentage: 0,
+          killsPerSet: 0,
+          pointsPerSet: 0
+        }
+      }));
+    }
+    
     const equipo = await Equipo.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
     if (!equipo) return res.status(404).json({ error: 'Equipo no encontrado' });
     res.json(equipo);

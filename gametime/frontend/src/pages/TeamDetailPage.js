@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/MediaPage.css';
 import '../styles/Teams.css';
@@ -10,6 +10,7 @@ import CloudinaryUpload from '../components/CloudinaryUpload';
 
 const TeamDetailPage = ({ language, userRole }) => {
   const { leagueParam, teamParam } = useParams();
+  const navigate = useNavigate();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -28,8 +29,8 @@ const TeamDetailPage = ({ language, userRole }) => {
   const [showPlayersModal, setShowPlayersModal] = useState(false);
   const [playerForm, setPlayerForm] = useState({
     name: '',
-    rut: '',
     age: '',
+    height: '',
     position: '',
     image: ''
   });
@@ -232,8 +233,8 @@ const TeamDetailPage = ({ language, userRole }) => {
   const openPlayersModal = () => {
     setPlayerForm({
       name: '',
-      rut: '',
       age: '',
+      height: '',
       position: '',
       image: ''
     });
@@ -247,8 +248,8 @@ const TeamDetailPage = ({ language, userRole }) => {
     setShowPlayersModal(false);
     setPlayerForm({
       name: '',
-      rut: '',
       age: '',
+      height: '',
       position: '',
       image: ''
     });
@@ -278,7 +279,7 @@ const TeamDetailPage = ({ language, userRole }) => {
 
   const handleAddPlayer = async (e) => {
     e.preventDefault();
-    if (!playerForm.name.trim() || !playerForm.rut.trim()) return;
+    if (!playerForm.name.trim()) return;
     
     setLoading(true);
     try {
@@ -289,8 +290,8 @@ const TeamDetailPage = ({ language, userRole }) => {
 
       const newPlayer = {
         name: playerForm.name.trim(),
-        rut: playerForm.rut.trim(),
         age: parseInt(playerForm.age) || 0,
+        height: playerForm.height.trim(),
         position: playerForm.position.trim(),
         image: imageToSave,
         stats: {
@@ -327,8 +328,8 @@ const TeamDetailPage = ({ language, userRole }) => {
         setTeam(updatedTeam);
         setPlayerForm({
           name: '',
-          rut: '',
           age: '',
+          height: '',
           position: '',
           image: ''
         });
@@ -380,6 +381,11 @@ const TeamDetailPage = ({ language, userRole }) => {
       alert(language === 'en' ? 'Error removing player' : 'Error al eliminar jugador');
     }
     setLoading(false);
+  };
+
+  // Función para navegar a los detalles del jugador
+  const handlePlayerClick = (playerIndex) => {
+    navigate(`/teams/${leagueParam}/${teamParam}/player/${playerIndex}`);
   };
 
   if (loading) {
@@ -448,7 +454,12 @@ const TeamDetailPage = ({ language, userRole }) => {
           {Array.isArray(team.roster) && team.roster.length > 0 ? (
             <div className="row team-players-grid" style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
             {team.roster.map((player, idx) => (
-              <div key={idx} className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4 d-flex flex-column align-items-center">
+              <div 
+                key={idx} 
+                className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4 d-flex flex-column align-items-center player-card-clickable"
+                onClick={() => handlePlayerClick(idx)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="player-image-container">
                   <img
                     src={
@@ -462,11 +473,9 @@ const TeamDetailPage = ({ language, userRole }) => {
                 </div>
                 <div className="player-name">
                   {typeof player === 'string' ? player : player.name}
-                  {typeof player === 'object' && (player.age || player.rut) && (
+                  {typeof player === 'object' && player.position && (
                     <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
-                      {player.age && `${player.age} ${language === 'en' ? 'years' : 'años'}`}
-                      {player.age && player.rut && ' • '}
-                      {player.rut}
+                      {player.position}
                     </div>
                   )}
                 </div>
@@ -648,23 +657,6 @@ const TeamDetailPage = ({ language, userRole }) => {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">
-                      {language === 'en' ? 'RUT' : 'RUT'} *
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control mb-2"
-                      name="rut"
-                      value={playerForm.rut}
-                      onChange={handlePlayerFormChange}
-                      placeholder="12.345.678-9"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="row">
-                  <div className="col-md-6">
-                    <label className="form-label">
                       {language === 'en' ? 'Age' : 'Edad'}
                     </label>
                     <input
@@ -675,6 +667,22 @@ const TeamDetailPage = ({ language, userRole }) => {
                       onChange={handlePlayerFormChange}
                       min="15"
                       max="50"
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6">
+                    <label className="form-label">
+                      {language === 'en' ? 'Height' : 'Estatura'}
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      name="height"
+                      value={playerForm.height}
+                      onChange={handlePlayerFormChange}
+                      placeholder={language === 'en' ? 'e.g. 1.85m' : 'Ej: 1.85m'}
                     />
                   </div>
                   <div className="col-md-6">
@@ -808,8 +816,8 @@ const TeamDetailPage = ({ language, userRole }) => {
                         <div className="player-details">
                           <h6 className="player-name-title">{player.name}</h6>
                           <div className="player-meta">
-                            {player.rut && <span>RUT: {player.rut}</span>}
                             {player.age && <span>Edad: {player.age}</span>}
+                            {player.height && <span>Estatura: {player.height}</span>}
                             {player.position && <span>Posición: {player.position}</span>}
                           </div>
                         </div>

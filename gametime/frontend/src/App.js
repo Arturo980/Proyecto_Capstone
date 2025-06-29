@@ -18,8 +18,9 @@ import texts from './translations/texts';
 import HorizontalGamesCarousel from './components/HorizontalGamesCarousel'; // Importar el nuevo componente
 import { API_BASE_URL } from './assets/Configuration/config';
 import TeamDetailPage from './pages/TeamDetailPage'; 
+import PlayerDetailPage from './pages/PlayerDetailPage';
 import LoadingSpinner from './components/LoadingSpinner';
-import logoEmpresa from './assets/images/GameTime.png'; 
+import logoEmpresa from './assets/images/GameTime.png';
 import NewsEditorPage from './pages/NewsEditorPage';
 import NewsDetailPage from './pages/NewsDetailPage';
 import NewsPage from './pages/NewsPage'; 
@@ -370,6 +371,7 @@ function App() {
                     <Route path="/teams" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
                     <Route path="/teams/:leagueId" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><TeamsPage language={language} userRole={userRole} /></div>} />
                     <Route path="/teams/:leagueParam/:teamParam" element={<div className="page-wrapper" style={{ minHeight: 'calc(100vh - 160px)', marginTop: 48, marginBottom: 48 }}><div className="container"><TeamDetailPage language={language} userRole={userRole} /></div></div>} />
+                    <Route path="/teams/:leagueParam/:teamParam/player/:playerIndex" element={<div className="page-wrapper" style={{ minHeight: 'calc(100vh - 160px)', marginTop: 48, marginBottom: 48 }}><div className="container"><PlayerDetailPage language={language} /></div></div>} />
                     <Route path="/stats" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><StatsPage language={language} /></div>} />
                     <Route path="/games" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><GamesPage language={language} /></div>} />
                     <Route path="/media" element={<div className="container" style={{ marginTop: 48, marginBottom: 48 }}><MediaPage language={language} /></div>} />

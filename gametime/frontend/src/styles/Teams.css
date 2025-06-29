@@ -140,23 +140,23 @@
   border-radius: 12px;
   overflow: hidden;
   min-height: 200px;
-  background-color: #f3f3f3 !important;
+  background-color: #f4f4f4 !important;
   border: 1px solid #e0e0e0;
 }
 
 .team-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  background-color: #eeeeee !important;
+  background-color: #595959 !important;
 }
 
 /* Override Bootstrap card styling for team cards */
 .team-card.card {
-  background-color: #f3f3f3 !important;
+  background-color: #f4f4f4 !important;
 }
 
 .team-card.card:hover {
-  background-color: #eeeeee !important;
+  background-color: #adadad !important;
 }
 
 .team-card .card-body {
@@ -1133,5 +1133,132 @@
     max-width: 140px;
     padding: 5px 10px;
     font-size: 12px;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA PÁGINAS DE EQUIPOS
+   ======================================== */
+
+/* Estilos para tarjetas de jugadores clickeables */
+.player-card-clickable {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.player-card-clickable:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Estilos para la página de detalles del jugador */
+.player-detail-page-wrapper {
+  background-color: #f8f9fa;
+}
+
+.player-info-card {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  background: linear-gradient(135deg, #fff, #f8f9fa);
+}
+
+.player-info-card .card-body {
+  padding: 2rem;
+}
+
+.player-name-large {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.player-basic-info {
+  text-align: left;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.stats-card {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+}
+
+.stats-card .card-header {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border-radius: 15px 15px 0 0;
+  border: none;
+  padding: 1.5rem;
+}
+
+.stats-card .card-header h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.stats-card .card-body {
+  padding: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #007bff;
+}
+
+/* Responsive para página de detalles */
+@media (max-width: 768px) {
+  .player-info-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .stats-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .player-name-large {
+    font-size: 1.5rem;
+  }
+  
+  .stat-item {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  
+  .stat-value {
+    margin-top: 0.25rem;
   }
 }
