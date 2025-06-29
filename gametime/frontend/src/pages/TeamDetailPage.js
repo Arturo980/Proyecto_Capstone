@@ -827,15 +827,17 @@ const TeamDetailPage = ({ language, userRole }) => {
                 <div className="row">
                   <div className="col-md-6">
                     <label className="form-label">
-                      {language === 'en' ? 'Height' : 'Estatura'}
+                      {language === 'en' ? 'Height (cm)' : 'Estatura (cm)'}
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       className="form-control mb-2"
                       name="height"
                       value={playerForm.height}
                       onChange={handlePlayerFormChange}
-                      placeholder={language === 'en' ? 'e.g. 1.85m' : 'Ej: 1.85m'}
+                      placeholder={language === 'en' ? 'e.g. 185' : 'Ej: 185'}
+                      min="150"
+                      max="250"
                     />
                   </div>
                   <div className="col-md-6">
@@ -969,7 +971,7 @@ const TeamDetailPage = ({ language, userRole }) => {
                           <h6 className="player-name-title">{player.name}</h6>
                           <div className="player-meta">
                             {player.age && <span>Edad: {player.age}</span>}
-                            {player.height && <span>Estatura: {player.height}</span>}
+                            {player.height && <span>Estatura: {player.height} cm</span>}
                             {player.position && <span>Posición: {player.position}</span>}
                           </div>
                         </div>
@@ -1059,15 +1061,17 @@ const TeamDetailPage = ({ language, userRole }) => {
               <div className="row">
                 <div className="col-md-6">
                   <label className="form-label">
-                    {language === 'en' ? 'Height' : 'Estatura'}
+                    {language === 'en' ? 'Height (cm)' : 'Estatura (cm)'}
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     className="form-control mb-2"
                     name="height"
                     value={editPlayerForm.height}
                     onChange={handleEditPlayerFormChange}
-                    placeholder={language === 'en' ? 'e.g. 1.85m' : 'Ej: 1.85m'}
+                    placeholder={language === 'en' ? 'e.g. 185' : 'Ej: 185'}
+                    min="150"
+                    max="250"
                   />
                 </div>
                 <div className="col-md-6">
