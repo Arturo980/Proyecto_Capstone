@@ -86,11 +86,8 @@ const updateLeague = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'ID de liga inválido (no es un ObjectId)' });
     }
-    // Solo admin puede cambiar prioridad
-    const user = req.user || req.body.user;
-    if (typeof req.body.priority === 'number' && (!user || !user.esAdmin)) {
-      return res.status(403).json({ error: 'Solo el administrador puede modificar la prioridad de la liga' });
-    }
+    
+    // El middleware isAdmin ya verifica los permisos, así que no necesitamos verificar aquí
     const update = {};
     if (typeof req.body.setsToWin === 'number') update.setsToWin = req.body.setsToWin;
     if (typeof req.body.lastSetPoints === 'number') update.lastSetPoints = req.body.lastSetPoints;
@@ -98,6 +95,7 @@ const updateLeague = async (req, res) => {
     if (typeof req.body.pointsWin === 'number') update.pointsWin = req.body.pointsWin;
     if (typeof req.body.pointsLose === 'number') update.pointsLose = req.body.pointsLose;
     if (typeof req.body.priority === 'number') update.priority = req.body.priority;
+    
     const liga = await Liga.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!liga) {
       return res.status(404).json({ error: 'Liga no encontrada' });
