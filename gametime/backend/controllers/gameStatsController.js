@@ -153,6 +153,7 @@ const updateGameStats = async (req, res) => {
 const getPlayerAverages = async (req, res) => {
   try {
     const { league } = req.query;
+    console.log('🔍 Getting player averages for league:', league);
     
     let matchFilter = {};
     if (league) {
@@ -163,7 +164,9 @@ const getPlayerAverages = async (req, res) => {
       }
     }
 
-    // Agregar estadísticas para calcular promedios
+    console.log('📋 Match filter:', matchFilter);
+
+    // Agregar estadísticas para calcular totales y promedios
     const averages = await GameStats.aggregate([
       { $match: matchFilter },
       {
@@ -171,14 +174,29 @@ const getPlayerAverages = async (req, res) => {
           _id: { playerName: '$playerName', team: '$team' },
           totalGames: { $sum: 1 },
           totalSets: { $sum: '$setsPlayed' },
-          totalAces: { $sum: '$aces' },
-          totalAssists: { $sum: '$assists' },
-          totalAttacks: { $sum: '$attacks' },
-          totalBlocks: { $sum: '$blocks' },
-          totalDigs: { $sum: '$digs' },
-          totalHittingErrors: { $sum: '$hittingErrors' },
-          totalKills: { $sum: '$kills' },
-          totalPoints: { $sum: '$points' }
+          
+          // Totales acumulados de todas las estadísticas
+          aces: { $sum: '$aces' },
+          assists: { $sum: '$assists' },
+          attacks: { $sum: '$attacks' },
+          blocks: { $sum: '$blocks' },
+          digs: { $sum: '$digs' },
+          hittingErrors: { $sum: '$hittingErrors' },
+          kills: { $sum: '$kills' },
+          points: { $sum: '$points' },
+          
+          // Estadísticas extendidas
+          attackErrors: { $sum: '$attackErrors' },
+          blockErrors: { $sum: '$blockErrors' },
+          blockTouches: { $sum: '$blockTouches' },
+          serveErrors: { $sum: '$serveErrors' },
+          serveAttempts: { $sum: '$serveAttempts' },
+          setErrors: { $sum: '$setErrors' },
+          setAttempts: { $sum: '$setAttempts' },
+          receptionSuccessful: { $sum: '$receptionSuccessful' },
+          receptionErrors: { $sum: '$receptionErrors' },
+          receptionAttempts: { $sum: '$receptionAttempts' },
+          digErrors: { $sum: '$digErrors' }
         }
       },
       {
@@ -187,59 +205,82 @@ const getPlayerAverages = async (req, res) => {
           team: '$_id.team',
           totalGames: 1,
           totalSets: 1,
+          
+          // Totales (para las nuevas tablas)
+          aces: 1,
+          assists: 1,
+          attacks: 1,
+          blocks: 1,
+          digs: 1,
+          hittingErrors: 1,
+          kills: 1,
+          points: 1,
+          attackErrors: 1,
+          blockErrors: 1,
+          blockTouches: 1,
+          serveErrors: 1,
+          serveAttempts: 1,
+          setErrors: 1,
+          setAttempts: 1,
+          receptionSuccessful: 1,
+          receptionErrors: 1,
+          receptionAttempts: 1,
+          digErrors: 1,
+          
+          // Promedios por set (para compatibilidad)
           acesPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalAces', '$totalSets'] }, 
+              then: { $divide: ['$aces', '$totalSets'] }, 
               else: 0 
             } 
           },
           assistsPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalAssists', '$totalSets'] }, 
+              then: { $divide: ['$assists', '$totalSets'] }, 
               else: 0 
             } 
           },
           attacksPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalAttacks', '$totalSets'] }, 
+              then: { $divide: ['$attacks', '$totalSets'] }, 
               else: 0 
             } 
           },
           blocksPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalBlocks', '$totalSets'] }, 
+              then: { $divide: ['$blocks', '$totalSets'] }, 
               else: 0 
             } 
           },
           digsPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalDigs', '$totalSets'] }, 
+              then: { $divide: ['$digs', '$totalSets'] }, 
               else: 0 
             } 
           },
           hittingErrorsPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalHittingErrors', '$totalSets'] }, 
+              then: { $divide: ['$hittingErrors', '$totalSets'] }, 
               else: 0 
             } 
           },
           killsPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalKills', '$totalSets'] }, 
+              then: { $divide: ['$kills', '$totalSets'] }, 
               else: 0 
             } 
           },
           pointsPerSet: { 
             $cond: { 
               if: { $gt: ['$totalSets', 0] }, 
-              then: { $divide: ['$totalPoints', '$totalSets'] }, 
+              then: { $divide: ['$points', '$totalSets'] }, 
               else: 0 
             } 
           }
@@ -247,6 +288,9 @@ const getPlayerAverages = async (req, res) => {
       },
       { $sort: { playerName: 1 } }
     ]);
+
+    console.log('📊 Player averages result count:', averages.length);
+    console.log('👤 Sample data:', averages.slice(0, 2));
 
     res.json(averages);
   } catch (err) {
