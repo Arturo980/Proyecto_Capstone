@@ -153,7 +153,6 @@ const updateGameStats = async (req, res) => {
 const getPlayerAverages = async (req, res) => {
   try {
     const { league } = req.query;
-    console.log('🔍 Getting player averages for league:', league);
     
     let matchFilter = {};
     if (league) {
@@ -163,8 +162,6 @@ const getPlayerAverages = async (req, res) => {
         matchFilter.league = league;
       }
     }
-
-    console.log('📋 Match filter:', matchFilter);
 
     // Agregar estadísticas para calcular totales y promedios
     const averages = await GameStats.aggregate([
@@ -288,9 +285,6 @@ const getPlayerAverages = async (req, res) => {
       },
       { $sort: { playerName: 1 } }
     ]);
-
-    console.log('📊 Player averages result count:', averages.length);
-    console.log('👤 Sample data:', averages.slice(0, 2));
 
     res.json(averages);
   } catch (err) {

@@ -196,7 +196,7 @@ const texts = {
     aces_per_set: "Aces por set",
     attacks_per_set: "Ataques por set",
     digs_per_set: "Defensas por set",
-    hitting_percentage: "% Golpeo",
+    hitting_percentage: "% Ataque",
     kills_per_set: "Remates por set",
     points_per_set: "Puntos por set",
     search_player_team: "Buscar jugador o equipo",

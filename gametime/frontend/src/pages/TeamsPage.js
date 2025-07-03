@@ -96,7 +96,8 @@ const TeamsPage = ({ language, userRole }) => {
     if (!Array.isArray(data)) {
       data = [];
     }
-    data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    // El backend ya devuelve las ligas ordenadas por prioridad, no necesitamos reordenar aquí
+    // data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     setLeagues(data);
 
     // Priorizar parámetro de URL > sessionStorage > primera liga
@@ -640,11 +641,17 @@ const TeamsPage = ({ language, userRole }) => {
   const savePriorities = async () => {
     setLoading(true);
     try {
+      // Obtener información del usuario para autenticación
+      const user = JSON.parse(localStorage.getItem('user'));
+      
       // Asignar prioridades basadas en la posición en el array (1, 2, 3...)
-      const updatePromises = priorityLeagues.map((league, index) => 
-        fetch(`${LEAGUES_URL}/${league._id}`, {
+      const updatePromises = priorityLeagues.map(async (league, index) => {
+        const response = await fetch(`${LEAGUES_URL}/${league._id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'user-email': user?.correo || 'admin'
+          },
           body: JSON.stringify({
             name: league.name,
             setsToWin: league.setsToWin,
@@ -652,19 +659,23 @@ const TeamsPage = ({ language, userRole }) => {
             pointsWin: league.pointsWin,
             pointsLose: league.pointsLose,
             priority: index + 1, // La posición determina la prioridad (1, 2, 3...)
-            code: league.code
+            code: league.code,
+            user: user // Enviar información del usuario en el body también
           }),
-        })
-      );
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error updating ${league.name}: ${errorData.error || response.statusText}`);
+        }
+        
+        return response.json();
+      });
 
       await Promise.all(updatePromises);
       
-      // Actualizar el estado local de las ligas con las nuevas prioridades
-      const updatedLeagues = priorityLeagues.map((league, index) => ({
-        ...league,
-        priority: index + 1
-      }));
-      setLeagues(updatedLeagues);
+      // Recargar las ligas desde el servidor para asegurar consistencia
+      await fetchLeagues();
       closePriorityModal();
       
     } catch (error) {

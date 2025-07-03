@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../assets/Configuration/config';
 import '../styles/MediaPage.css';
-import '../styles/Teams.css';
+import '../styles/TeamDetailPage.css';
 import avatarGenerico from '../assets/images/avatar-generico.jpg';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';

@@ -303,7 +303,7 @@ const GameStatsManagement = ({ language = 'es' }) => {
                       case 'attacks': return language === 'en' ? 'Attacks' : 'Ataques';
                       case 'blocks': return language === 'en' ? 'Blocks' : 'Bloqueos';
                       case 'digs': return language === 'en' ? 'Digs' : 'Defensas';
-                      case 'hittingErrors': return language === 'en' ? 'Hitting Errors' : 'Errores de golpeo';
+                      case 'hittingErrors': return language === 'en' ? 'Hitting Errors' : 'Errores de ataque';
                       case 'kills': return language === 'en' ? 'Kills' : 'Remates';
                       case 'points': return language === 'en' ? 'Points' : 'Puntos';
                       default: return stat;

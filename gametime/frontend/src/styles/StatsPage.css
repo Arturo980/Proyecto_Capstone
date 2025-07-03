@@ -1274,3 +1274,73 @@
   0%, 100% { transform: translateY(-50%) translateX(0); }
   50% { transform: translateY(-50%) translateX(-3px); }
 }
+
+/* Estilos para el sistema de pestañas de estadísticas */
+.stats-tabs-container {
+  margin-bottom: 20px;
+}
+
+.stats-tabs-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-tab-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stats-tab-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.stats-tab-btn.active {
+  background: #142f69;
+  color: white;
+  box-shadow: 0 2px 4px rgba(20, 47, 105, 0.3);
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .stats-tabs-header {
+    gap: 4px;
+    padding: 4px;
+  }
+  
+  .stats-tab-btn {
+    min-width: auto;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    flex: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-tabs-header {
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .stats-tab-btn {
+    min-width: 100%;
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+}
