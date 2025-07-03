@@ -118,6 +118,20 @@ const texts = {
     error_loading_news: "Error loading news.",
     title_content_image_required: "Title, content and main image are required.",
     error_saving_news: "Error saving news",
+    // Player positions
+    position_armador: "Setter",
+    position_punta: "Outside Hitter", 
+    position_central: "Middle Blocker",
+    position_opuesto: "Opposite Hitter",
+    position_libero: "Libero",
+    position_sin_posicion: "No Position",
+    // Coach related
+    coach: "Coach",
+    coach_name: "Coach Name",
+    manage_coach: "Manage Coach",
+    add_coach: "Add Coach",
+    edit_coach: "Edit Coach",
+    remove_coach: "Remove Coach",
     // ...add more as needed for modals/forms...
   },
   es: {
@@ -239,6 +253,20 @@ const texts = {
     error_loading_news: "Error al cargar la noticia.",
     title_content_image_required: "Título, contenido e imagen principal son obligatorios.",
     error_saving_news: "Error al guardar la noticia",
+    // Player positions
+    position_armador: "Armador",
+    position_punta: "Punta", 
+    position_central: "Central",
+    position_opuesto: "Opuesto",
+    position_libero: "Líbero",
+    position_sin_posicion: "Sin Posición",
+    // Coach related
+    coach: "Entrenador",
+    coach_name: "Nombre del Entrenador",
+    manage_coach: "Gestionar Entrenador",
+    add_coach: "Agregar Entrenador",
+    edit_coach: "Editar Entrenador",
+    remove_coach: "Eliminar Entrenador",
     // ...agrega más según lo que uses en los modales y formularios...
   },
 };

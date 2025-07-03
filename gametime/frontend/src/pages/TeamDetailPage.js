@@ -7,6 +7,7 @@ import avatarGenerico from '../assets/images/avatar-generico.jpg';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import CloudinaryUpload from '../components/CloudinaryUpload';
+import texts from '../translations/texts';
 
 const TeamDetailPage = ({ language, userRole }) => {
   const { leagueParam, teamParam } = useParams();
@@ -51,6 +52,38 @@ const TeamDetailPage = ({ language, userRole }) => {
   const [editPlayerImageType, setEditPlayerImageType] = useState('url');
   const [editPlayerImageFile, setEditPlayerImageFile] = useState(null);
   const editPlayerFileInputRef = useRef(null);
+
+  // Estado para el modal de gestión del coach
+  const [showCoachModal, setShowCoachModal] = useState(false);
+  const [coachForm, setCoachForm] = useState({
+    name: '',
+    image: ''
+  });
+  const [coachImageType, setCoachImageType] = useState('url');
+  const [coachImageFile, setCoachImageFile] = useState(null);
+  const coachFileInputRef = useRef(null);
+
+  // Función para obtener la traducción de posición
+  const getPositionTranslation = (position) => {
+    const t = texts[language] || texts.es;
+    
+    switch(position) {
+      case 'Armador':
+        return t.position_armador;
+      case 'Punta':
+        return t.position_punta;
+      case 'Central':
+        return t.position_central;
+      case 'Opuesto':
+        return t.position_opuesto;
+      case 'Líbero':
+        return t.position_libero;
+      case 'Sin Posición':
+        return t.position_sin_posicion;
+      default:
+        return position;
+    }
+  };
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -485,6 +518,127 @@ const TeamDetailPage = ({ language, userRole }) => {
     setLoading(false);
   };
 
+  // Funciones para el modal del coach
+  const openCoachModal = () => {
+    setCoachForm({
+      name: team.coach?.name || '',
+      image: team.coach?.image || ''
+    });
+    setCoachImageType('url');
+    setCoachImageFile(null);
+    if (coachFileInputRef.current) coachFileInputRef.current.value = '';
+    setShowCoachModal(true);
+  };
+
+  const closeCoachModal = () => {
+    setShowCoachModal(false);
+    setCoachForm({ name: '', image: '' });
+    setCoachImageType('url');
+    setCoachImageFile(null);
+    if (coachFileInputRef.current) coachFileInputRef.current.value = '';
+  };
+
+  const handleCoachFormChange = (e) => {
+    const { name, value } = e.target;
+    setCoachForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCoachImageUpload = (url) => {
+    if (url) {
+      setCoachForm(prev => ({ ...prev, image: url }));
+    }
+  };
+
+  const getCoachImagePreview = () => {
+    if (coachImageType === 'file' && coachImageFile) {
+      return URL.createObjectURL(coachImageFile);
+    }
+    if (coachForm.image) return coachForm.image;
+    return null;
+  };
+
+  const handleSaveCoach = async (e) => {
+    e.preventDefault();
+    if (!coachForm.name.trim()) return;
+    
+    setLoading(true);
+    try {
+      let imageToSave = coachForm.image || '';
+      if (coachImageType === 'file' && coachImageFile) {
+        imageToSave = getCoachImagePreview();
+      }
+
+      const coachData = {
+        name: coachForm.name.trim(),
+        image: imageToSave
+      };
+
+      const payload = {
+        name: team.name,
+        abbr: team.abbr,
+        logo: team.logo,
+        league: team.league,
+        roster: team.roster || [],
+        staff: team.staff || [],
+        coach: coachData
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const updatedTeam = await response.json();
+        setTeam(updatedTeam);
+        closeCoachModal();
+      } else {
+        alert(language === 'en' ? 'Error updating coach' : 'Error al actualizar entrenador');
+      }
+    } catch (error) {
+      console.error('Error updating coach:', error);
+      alert(language === 'en' ? 'Error updating coach' : 'Error al actualizar entrenador');
+    }
+    setLoading(false);
+  };
+
+  const handleRemoveCoach = async () => {
+    if (!window.confirm(language === 'en' ? 'Are you sure you want to remove the coach?' : '¿Seguro que deseas eliminar el entrenador?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        name: team.name,
+        abbr: team.abbr,
+        logo: team.logo,
+        league: team.league,
+        roster: team.roster || [],
+        staff: team.staff || [],
+        coach: null
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/teams/${team._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const updatedTeam = await response.json();
+        setTeam(updatedTeam);
+      } else {
+        alert(language === 'en' ? 'Error removing coach' : 'Error al eliminar entrenador');
+      }
+    } catch (error) {
+      console.error('Error removing coach:', error);
+      alert(language === 'en' ? 'Error removing coach' : 'Error al eliminar entrenador');
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -538,9 +692,82 @@ const TeamDetailPage = ({ language, userRole }) => {
                 <i className="fas fa-users"></i>
                 {language === 'en' ? 'Manage Players' : 'Gestionar Jugadores'}
               </button>
+              <button 
+                className="btn btn-success btn-sm"
+                onClick={openCoachModal}
+              >
+                <i className="fas fa-chalkboard-teacher"></i>
+                {texts[language]?.manage_coach || 'Gestionar Entrenador'}
+              </button>
             </div>
           )}
-        </div>        <div className="row justify-content-center team-detail-content" style={{ minHeight: '400px' }}>
+        </div>
+        
+        {/* Sección del Coach */}
+        <div className="coach-section mb-4">
+          <h3>{texts[language]?.coach || 'Entrenador'}</h3>
+          {team.coach && team.coach.name ? (
+            <div className="coach-info">
+              <div className="d-flex align-items-center">
+                <div className="coach-avatar me-3">
+                  {team.coach.image ? (
+                    <img 
+                      src={team.coach.image} 
+                      alt={team.coach.name}
+                      className="coach-avatar-img"
+                      style={{ 
+                        width: '60px', 
+                        height: '60px', 
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  ) : (
+                    <div className="coach-avatar-placeholder">
+                      {team.coach.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="coach-details">
+                  <h5 className="mb-0">{team.coach.name}</h5>
+                  <small className="text-muted">{texts[language]?.coach || 'Entrenador'}</small>
+                </div>
+                {(userRole === 'content-editor' || userRole === 'admin') && (
+                  <div className="coach-actions ms-auto">
+                    <button
+                      className="btn btn-outline-primary btn-sm me-2"
+                      onClick={openCoachModal}
+                    >
+                      {texts[language]?.edit_coach || 'Editar'}
+                    </button>
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={handleRemoveCoach}
+                    >
+                      {texts[language]?.remove_coach || 'Eliminar'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="no-coach">
+              <p className="text-muted">
+                {language === 'en' ? 'No coach assigned' : 'Sin entrenador asignado'}
+              </p>
+              {(userRole === 'content-editor' || userRole === 'admin') && (
+                <button
+                  className="btn btn-outline-success btn-sm"
+                  onClick={openCoachModal}
+                >
+                  {texts[language]?.add_coach || 'Agregar Entrenador'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="row justify-content-center team-detail-content" style={{ minHeight: '400px' }}>
           {Array.isArray(team.roster) && team.roster.length > 0 ? (
             <div className="col-12">
               {/* Agrupar jugadores por posición */}
@@ -567,10 +794,7 @@ const TeamDetailPage = ({ language, userRole }) => {
                   return (
                     <div key={position} className="position-group mb-4">
                       <h4 className="position-title">
-                        {position === 'Sin Posición' 
-                          ? (language === 'en' ? 'No Position' : 'Sin Posición')
-                          : position
-                        }
+                        {getPositionTranslation(position)}
                       </h4>
                       <div className="row">
                         {playersInPosition.map((player) => (
@@ -817,11 +1041,11 @@ const TeamDetailPage = ({ language, userRole }) => {
                       <option value="">
                         {language === 'en' ? 'Select Position' : 'Seleccionar Posición'}
                       </option>
-                      <option value="Armador">{language === 'en' ? 'Setter' : 'Armador'}</option>
-                      <option value="Punta">{language === 'en' ? 'Outside Hitter' : 'Punta'}</option>
-                      <option value="Central">{language === 'en' ? 'Middle Blocker' : 'Central'}</option>
-                      <option value="Opuesto">{language === 'en' ? 'Opposite Hitter' : 'Opuesto'}</option>
-                      <option value="Líbero">{language === 'en' ? 'Libero' : 'Líbero'}</option>
+                      <option value="Armador">{texts[language]?.position_armador || 'Armador'}</option>
+                      <option value="Punta">{texts[language]?.position_punta || 'Punta'}</option>
+                      <option value="Central">{texts[language]?.position_central || 'Central'}</option>
+                      <option value="Opuesto">{texts[language]?.position_opuesto || 'Opuesto'}</option>
+                      <option value="Líbero">{texts[language]?.position_libero || 'Líbero'}</option>
                     </select>
                   </div>
                 </div>
@@ -1051,11 +1275,11 @@ const TeamDetailPage = ({ language, userRole }) => {
                     <option value="">
                       {language === 'en' ? 'Select Position' : 'Seleccionar Posición'}
                     </option>
-                    <option value="Armador">{language === 'en' ? 'Setter' : 'Armador'}</option>
-                    <option value="Punta">{language === 'en' ? 'Outside Hitter' : 'Punta'}</option>
-                    <option value="Central">{language === 'en' ? 'Middle Blocker' : 'Central'}</option>
-                    <option value="Opuesto">{language === 'en' ? 'Opposite Hitter' : 'Opuesto'}</option>
-                    <option value="Líbero">{language === 'en' ? 'Libero' : 'Líbero'}</option>
+                    <option value="Armador">{texts[language]?.position_armador || 'Armador'}</option>
+                    <option value="Punta">{texts[language]?.position_punta || 'Punta'}</option>
+                    <option value="Central">{texts[language]?.position_central || 'Central'}</option>
+                    <option value="Opuesto">{texts[language]?.position_opuesto || 'Opuesto'}</option>
+                    <option value="Líbero">{texts[language]?.position_libero || 'Líbero'}</option>
                   </select>
                 </div>
               </div>
@@ -1146,6 +1370,138 @@ const TeamDetailPage = ({ language, userRole }) => {
                   className="btn btn-secondary" 
                   type="button" 
                   onClick={closeEditPlayerModal}
+                  disabled={loading}
+                >
+                  {language === 'en' ? 'Cancel' : 'Cancelar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de gestión del coach */}
+      {showCoachModal && (userRole === 'content-editor' || userRole === 'admin') && (
+        <div className="modal-overlay" onClick={closeCoachModal}>
+          <div className="modal-content coach-modal" onClick={e => e.stopPropagation()}>
+            <button
+              className="btn btn-secondary close-button"
+              onClick={closeCoachModal}
+            >
+              &times;
+            </button>
+            <h2>
+              {team.coach && team.coach.name 
+                ? (texts[language]?.edit_coach || 'Editar Entrenador')
+                : (texts[language]?.add_coach || 'Agregar Entrenador')
+              }
+            </h2>
+            
+            <form onSubmit={handleSaveCoach}>
+              <div className="mb-3">
+                <label className="form-label">
+                  {texts[language]?.coach_name || 'Nombre del Entrenador'} *
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="name"
+                  value={coachForm.name}
+                  onChange={handleCoachFormChange}
+                  placeholder={language === 'en' ? 'Enter coach name' : 'Ingrese el nombre del entrenador'}
+                  required
+                />
+              </div>
+
+              {/* Imagen del coach */}
+              <div className="mb-3">
+                <label className="form-label">
+                  {language === 'en' ? 'Coach Image' : 'Imagen del Entrenador'}
+                </label>
+                <div className="mb-2">
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="coachImageType"
+                      id="coachImageUrl"
+                      checked={coachImageType === 'url'}
+                      onChange={() => {
+                        setCoachImageType('url');
+                        setCoachImageFile(null);
+                        if (coachFileInputRef.current) coachFileInputRef.current.value = '';
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="coachImageUrl">
+                      {language === 'en' ? 'By URL' : 'Por URL'}
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="coachImageType"
+                      id="coachImageFile"
+                      checked={coachImageType === 'file'}
+                      onChange={() => {
+                        setCoachImageType('file');
+                        setCoachForm(prev => ({ ...prev, image: '' }));
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="coachImageFile">
+                      {language === 'en' ? 'Upload Image' : 'Subir Imagen'}
+                    </label>
+                  </div>
+                </div>
+                
+                {coachImageType === 'url' && (
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    name="image"
+                    value={coachForm.image}
+                    onChange={handleCoachFormChange}
+                    placeholder={language === 'en' ? 'Image URL' : 'URL de la Imagen'}
+                  />
+                )}
+                
+                {coachImageType === 'file' && (
+                  <CloudinaryUpload onUpload={handleCoachImageUpload} />
+                )}
+                
+                {/* Preview de la imagen */}
+                {getCoachImagePreview() && (
+                  <div className="mb-2">
+                    <img 
+                      src={getCoachImagePreview()} 
+                      alt="coach preview" 
+                      style={{ 
+                        maxWidth: 80, 
+                        maxHeight: 80, 
+                        marginTop: 8, 
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="d-flex gap-2 mt-3">
+                <button 
+                  className="btn btn-primary" 
+                  type="submit" 
+                  disabled={loading || !coachForm.name.trim()}
+                >
+                  {team.coach && team.coach.name 
+                    ? (language === 'en' ? 'Update Coach' : 'Actualizar Entrenador')
+                    : (texts[language]?.add_coach || 'Agregar Entrenador')
+                  }
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  type="button" 
+                  onClick={closeCoachModal}
                   disabled={loading}
                 >
                   {language === 'en' ? 'Cancel' : 'Cancelar'}

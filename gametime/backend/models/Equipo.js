@@ -24,7 +24,8 @@ const equipoSchema = new mongoose.Schema({
   }],
   staff: [String],
   coach: {
-    name: { type: String, default: '' }
+    name: { type: String, default: '' },
+    image: { type: String, default: '' }
   },
   league: { type: mongoose.Schema.Types.ObjectId, ref: 'Liga', required: true }
 });

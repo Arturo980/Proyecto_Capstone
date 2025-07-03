@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../styles/HorizontalCarousel.css";
 import { API_BASE_URL } from "../assets/Configuration/config.js";
 import { io as socketIOClient } from "socket.io-client";
@@ -18,6 +18,42 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
   const [publicGameModal, setPublicGameModal] = useState(null);
   const [liveSetScore, setLiveSetScore] = useState({ score1: 0, score2: 0 });
   const [loadingDots, setLoadingDots] = useState(0);
+
+  // Función para obtener el rango de la semana actual (lunes a domingo)
+  const getCurrentWeekRange = useCallback(() => {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = domingo, 1 = lunes, etc.
+    
+    // Calcular días hasta el lunes (inicio de semana)
+    const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
+    
+    // Fecha del lunes de esta semana
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+    
+    // Fecha del domingo de esta semana
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return { monday, sunday };
+  }, []);
+
+  // Función para verificar si un partido está en la semana actual
+  const isGameInCurrentWeek = useCallback((gameDate) => {
+    if (!gameDate) return false;
+    
+    try {
+      const date = new Date(gameDate);
+      const { monday, sunday } = getCurrentWeekRange();
+      
+      return date >= monday && date <= sunday;
+    } catch (error) {
+      console.error('Error checking game date:', error);
+      return false;
+    }
+  }, [getCurrentWeekRange]);
 
   // Función para formatear fechas según el idioma
   const formatDate = (dateString) => {
@@ -100,7 +136,7 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
       .catch(() => setTeams([]));
   }, [selectedLeague]);
 
-  // Cargar todos los partidos de la liga seleccionada
+  // Cargar partidos de la semana actual de la liga seleccionada
   useEffect(() => {
     if (!selectedLeague) return;
     setLoading(true);
@@ -111,8 +147,10 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
       .then((res) => res.json())
       .then((data) => {
         if (isMounted) {
-          const games = Array.isArray(data.games) ? data.games : [];
-          setGames(games);
+          const allGames = Array.isArray(data.games) ? data.games : [];
+          // Filtrar solo los partidos de la semana actual
+          const weekGames = allGames.filter(game => isGameInCurrentWeek(game.date));
+          setGames(weekGames);
           setLoading(false);
         }
       })
@@ -124,7 +162,7 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
       });
 
     return () => { isMounted = false; };
-  }, [selectedLeague]);
+  }, [selectedLeague, isGameInCurrentWeek]);
 
   // Inicializar socket.io solo una vez
   useEffect(() => {
@@ -168,12 +206,15 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
 
     // Nuevo: Actualizar partidos en tiempo real cuando se confirmen citados o se cree/actualice un partido
     const handleGameCreatedOrUpdated = () => {
-      // Refresca todos los partidos de la liga seleccionada
+      // Refresca los partidos de la semana actual de la liga seleccionada
       if (selectedLeague) {
         fetch(`${GAMES_URL}?league=${selectedLeague}`)
           .then((res) => res.json())
           .then((data) => {
-            setGames(Array.isArray(data.games) ? data.games : []);
+            const allGames = Array.isArray(data.games) ? data.games : [];
+            // Filtrar solo los partidos de la semana actual
+            const weekGames = allGames.filter(game => isGameInCurrentWeek(game.date));
+            setGames(weekGames);
           });
       }
     };
@@ -191,7 +232,7 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
       socket.off('game_created', handleGameCreatedOrUpdated);
       socket.off('game_updated', handleGameCreatedOrUpdated);
     };
-  }, [socket, selectedLeague]);
+  }, [socket, selectedLeague, isGameInCurrentWeek]);
 
   // Helper para obtener logo y abbr de un equipo
   const getTeamData = (abbrOrName) => {
@@ -280,7 +321,7 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
   return (
     <div className="carousel-container">
       <div className="carousel-title">
-        <span>{language === 'en' ? 'Results' : 'Resultados'}</span>
+        <span>{language === 'en' ? 'This Week\'s Games' : 'Partidos de la Semana'}</span>
         <select
           className="carousel-dropdown"
           value={selectedLeague}
@@ -341,8 +382,8 @@ const HorizontalGamesCarousel = ({ language = 'es', leagues: externalLeagues = n
             border: "1px solid rgba(255, 255, 255, 0.1)"
           }}>
             {language === 'en' 
-              ? 'No games scheduled.'
-              : 'No hay partidos programados.'
+              ? 'No games scheduled for this week.'
+              : 'No hay partidos programados para esta semana.'
             }
           </div>
         ) : (
