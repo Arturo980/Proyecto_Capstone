@@ -109,7 +109,8 @@ const GamesPage = ({ language = 'es' }) => {
       }
       let data = await res.json();
       if (!Array.isArray(data)) data = [];
-      data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      // El backend ya devuelve las ligas ordenadas por prioridad, no reordenar aquí
+      // data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
       setLeagues(data);
       if (data.length > 0) setActiveLeague(data[0]._id);
     } catch (err) {
